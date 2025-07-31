@@ -1,0 +1,18 @@
+[gd_scene load_steps=5 format=3 uid="uid://bsdpxvbgoxglm"]
+
+[ext_resource type="Script" uid="uid://dw5juu5i42qxs" path="res://scripts/Main.gd" id="1_0bbpv"]
+[ext_resource type="PackedScene" uid="uid://cax4eocmnv26h" path="res://scenes/BiomeTile.tscn" id="1_elqb8"]
+[ext_resource type="PackedScene" uid="uid://cokuvsh54e76p" path="res://scenes/GameUI.tscn" id="1_rvslj"]
+[ext_resource type="PackedScene" uid="uid://3pqn5lc4qr5w" path="res://scenes/CameraController.tscn" id="4_rarhs"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_0bbpv")
+
+[node name="BiomeTile" parent="." instance=ExtResource("1_elqb8")]
+
+[node name="CameraController" parent="." instance=ExtResource("4_rarhs")]
+
+[node name="UILayer" type="CanvasLayer" parent="."]
+
+[node name="GameUi" parent="UILayer" instance=ExtResource("1_rvslj")]
+anchors_preset = 0

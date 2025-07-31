@@ -1,0 +1,119 @@
+[gd_scene load_steps=2 format=3 uid="uid://cokuvsh54e76p"]
+
+[ext_resource type="Script" uid="uid://ccejb0f681uvq" path="res://scripts/GameUI.gd" id="1_jkspe"]
+
+[node name="GameUi" type="Control"]
+layout_mode = 3
+script = ExtResource("1_jkspe")
+
+[node name="TopBar" type="Panel" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="LeftSection" type="HBoxContainer" parent="TopBar"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 50.0
+
+[node name="TurnInfo" type="VBoxContainer" parent="TopBar/LeftSection"]
+layout_mode = 2
+
+[node name="TurnLabel" type="Label" parent="TopBar/LeftSection/TurnInfo"]
+layout_mode = 2
+
+[node name="TurnSubtext" type="Label" parent="TopBar/LeftSection/TurnInfo"]
+layout_mode = 2
+
+[node name="CenterSection" type="HBoxContainer" parent="TopBar"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="ResourcesContainer" type="HBoxContainer" parent="TopBar/CenterSection"]
+layout_mode = 2
+
+[node name="GoldContainer" type="VBoxContainer" parent="TopBar/CenterSection/ResourcesContainer"]
+layout_mode = 2
+
+[node name="GoldIcon" type="TextureRect" parent="TopBar/CenterSection/ResourcesContainer/GoldContainer"]
+layout_mode = 2
+
+[node name="GoldLabel" type="Label" parent="TopBar/CenterSection/ResourcesContainer/GoldContainer"]
+layout_mode = 2
+
+[node name="FoodContainer" type="VBoxContainer" parent="TopBar/CenterSection/ResourcesContainer"]
+layout_mode = 2
+
+[node name="FoodIcon" type="TextureRect" parent="TopBar/CenterSection/ResourcesContainer/FoodContainer"]
+layout_mode = 2
+
+[node name="FoodLabel" type="Label" parent="TopBar/CenterSection/ResourcesContainer/FoodContainer"]
+layout_mode = 2
+
+[node name="WoodContainer" type="VBoxContainer" parent="TopBar/CenterSection/ResourcesContainer"]
+layout_mode = 2
+
+[node name="WoodIcon" type="TextureRect" parent="TopBar/CenterSection/ResourcesContainer/WoodContainer"]
+layout_mode = 2
+
+[node name="WoodLabel" type="Label" parent="TopBar/CenterSection/ResourcesContainer/WoodContainer"]
+layout_mode = 2
+
+[node name="StoneContainer" type="VBoxContainer" parent="TopBar/CenterSection/ResourcesContainer"]
+layout_mode = 2
+
+[node name="StoneIcon" type="TextureRect" parent="TopBar/CenterSection/ResourcesContainer/StoneContainer"]
+layout_mode = 2
+
+[node name="StoneLabel" type="Label" parent="TopBar/CenterSection/ResourcesContainer/StoneContainer"]
+layout_mode = 2
+
+[node name="RightSection" type="HBoxContainer" parent="TopBar"]
+layout_mode = 2
+offset_left = 20.0
+offset_right = 21.0
+offset_bottom = 50.0
+
+[node name="CharacterInfo" type="VBoxContainer" parent="TopBar/RightSection"]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="TopBar/RightSection/CharacterInfo"]
+layout_mode = 2
+
+[node name="StatsContainer" type="VBoxContainer" parent="TopBar/RightSection/CharacterInfo"]
+layout_mode = 2
+
+[node name="LevelLabel" type="Label" parent="TopBar/RightSection/CharacterInfo/StatsContainer"]
+layout_mode = 2
+
+[node name="HPLabel" type="Label" parent="TopBar/RightSection/CharacterInfo/StatsContainer"]
+layout_mode = 2
+
+[node name="BottomBar" type="Panel" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="MenuButtons" type="HBoxContainer" parent="BottomBar"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="InventoryButton" type="Button" parent="BottomBar/MenuButtons"]
+layout_mode = 2
+
+[node name="CharacterButton" type="Button" parent="BottomBar/MenuButtons"]
+layout_mode = 2
+
+[node name="BuildingsButton" type="Button" parent="BottomBar/MenuButtons"]
+layout_mode = 2
+
+[node name="ResearchButton" type="Button" parent="BottomBar/MenuButtons"]
+layout_mode = 2
+
+[node name="DiplomacyButton" type="Button" parent="BottomBar/MenuButtons"]
+layout_mode = 2
+
+[node name="SettingsButton" type="Button" parent="BottomBar/MenuButtons"]
+layout_mode = 2
