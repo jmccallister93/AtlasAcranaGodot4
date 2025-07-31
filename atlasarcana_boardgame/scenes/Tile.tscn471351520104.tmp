@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3 uid="uid://cax4eocmnv26h"]
+
+[ext_resource type="Script" uid="uid://dychkungnwem" path="res://Scripts/Tile.gd" id="1_2sjy5"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ixgav"]
+
+[node name="Tile" type="Area2D"]
+script = ExtResource("1_2sjy5")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_ixgav")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Panel" type="Panel" parent="CanvasLayer"]
+offset_right = 40.0
+offset_bottom = 40.0
