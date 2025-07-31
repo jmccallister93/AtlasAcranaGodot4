@@ -1,0 +1,16 @@
+ea4bc82a6ad023ab7ee23ee620429895
+::res://::1753938755
+::res://assets/::1753937281
+::res://assets/tiles/::1753937471
+default.png::CompressedTexture2D/CompressedTexture2D::776995897545045617::1753937463::1753937471::1::::<><><>0<>0<>c57fdaf40b3c6a908a818de94c422bf5<>res://.godot/imported/default.png-d081caf93e9b07b52ef87f2fdae1f385.ctex::
+forest.png::CompressedTexture2D/CompressedTexture2D::58567743628455502::1753937369::1753937380::1::::<><><>0<>0<>41dc48ee3932cf18dc613d411eb11df0<>res://.godot/imported/forest.png-1904ebfce3fba7d490732ab15fa8c54c.ctex::
+grassland.png::CompressedTexture2D/CompressedTexture2D::6564399806942993892::1753937324::1753937331::1::::<><><>0<>0<>792447020460568540434776f2b3bc9a<>res://.godot/imported/grassland.png-97c17f416d6ea2f742a007966aabb457.ctex::
+mountain.png::CompressedTexture2D/CompressedTexture2D::6006082496538123055::1753937412::1753937421::1::::<><><>0<>0<>72bf1d4bd0ef5ce6802f0ecbf7774044<>res://.godot/imported/mountain.png-62999768e8ea3572d60b71892dc47b20.ctex::
+water.png::CompressedTexture2D/CompressedTexture2D::1596782815327242827::1753937444::1753937450::1::::<><><>0<>0<>f432c6ad5e169a02321ca8524ac74f44<>res://.godot/imported/water.png-6ee55e3d64f9a08d57af89d412298952.ctex::
+::res://scenes/::1753938755
+BiomeTile.tscn::PackedScene::4822090730675389961::1753938761::0::1::::<><><>0<>0<><>::uid://dychkungnwem::::res://Scripts/Tile.gd
+Main.tscn::PackedScene::3656965935418562866::1753938755::0::1::::<><><>0<>0<><>::uid://cax4eocmnv26h::::res://scenes/BiomeTile.tscn
+UI.tscn::PackedScene/PackedScene::6286273331200818095::1753938714::0::1::::<><><>0<>0<><>::uid://dj5xxyxsbxks8::::res://scripts/UI.gd
+::res://scripts/::1753938755
+Tile.gd::GDScript::260246088283203796::1753938755::0::1::::BiomeTile<>Area2D<><>0<>0<><>::
+UI.gd::GDScript/GDScript::7854331837447824373::1753938609::0::1::::<>Control<><>0<>0<><>::
