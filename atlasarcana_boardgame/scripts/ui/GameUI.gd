@@ -20,6 +20,9 @@ class_name GameUI
 @onready var character_level_label: Label = $TopBar/RightSection/CharacterInfo/StatsContainer/LevelLabel
 @onready var character_hp_label: Label = $TopBar/RightSection/CharacterInfo/StatsContainer/HPLabel
 
+#Menus
+@onready var inventory_menu = get_parent().get_node_or_null("InventoryMenu")
+
 # Game Data (Placeholder values)
 var current_turn: int = 1
 var player_resources: Dictionary = {
@@ -39,6 +42,8 @@ var character_data: Dictionary = {
 
 # Signals for menu interactions
 signal inventory_opened
+signal inventory_closed
+
 signal character_sheet_opened
 signal buildings_menu_opened
 signal research_opened
@@ -195,8 +200,15 @@ func level_up_character():
 # Menu button callbacks
 func _on_inventory_button_pressed():
 	"""Handle inventory button press"""
-	print("Opening Inventory...")
-	inventory_opened.emit()
+	if inventory_menu:
+		if inventory_menu.visible:
+			inventory_menu.hide()
+			inventory_closed.emit()
+			print("Hiding inventory...")
+		else:
+			inventory_menu.show()
+			inventory_opened.emit()
+			print("Showing inventory...")
 
 func _on_character_button_pressed():
 	"""Handle character sheet button press"""

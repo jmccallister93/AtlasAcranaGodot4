@@ -1,9 +1,10 @@
 [gd_scene load_steps=2 format=3 uid="uid://cokuvsh54e76p"]
 
-[ext_resource type="Script" uid="uid://ccejb0f681uvq" path="res://scripts/GameUI.gd" id="1_jkspe"]
+[ext_resource type="Script" uid="uid://ccejb0f681uvq" path="res://scripts/ui/GameUI.gd" id="1_jkspe"]
 
 [node name="GameUi" type="Control"]
 layout_mode = 3
+anchors_preset = 0
 script = ExtResource("1_jkspe")
 
 [node name="TopBar" type="Panel" parent="."]
@@ -102,18 +103,25 @@ offset_bottom = 40.0
 
 [node name="InventoryButton" type="Button" parent="BottomBar/MenuButtons"]
 layout_mode = 2
+text = "Inventory
+"
 
 [node name="CharacterButton" type="Button" parent="BottomBar/MenuButtons"]
 layout_mode = 2
+text = "Character"
 
 [node name="BuildingsButton" type="Button" parent="BottomBar/MenuButtons"]
 layout_mode = 2
+text = "Buildings"
 
 [node name="ResearchButton" type="Button" parent="BottomBar/MenuButtons"]
 layout_mode = 2
+text = "Research"
 
 [node name="DiplomacyButton" type="Button" parent="BottomBar/MenuButtons"]
 layout_mode = 2
+text = "Diplomacy"
 
 [node name="SettingsButton" type="Button" parent="BottomBar/MenuButtons"]
 layout_mode = 2
+text = "Settings"

@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://cax4eocmnv26h" path="res://scenes/BiomeTile.tscn" id="1_elqb8"]
 [ext_resource type="PackedScene" uid="uid://cokuvsh54e76p" path="res://scenes/ui/GameUI.tscn" id="1_rvslj"]
 [ext_resource type="PackedScene" uid="uid://3pqn5lc4qr5w" path="res://scenes/CameraController.tscn" id="4_rarhs"]
-[ext_resource type="PackedScene" uid="uid://bypgbdcqjh6bb" path="res://scenes/ui/menus/InventoryMenu.tscn" id="5_vcsgt"]
+[ext_resource type="PackedScene" uid="uid://c7kocrv8amtnp" path="res://scenes/ui/menus/MenuManager.tscn" id="5_vcsgt"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_0bbpv")
@@ -16,7 +16,5 @@ script = ExtResource("1_0bbpv")
 [node name="MenuManager" parent="." instance=ExtResource("5_vcsgt")]
 
 [node name="UILayer" type="CanvasLayer" parent="."]
-
-[node name="InventoryMenu" parent="UILayer" instance=ExtResource("5_vcsgt")]
 
 [node name="GameUi" parent="UILayer" instance=ExtResource("1_rvslj")]

@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://dinhkus883yy6"]
+
+[ext_resource type="Texture2D" uid="uid://lcnakkjqtlpp" path="res://assets/tiles/default.png" id="1_wcx24"]
+
+[node name="Inventory" type="CanvasLayer"]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_wcx24")

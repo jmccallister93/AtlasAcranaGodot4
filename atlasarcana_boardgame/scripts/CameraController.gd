@@ -7,6 +7,10 @@ class_name CameraController
 @export var min_zoom: float = 0.5
 @export var max_zoom: float = 3.0
 
+# Mouse drag settings
+@export var enable_mouse_drag: bool = true
+@export var drag_sensitivity: float = 1.0
+
 # Optional camera bounds (set these if you want to limit camera movement)
 @export var use_bounds: bool = false
 @export var bounds_rect: Rect2 = Rect2(-1000, -1000, 2000, 2000)
@@ -18,6 +22,11 @@ class_name CameraController
 # Internal variables
 var target_position: Vector2
 var movement_input: Vector2
+
+# Mouse drag variables
+var is_dragging: bool = false
+var drag_start_position: Vector2
+var last_mouse_position: Vector2
 
 func _ready():
 	# Initialize target position to current position
@@ -38,13 +47,13 @@ func handle_input():
 	movement_input = Vector2.ZERO
 	
 	# WASD movement input
-	if Input.is_action_pressed("ui_left") or Input.is_action_pressed("move_left"):
+	if Input.is_action_pressed("ui_left"):
 		movement_input.x -= 1
-	if Input.is_action_pressed("ui_right") or Input.is_action_pressed("move_right"):
+	if Input.is_action_pressed("ui_right"):
 		movement_input.x += 1
-	if Input.is_action_pressed("ui_up") or Input.is_action_pressed("move_up"):
+	if Input.is_action_pressed("ui_up"):
 		movement_input.y -= 1
-	if Input.is_action_pressed("ui_down") or Input.is_action_pressed("move_down"):
+	if Input.is_action_pressed("ui_down"):
 		movement_input.y += 1
 	
 	# Normalize diagonal movement so it's not faster
@@ -59,13 +68,65 @@ func handle_zoom_input():
 		zoom_out()
 
 func _unhandled_input(event):
-	"""Handle mouse wheel zoom"""
+	"""Handle mouse wheel zoom and mouse drag"""
 	if event is InputEventMouseButton:
 		if event.pressed:
+			# Handle zoom
 			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 				zoom_in()
 			elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 				zoom_out()
+			# Handle drag start
+			elif event.button_index == MOUSE_BUTTON_LEFT and enable_mouse_drag:
+				start_mouse_drag(event.position)
+		else:
+			# Handle drag end
+			if event.button_index == MOUSE_BUTTON_LEFT and is_dragging:
+				stop_mouse_drag()
+	
+	elif event is InputEventMouseMotion:
+		# Handle mouse drag movement
+		if is_dragging:
+			update_mouse_drag(event.position)
+
+func start_mouse_drag(mouse_pos: Vector2):
+	"""Start mouse drag camera movement"""
+	is_dragging = true
+	drag_start_position = mouse_pos
+	last_mouse_position = mouse_pos
+	
+	# Optional: Change cursor to indicate dragging
+	Input.set_default_cursor_shape(Input.CURSOR_DRAG)
+
+func stop_mouse_drag():
+	"""Stop mouse drag camera movement"""
+	is_dragging = false
+	
+	# Reset cursor
+	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+
+func update_mouse_drag(mouse_pos: Vector2):
+	"""Update camera position based on mouse drag"""
+	if not is_dragging:
+		return
+	
+	# Calculate mouse movement delta
+	var mouse_delta = last_mouse_position - mouse_pos
+	
+	# Convert screen space movement to world space
+	# Account for camera zoom - more zoom means less movement per pixel
+	var world_delta = mouse_delta / zoom * drag_sensitivity
+	
+	# Update target position (inverted because we want to "drag" the world)
+	target_position += world_delta
+	
+	# Apply bounds if enabled
+	if use_bounds:
+		target_position.x = clamp(target_position.x, bounds_rect.position.x, bounds_rect.position.x + bounds_rect.size.x)
+		target_position.y = clamp(target_position.y, bounds_rect.position.y, bounds_rect.position.y + bounds_rect.size.y)
+	
+	# Update last mouse position
+	last_mouse_position = mouse_pos
 
 func zoom_in():
 	"""Zoom the camera in"""
@@ -83,7 +144,8 @@ func zoom_out():
 
 func update_camera_movement(delta):
 	"""Update camera position based on input"""
-	if movement_input != Vector2.ZERO:
+	# Handle WASD movement (only if not dragging)
+	if movement_input != Vector2.ZERO and not is_dragging:
 		# Calculate movement speed adjusted for zoom (move faster when zoomed out)
 		var adjusted_speed = move_speed / zoom.x
 		
@@ -96,6 +158,7 @@ func update_camera_movement(delta):
 			target_position.y = clamp(target_position.y, bounds_rect.position.y, bounds_rect.position.y + bounds_rect.size.y)
 	
 	# Apply movement (smooth or instant)
+	# Mouse drag updates target_position directly, so this handles both WASD and drag
 	if smooth_movement:
 		global_position = global_position.lerp(target_position, movement_smoothing * delta)
 	else:
@@ -134,6 +197,16 @@ func set_bounds(new_bounds: Rect2):
 func disable_bounds():
 	"""Disable camera bounds"""
 	use_bounds = false
+
+func set_drag_enabled(enabled: bool):
+	"""Enable or disable mouse drag functionality"""
+	enable_mouse_drag = enabled
+	if not enabled and is_dragging:
+		stop_mouse_drag()
+
+func is_mouse_dragging() -> bool:
+	"""Check if currently dragging with mouse"""
+	return is_dragging
 
 # Utility methods
 func focus_on_tile(tile_position: Vector2):
