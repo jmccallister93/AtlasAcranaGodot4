@@ -1,3 +1,6 @@
+Panel
+ColorRect
+Control
 Button
 Label
 HBoxContainer
