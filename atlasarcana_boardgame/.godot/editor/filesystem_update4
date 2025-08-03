@@ -13,3 +13,4 @@ res://scripts/ui/menus/CharacterMenu.gd
 res://scenes/ui/menus/BuildingMenu.tscn
 res://scripts/ui/menus/BuildingMenu.gd
 res://scripts/Main.gd
+res://scenes/map/BiomeTile.tscn

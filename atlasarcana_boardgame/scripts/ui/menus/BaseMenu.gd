@@ -89,7 +89,7 @@ func create_grid_container():
 	
 	# Create a GridContainer and assign it to item_container
 	item_container = GridContainer.new()
-	item_container.columns = 8  # Adjust based on how many items per row you want
+	item_container.columns = 5  # Adjust based on how many items per row you want
 	
 	# Add to scroll container and scene
 	scroll_container.add_child(item_container)

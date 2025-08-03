@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://cax4eocmnv26h"]
 
-[ext_resource type="Script" uid="uid://dychkungnwem" path="res://scripts/BiomeTile.gd" id="1_bmkg1"]
+[ext_resource type="Script" uid="uid://dychkungnwem" path="res://scripts/map/BiomeTile.gd" id="1_bmkg1"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ixgav"]
 size = Vector2(0, 0)
