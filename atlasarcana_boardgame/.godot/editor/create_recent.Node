@@ -1,6 +1,7 @@
+BaseMenu
+Control
 Panel
 ColorRect
-Control
 Button
 Label
 HBoxContainer

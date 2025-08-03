@@ -113,15 +113,3 @@ text = "Character"
 [node name="BuildingsButton" type="Button" parent="BottomBar/MenuButtons"]
 layout_mode = 2
 text = "Buildings"
-
-[node name="ResearchButton" type="Button" parent="BottomBar/MenuButtons"]
-layout_mode = 2
-text = "Research"
-
-[node name="DiplomacyButton" type="Button" parent="BottomBar/MenuButtons"]
-layout_mode = 2
-text = "Diplomacy"
-
-[node name="SettingsButton" type="Button" parent="BottomBar/MenuButtons"]
-layout_mode = 2
-text = "Settings"

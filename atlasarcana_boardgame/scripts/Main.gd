@@ -1,8 +1,9 @@
 # Add this to your Main.gd script
 
-extends Node2D  # or whatever your Main node type is
+extends Node2D
 
 # Reference to the UI
+#@onready var game_ui: GameUI = $GameUI
 @onready var game_ui: GameUI = $GameUI
 
 func _ready():

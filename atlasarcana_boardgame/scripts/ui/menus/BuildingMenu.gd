@@ -1,14 +1,13 @@
 extends BaseMenu
-class_name InventoryMenu
+class_name BuildingMenu
 
 func ready_post():
-	menu_title = "Inventory"
+	menu_title = "Building"
 	title_label.text = menu_title 
-	populate_inventory(["Sword", "Potion", "Book", "Shield", "Bow", "Arrow", "Helmet", "Boots", "Ring", "Necklace"])
+	populate_buildings(["Farm", "Stables", "Docks", ])
 
 
-#For testing 
-func populate_inventory(item_names: Array):
+func populate_buildings(item_names: Array):
 	# Clear existing items
 	for child in item_container.get_children():
 		child.queue_free()

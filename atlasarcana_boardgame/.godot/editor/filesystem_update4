@@ -5,3 +5,11 @@ res://scenes/ui/GameUI.tscn
 res://scenes/ui/menus/InventoryMenu.tscn
 res://scenes/ui/menus/Inventory.tscn
 res://scripts/ui/menus/InventoryMenu.gd
+res://scenes/ui/menus/BaseMenu.tscn
+res://scripts/ui/GameUI.gd
+res://scripts/ui/menus/BaseMenu.gd
+res://scenes/ui/menus/CharacterMenu.tscn
+res://scripts/ui/menus/CharacterMenu.gd
+res://scenes/ui/menus/BuildingMenu.tscn
+res://scripts/ui/menus/BuildingMenu.gd
+res://scripts/Main.gd
