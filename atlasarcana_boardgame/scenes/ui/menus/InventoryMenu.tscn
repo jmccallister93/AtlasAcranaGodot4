@@ -7,16 +7,6 @@ layout_mode = 3
 anchors_preset = 0
 script = ExtResource("1_ak5rs")
 
-[node name="CloseButton" type="Button" parent="."]
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 2
-offset_left = 159.0
-offset_right = 209.0
 offset_bottom = 31.0
-
-[node name="BoxContainer" type="BoxContainer" parent="."]
-layout_mode = 0
-offset_right = 209.0
-offset_bottom = 31.0
-
-[node name="HBoxContainer" type="HBoxContainer" parent="BoxContainer"]
-layout_mode = 2
