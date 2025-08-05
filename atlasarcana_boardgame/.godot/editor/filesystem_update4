@@ -16,3 +16,14 @@ res://scripts/Main.gd
 res://scenes/map/BiomeTile.tscn
 res://scenes/ui/menus/ItemSubmenu.tscn
 res://scripts/ui/menus/ItemSubmenu.gd
+res://scripts/map/BiomeTile.gd
+res://scenes/managers/GameManager.tscn
+res://scripts/managers/GameManager.gd
+res://scenes/managers/MapManager.tscn
+res://scripts/managers/MapManager.gd
+res://scripts/managers/MovementSystem.gd
+res://scripts/managers/BuildingSystem.gd
+res://scripts/entities/Character.gd
+res://scripts/entities/Building.gd
+res://scenes/managers/TurnManager.tscn
+res://scripts/managers/TurnManager.gd

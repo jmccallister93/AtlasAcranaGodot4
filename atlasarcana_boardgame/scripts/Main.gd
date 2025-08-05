@@ -8,13 +8,8 @@ extends Node2D
 
 func _ready():
 	# Connect UI signals to your game logic
-	if game_ui:
-		game_ui.inventory_opened.connect(_on_inventory_opened)
-		game_ui.character_sheet_opened.connect(_on_character_sheet_opened)
-		game_ui.buildings_menu_opened.connect(_on_buildings_menu_opened)
-		game_ui.research_opened.connect(_on_research_opened)
-		game_ui.diplomacy_opened.connect(_on_diplomacy_opened)
-		game_ui.settings_opened.connect(_on_settings_opened)
+	pass
+
 
 # Example: When a tile produces resources
 func _on_tile_resource_harvested(resources_gained: Dictionary):
@@ -44,30 +39,6 @@ func process_end_of_turn():
 	for resource in resources_per_turn:
 		game_ui.add_resources(resource, resources_per_turn[resource])
 
-# UI Menu Callbacks
-func _on_inventory_opened():
-	print("Opening inventory system...")
-	# Create and show inventory UI
-
-func _on_character_sheet_opened():
-	print("Opening character sheet...")
-	# Create and show character UI
-
-func _on_buildings_menu_opened():
-	print("Opening building menu...")
-	# Create and show building selection UI
-
-func _on_research_opened():
-	print("Opening research tree...")
-	# Create and show research UI
-
-func _on_diplomacy_opened():
-	print("Opening diplomacy...")
-	# Create and show diplomacy UI
-
-func _on_settings_opened():
-	print("Opening settings...")
-	# Create and show settings UI
 
 # Example: Connect to your tile system
 func _on_tile_clicked(tile):

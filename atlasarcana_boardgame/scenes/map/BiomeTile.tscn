@@ -1,18 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://cax4eocmnv26h"]
+[gd_scene load_steps=2 format=3 uid="uid://cax4eocmnv26h"]
 
 [ext_resource type="Script" uid="uid://dychkungnwem" path="res://scripts/map/BiomeTile.gd" id="1_bmkg1"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_ixgav"]
-size = Vector2(0, 0)
-
 [node name="BiomeTile" type="Area2D"]
 script = ExtResource("1_bmkg1")
-
-[node name="Sprite2D" type="Sprite2D" parent="."]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("RectangleShape2D_ixgav")
-
-[node name="HoverLabel" type="Label" parent="."]
-offset_right = 40.0
-offset_bottom = 40.0

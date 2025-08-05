@@ -13,10 +13,10 @@ var resources: Dictionary = {}  # Resource amounts on this tile
 var is_occupied: bool = false
 var movement_cost: float = 1.0
 
-# Visual components
-@onready var sprite: Sprite2D = $Sprite2D
-@onready var collision_shape: CollisionShape2D = $CollisionShape2D
-@onready var hover_label: Label = $HoverLabel
+# Visual components - created in code
+var sprite: Sprite2D
+var collision_shape: CollisionShape2D
+var hover_label: Label
 
 # Signals for game events
 signal tile_clicked(tile: BiomeTile)
@@ -34,6 +34,11 @@ enum BiomeType {
 }
 
 func _ready():
+	# Create all components first
+	create_sprite()
+	create_collision_shape()
+	create_hover_label()
+	
 	# Connect signals
 	input_event.connect(_on_input_event)
 	mouse_entered.connect(_on_mouse_entered)
@@ -42,6 +47,39 @@ func _ready():
 	# Initialize tile
 	setup_tile()
 	setup_hover_label()
+
+func create_sprite():
+	"""Create and setup the sprite component"""
+	sprite = Sprite2D.new()
+	sprite.name = "Sprite2D"
+	add_child(sprite)
+
+func create_collision_shape():
+	"""Create and setup the collision shape"""
+	collision_shape = CollisionShape2D.new()
+	collision_shape.name = "CollisionShape2D"
+	
+	# Create rectangle shape for the tile
+	var shape = RectangleShape2D.new()
+	shape.size = Vector2(tile_size, tile_size)
+	collision_shape.shape = shape
+	
+	add_child(collision_shape)
+
+func create_hover_label():
+	"""Create and setup the hover label"""
+	hover_label = Label.new()
+	hover_label.name = "HoverLabel"
+	
+	# Basic label setup
+	hover_label.visible = false
+	hover_label.z_index = 10  # Ensure it appears above other elements
+	
+	# Set size flags for auto-sizing
+	hover_label.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	hover_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	
+	add_child(hover_label)
 
 func setup_tile():
 	"""Initialize the tile based on its biome type"""
@@ -54,25 +92,21 @@ func setup_tile():
 	movement_cost = biome_data.movement_cost
 	resources = biome_data.base_resources.duplicate()
 	
-	# Setup collision shape
-	var shape = RectangleShape2D.new()
-	shape.size = Vector2(tile_size, tile_size)
-	collision_shape.shape = shape
-	
 	# Position the tile in world space
 	global_position = Vector2(grid_position.x * tile_size, grid_position.y * tile_size)
 
 func setup_hover_label():
 	"""Setup the hover label properties"""
 	if hover_label:
-		# Position label above the tile
-		#hover_label.position = Vector2(-tile_size/2, -tile_size/2 - 20)
+		# Position label at top-left corner of tile with small offset
 		hover_label.position = Vector2(2, 2)
+		
 		# Style the label
 		hover_label.add_theme_color_override("font_color", Color.WHITE)
 		hover_label.add_theme_color_override("font_shadow_color", Color.BLACK)
 		hover_label.add_theme_constant_override("shadow_offset_x", 1)
 		hover_label.add_theme_constant_override("shadow_offset_y", 1)
+		hover_label.add_theme_font_size_override("font_size", 10)
 		
 		# Create a background for better readability
 		var style_box = StyleBoxFlat.new()
@@ -86,13 +120,6 @@ func setup_hover_label():
 		style_box.content_margin_left = 8
 		style_box.content_margin_right = 8
 		hover_label.add_theme_stylebox_override("normal", style_box)
-		
-		# Initially hide the label
-		hover_label.visible = false
-		
-		# Set size flags for auto-sizing
-		hover_label.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		hover_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 
 func get_biome_data(biome: BiomeType) -> Dictionary:
 	"""Return biome-specific data"""
@@ -129,6 +156,22 @@ func get_biome_data(biome: BiomeType) -> Dictionary:
 				"building_bonus": {"dock": 1.5},
 				"name": "Water"
 			}
+		BiomeType.DESERT:
+			return {
+				"texture": preload("res://assets/tiles/default.png"),
+				"movement_cost": 1.3,
+				"base_resources": {"stone": 1},
+				"building_bonus": {"mine": 1.2},
+				"name": "Desert"
+			}
+		#BiomeType.SWAMP:
+			#return {
+				#"texture": preload("res://assets/tiles/swamp.png"),
+				#"movement_cost": 2.5,
+				#"base_resources": {"wood": 1, "herbs": 2},
+				#"building_bonus": {"farm": 0.8},
+				#"name": "Swamp"
+			#}
 		_:
 			return {
 				"texture": preload("res://assets/tiles/default.png"),
@@ -151,7 +194,6 @@ func _on_mouse_entered():
 	"""Handle mouse hover"""
 	tile_hovered.emit(self)
 	# Add hover visual effect
-	
 	modulate = Color(1.2, 1.2, 1.2, 1.0)
 	# Show hover label with tile info
 	show_hover_info()
@@ -161,7 +203,7 @@ func _on_mouse_exited():
 	# Remove hover visual effect
 	modulate = Color.WHITE
 	
-		# Hide hover label
+	# Hide hover label
 	if hover_label:
 		hover_label.visible = false
 	
@@ -216,6 +258,27 @@ func show_context_menu():
 	print("1. Build Structure")
 	print("2. Harvest Resources")
 	print("3. Move Character Here")
+
+# Utility functions for changing tile properties
+func change_biome_type(new_biome: BiomeType):
+	"""Change the biome type and update visual/properties"""
+	biome_type = new_biome
+	setup_tile()
+
+func set_custom_texture(texture: Texture2D):
+	"""Set a custom texture for this tile"""
+	if sprite:
+		sprite.texture = texture
+
+func update_tile_size(new_size: int):
+	"""Update the tile size and collision shape"""
+	tile_size = new_size
+	
+	# Update collision shape
+	if collision_shape and collision_shape.shape:
+		var rect_shape = collision_shape.shape as RectangleShape2D
+		if rect_shape:
+			rect_shape.size = Vector2(tile_size, tile_size)
 
 # Building management
 func can_place_building(building_type: String) -> bool:
