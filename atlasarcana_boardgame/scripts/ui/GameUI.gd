@@ -160,15 +160,15 @@ func connect_menu_buttons():
 
 func close_all_menus():
 	if inventory_menu and inventory_menu.visible:
-		inventory_menu.hide()
+		inventory_menu.hide_menu()
 		inventory_closed.emit()
 
 	if character_menu and character_menu.visible:
-		character_menu.hide()
+		character_menu.hide_menu()
 		character_closed.emit()
 	
 	if building_menu and building_menu.visible:
-		building_menu.hide()
+		building_menu.hide_menu()
 		building_closed.emit()
 
 	# Add other menus here as needed (buildings_menu, etc.)
@@ -178,12 +178,12 @@ func _on_inventory_button_pressed():
 	"""Handle inventory button press"""
 	if inventory_menu:
 		if inventory_menu.visible:
-			inventory_menu.hide()
+			inventory_menu.hide_menu()
 			inventory_closed.emit()
 			print("Hiding inventory...")
 		else:
 			close_all_menus()
-			inventory_menu.show()
+			inventory_menu.show_menu()
 			inventory_opened.emit()
 			print("Showing inventory...")
 
@@ -191,12 +191,12 @@ func _on_character_button_pressed():
 	"""Handle character sheet button press"""
 	if character_menu:
 		if character_menu.visible:
-			character_menu.hide()
+			character_menu.hide_menu()
 			character_closed.emit()
 			print("Hiding character...")
 		else:
 			close_all_menus()
-			character_menu.show()
+			character_menu.show_menu()
 			character_opened.emit()
 			print("Showing character...")
 
@@ -204,11 +204,11 @@ func _on_buildings_button_pressed():
 	"""Handle buildings menu button press"""
 	if building_menu:
 		if building_menu.visible:
-			building_menu.hide()
+			building_menu.hide_menu()
 			building_closed.emit()
 			print("Hiding character...")
 		else:
 			close_all_menus()
-			building_menu.show()
+			building_menu.show_menu()
 			building_opened.emit()
 			print("Showing character...")

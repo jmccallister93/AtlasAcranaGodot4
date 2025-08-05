@@ -14,3 +14,5 @@ res://scenes/ui/menus/BuildingMenu.tscn
 res://scripts/ui/menus/BuildingMenu.gd
 res://scripts/Main.gd
 res://scenes/map/BiomeTile.tscn
+res://scenes/ui/menus/ItemSubmenu.tscn
+res://scripts/ui/menus/ItemSubmenu.gd
