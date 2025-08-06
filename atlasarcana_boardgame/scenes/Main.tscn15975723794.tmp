@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://dw5juu5i42qxs" path="res://scripts/Main.gd" id="1_0bbpv"]
 [ext_resource type="PackedScene" uid="uid://cokuvsh54e76p" path="res://scenes/ui/GameUI.tscn" id="1_rvslj"]
 [ext_resource type="PackedScene" uid="uid://3pqn5lc4qr5w" path="res://scenes/CameraController.tscn" id="4_rarhs"]
-[ext_resource type="PackedScene" uid="uid://b55kyirmo4u56" path="res://scenes/entities/Character.tscn" id="7_nxtc6"]
+[ext_resource type="PackedScene" uid="uid://hpalmer5r341" path="res://scenes/managers/GameManager.tscn" id="5_nxtc6"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_0bbpv")
@@ -14,4 +14,4 @@ script = ExtResource("1_0bbpv")
 
 [node name="GameUi" parent="UILayer" instance=ExtResource("1_rvslj")]
 
-[node name="Character" parent="." instance=ExtResource("7_nxtc6")]
+[node name="GameManager" parent="." instance=ExtResource("5_nxtc6")]

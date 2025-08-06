@@ -32,26 +32,13 @@ var character_menu: CharacterMenu
 var building_menu: BuildingMenu
 
 #Action Control
-
+@onready var turn_manager = GameManager.turn_manager
 @onready var action_control = $BottomBar/ActionControl
 @onready var advance_turn_button = $BottomBar/ActionControl/AdvanceTurn
-
-# Game Data (Placeholder values)
 var current_turn: int = 1
-var player_resources: Dictionary = {
-	"gold": 1250,
-	"food": 45,
-	"wood": 78,
-	"stone": 32
-}
-var character_data: Dictionary = {
-	"name": "Hero",
-	"level": 5,
-	"current_hp": 85,
-	"max_hp": 100,
-	"experience": 2340,
-	"next_level_exp": 3000
-}
+
+#Character 
+@onready var character = get_parent().get_parent().get_node_or_null("Character")
 
 # Signals for menu interactions
 signal inventory_opened
@@ -78,7 +65,6 @@ func _ready():
 	add_child(building_menu)
 	building_menu.hide()
 	get_turn()
-	
 
 func setup_ui():
 	"""Initialize UI styling and properties"""
@@ -119,6 +105,7 @@ func setup_top_bar_layout():
 	var left_section = $TopBar/LeftSection
 	left_section.position = Vector2(10, 10)
 	left_section.size = Vector2(200, bar_size.y - 20)
+	turn_label.text = "Turn Number"
 
 	
 	# Center section (Resources)
@@ -142,26 +129,15 @@ func setup_bottom_bar_layout():
 	var menu_buttons = $BottomBar/MenuButtons
 	var button_container_width = 300  # Adjust based on number of buttons
 	menu_buttons.position = Vector2((bar_size.x - button_container_width) / 2, 5)
-	#menu_buttons.size = Vector2(button_container_width, bar_size.y - 10)
+
 	
+#	Advance turn button setup
 	action_control.position = Vector2(5, 5)
 	advance_turn_button.text = "Advance"
-	var turn_manager = get_parent().get_parent().get_node_or_null("TurnManager")
 	advance_turn_button.pressed.connect(turn_manager.advance_turn)
-	
 
-func get_turn():
-	turn_label.text = "Turn Number"
-	var turn_manager = get_parent().get_parent().get_node_or_null("TurnManager")
-	turn_manager.turn_advanced.connect(_on_turn_manager_turn_advanced)
-
-# Handle screen resize (with recursion protection)
+# Handle screen resize 
 var _is_resizing = false
-func _notification(what):
-	if what == NOTIFICATION_RESIZED and not _is_resizing:
-		_is_resizing = true
-		setup_ui()
-		_is_resizing = false
 
 func connect_menu_buttons():
 	"""Connect all menu button signals"""
@@ -231,10 +207,16 @@ func _on_buildings_button_pressed():
 			building_opened.emit()
 			print("Showing character...")
 
-func _on_turn_manager_turn_advanced(turn: int) -> void:
-	print("Signal received: Turn =", turn)
+#Turn related
+func get_turn():
+	turn_manager.turn_advanced.connect(_on_turn_manager_turn_advanced)
+	turn_manager.initial_turn.connect(_on_turn_manager_initial_turn)
+
+func _on_turn_manager_initial_turn(turn: int) -> void:
 	turn_subtext.text = str(turn)
-	current_turn = turn
+
+func _on_turn_manager_turn_advanced(turn: int) -> void:
+	turn_subtext.text = str(turn)
 
 func _on_advance_click():
 	advance_turn_clicked.emit()

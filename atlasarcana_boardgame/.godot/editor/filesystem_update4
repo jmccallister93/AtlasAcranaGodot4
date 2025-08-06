@@ -13,3 +13,9 @@ res://scenes/managers/TurnManager.tscn
 res://scripts/ui/GameUI.gd
 res://scripts/managers/TurnManager.gd
 res://scripts/Main.gd
+res://scenes/managers/PhaseManager.tscn
+res://scripts/managers/PhaseManager.gd
+res://resources/entities/CharacterStats.gd
+res://scripts/entities/Character.gd
+res://scenes/entities/Character.tscn
+res://scripts/managers/GameManager.gd

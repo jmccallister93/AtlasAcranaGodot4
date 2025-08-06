@@ -14,6 +14,10 @@ config/name="AtlasArcana_BoardGame"
 run/main_scene="uid://bsdpxvbgoxglm"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 
+[autoload]
+
+GameManager="*res://scenes/managers/GameManager.tscn"
+
 [input]
 
 ui_left={
