@@ -113,3 +113,13 @@ text = "Character"
 [node name="BuildingsButton" type="Button" parent="BottomBar/MenuButtons"]
 layout_mode = 2
 text = "Buildings"
+
+[node name="ActionControl" type="Control" parent="BottomBar"]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="AdvanceTurn" type="Button" parent="BottomBar/ActionControl"]
+layout_mode = 0
+offset_right = 8.0
+offset_bottom = 8.0

@@ -1,12 +1,12 @@
+Button
+Control
+HBoxContainer
 Node
 Node2D
-Control
 BaseMenu
 Panel
 ColorRect
-Button
 Label
-HBoxContainer
 BoxContainer
 CanvasLayer
 Sprite2D

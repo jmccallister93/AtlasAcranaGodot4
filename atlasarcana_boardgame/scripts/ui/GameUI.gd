@@ -3,6 +3,7 @@ class_name GameUI
 
 # UI References - Top Bar
 @onready var turn_label: Label = $TopBar/LeftSection/TurnInfo/TurnLabel
+@onready var turn_subtext = $TopBar/LeftSection/TurnInfo/TurnSubtext
 @onready var resources_container: HBoxContainer = $TopBar/CenterSection/ResourcesContainer
 @onready var character_info: VBoxContainer = $TopBar/RightSection/CharacterInfo
 
@@ -29,6 +30,11 @@ var character_menu: CharacterMenu
 
 @onready var building_menu_scene: PackedScene = preload("res://scenes/ui/menus/BuildingMenu.tscn")
 var building_menu: BuildingMenu
+
+#Action Control
+
+@onready var action_control = $BottomBar/ActionControl
+@onready var advance_turn_button = $BottomBar/ActionControl/AdvanceTurn
 
 # Game Data (Placeholder values)
 var current_turn: int = 1
@@ -57,7 +63,7 @@ signal character_closed
 signal building_opened
 signal building_closed
 
-
+signal advance_turn_clicked
 
 func _ready():
 	setup_ui()
@@ -71,6 +77,8 @@ func _ready():
 	building_menu = building_menu_scene.instantiate()
 	add_child(building_menu)
 	building_menu.hide()
+	get_turn()
+	
 
 func setup_ui():
 	"""Initialize UI styling and properties"""
@@ -111,6 +119,7 @@ func setup_top_bar_layout():
 	var left_section = $TopBar/LeftSection
 	left_section.position = Vector2(10, 10)
 	left_section.size = Vector2(200, bar_size.y - 20)
+
 	
 	# Center section (Resources)
 	var center_section = $TopBar/CenterSection  
@@ -134,6 +143,17 @@ func setup_bottom_bar_layout():
 	var button_container_width = 300  # Adjust based on number of buttons
 	menu_buttons.position = Vector2((bar_size.x - button_container_width) / 2, 5)
 	#menu_buttons.size = Vector2(button_container_width, bar_size.y - 10)
+	
+	action_control.position = Vector2(5, 5)
+	advance_turn_button.text = "Advance"
+	var turn_manager = get_parent().get_parent().get_node_or_null("TurnManager")
+	advance_turn_button.pressed.connect(turn_manager.advance_turn)
+	
+
+func get_turn():
+	turn_label.text = "Turn Number"
+	var turn_manager = get_parent().get_parent().get_node_or_null("TurnManager")
+	turn_manager.turn_advanced.connect(_on_turn_manager_turn_advanced)
 
 # Handle screen resize (with recursion protection)
 var _is_resizing = false
@@ -155,8 +175,6 @@ func connect_menu_buttons():
 	inventory_btn.pressed.connect(_on_inventory_button_pressed)
 	character_btn.pressed.connect(_on_character_button_pressed)
 	buildings_btn.pressed.connect(_on_buildings_button_pressed)
-
-
 
 func close_all_menus():
 	if inventory_menu and inventory_menu.visible:
@@ -212,3 +230,11 @@ func _on_buildings_button_pressed():
 			building_menu.show_menu()
 			building_opened.emit()
 			print("Showing character...")
+
+func _on_turn_manager_turn_advanced(turn: int) -> void:
+	print("Signal received: Turn =", turn)
+	turn_subtext.text = str(turn)
+	current_turn = turn
+
+func _on_advance_click():
+	advance_turn_clicked.emit()
