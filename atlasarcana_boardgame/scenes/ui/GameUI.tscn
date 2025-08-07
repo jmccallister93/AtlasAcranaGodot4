@@ -98,7 +98,7 @@ offset_bottom = 40.0
 
 [node name="MenuButtons" type="HBoxContainer" parent="BottomBar"]
 layout_mode = 0
-offset_right = 40.0
+offset_right = 255.0
 offset_bottom = 40.0
 
 [node name="InventoryButton" type="Button" parent="BottomBar/MenuButtons"]
@@ -114,12 +114,29 @@ text = "Character"
 layout_mode = 2
 text = "Buildings"
 
-[node name="ActionControl" type="Control" parent="BottomBar"]
+[node name="ActionButtons" type="HBoxContainer" parent="BottomBar"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="MoveButton" type="Button" parent="BottomBar/ActionButtons"]
+layout_mode = 2
+
+[node name="BuildButton" type="Button" parent="BottomBar/ActionButtons"]
+layout_mode = 2
+
+[node name="AttackButton" type="Button" parent="BottomBar/ActionButtons"]
+layout_mode = 2
+
+[node name="InteractButton" type="Button" parent="BottomBar/ActionButtons"]
+layout_mode = 2
+
+[node name="AdvanceTurnControl" type="Control" parent="BottomBar"]
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 
-[node name="AdvanceTurn" type="Button" parent="BottomBar/ActionControl"]
+[node name="AdvanceTurn" type="Button" parent="BottomBar/AdvanceTurnControl"]
 layout_mode = 0
 offset_right = 8.0
 offset_bottom = 8.0

@@ -1,7 +1,7 @@
-CharacterBody2D
 Button
-Control
 HBoxContainer
+CharacterBody2D
+Control
 Node
 Node2D
 BaseMenu

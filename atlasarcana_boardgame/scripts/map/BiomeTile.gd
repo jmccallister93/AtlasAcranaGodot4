@@ -43,9 +43,10 @@ func _ready():
 	create_hover_label()
 	
 	# Connect signals
-	input_event.connect(_on_input_event)
-	mouse_entered.connect(_on_mouse_entered)
-	mouse_exited.connect(_on_mouse_exited)
+#	TODO
+	#input_event.connect(_on_input_event)
+	#mouse_entered.connect(_on_mouse_entered)
+	#mouse_exited.connect(_on_mouse_exited)
 	
 	# Initialize tile
 	setup_tile()

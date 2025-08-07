@@ -3,6 +3,7 @@ class_name MapManager
 
 signal map_generated
 signal tile_clicked(tile: BiomeTile)
+signal movement_requested(target_grid_pos: Vector2i)
 
 # Map configuration - single source of truth
 var map_width: int = 32
@@ -23,6 +24,27 @@ var biome_weights = {
 	BiomeTile.BiomeType.SWAMP: 0.05
 }
 
+func _input(event):
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			handle_movement_click(event.position)
+			
+func handle_movement_click(screen_pos: Vector2):
+	# Convert screen position to local position on the map
+	var local_pos = to_local(get_global_mouse_position())
+	
+	# Convert to grid coordinates
+	var grid_pos = Vector2i(int(local_pos.x / tile_size), int(local_pos.y / tile_size))
+	
+	print("Screen pos: ", screen_pos)
+	print("Local pos: ", local_pos) 
+	print("Grid pos: ", grid_pos)
+	
+	# Check if it's a valid grid position
+	if is_valid_position(grid_pos):
+		# Emit a signal that GameManager can listen to
+		movement_requested.emit(grid_pos)
+		
 func generate_map(width: int, height: int):
 	"""Generate a new map with the specified dimensions"""
 	map_width = width

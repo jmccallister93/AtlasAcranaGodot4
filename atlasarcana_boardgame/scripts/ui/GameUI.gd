@@ -31,9 +31,25 @@ var character_menu: CharacterMenu
 @onready var building_menu_scene: PackedScene = preload("res://scenes/ui/menus/BuildingMenu.tscn")
 var building_menu: BuildingMenu
 
-# Action Control
-@onready var action_control = $BottomBar/ActionControl
-@onready var advance_turn_button = $BottomBar/ActionControl/AdvanceTurn
+#Top Bar
+@onready var top_bar = $TopBar
+
+#Bottom Bar
+@onready var bottom_bar = $BottomBar
+
+#Menu buttons
+@onready var menu_buttons = $BottomBar/MenuButtons
+
+# Advance Turn Control
+@onready var advance_turn_control = $BottomBar/AdvanceTurnControl
+@onready var advance_turn_button = $BottomBar/AdvanceTurnControl/AdvanceTurn
+
+#Action Controls
+@onready var action_buttons = $BottomBar/ActionButtons
+@onready var move_button = $BottomBar/ActionButtons/MoveButton
+@onready var build_button = $BottomBar/ActionButtons/BuildButton
+@onready var attack_button = $BottomBar/ActionButtons/AttackButton
+@onready var interact_button = $BottomBar/ActionButtons/InteractButton
 
 # Character UI
 @onready var character_stamina = Label.new()
@@ -73,14 +89,12 @@ func setup_ui():
 
 func setup_top_bar(viewport_size: Vector2):
 	"""Setup top bar positioning and size"""
-	var top_bar = $TopBar
 	top_bar.position = Vector2(0, 0)
 	top_bar.size = Vector2(viewport_size.x, 80)
 	top_bar.mouse_filter = Control.MOUSE_FILTER_STOP
 
 func setup_bottom_bar(viewport_size: Vector2):
 	"""Setup bottom bar positioning and size"""
-	var bottom_bar = $BottomBar
 	bottom_bar.position = Vector2(0, viewport_size.y - 60)
 	bottom_bar.size = Vector2(viewport_size.x, 60)
 	bottom_bar.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -110,22 +124,39 @@ func setup_top_bar_layout():
 
 func setup_bottom_bar_layout():
 	"""Position elements within the bottom bar"""
-	var bottom_bar = $BottomBar
-	var bar_size = bottom_bar.size
-	
-	# Center the menu buttons
-	var menu_buttons = $BottomBar/MenuButtons
-	var button_container_width = 300
-	menu_buttons.position = Vector2((bar_size.x - button_container_width) / 2, 5)
-	
-	# Advance turn button setup
-	action_control.position = Vector2(5, 5)
+	# Set button text first
+	move_button.text = "Move"
+	build_button.text = "Build"
+	attack_button.text = "Attack"
+	interact_button.text = "Interact"
 	advance_turn_button.text = "Advance"
-	advance_turn_button.pressed.connect(GameManager.advance_turn)
+	
+	# Connect advance button signal
+	if not advance_turn_button.pressed.is_connected(GameManager.advance_turn):
+		advance_turn_button.pressed.connect(GameManager.advance_turn)
 	
 	# Setup stamina display
 	setup_stamina_display(bottom_bar)
-
+	
+	# Position elements after UI layout is complete
+	call_deferred("_position_bottom_bar_elements")
+	
+func _position_bottom_bar_elements():
+	"""Position elements after the UI has finished its layout pass"""
+	var bar_size = bottom_bar.size
+	var margin = 10  # Standard margin from edges
+	
+	# Menu buttons - Left side
+	menu_buttons.position = Vector2(margin, 5)
+	
+	# Action buttons - Center (use actual container size)
+	var action_button_width = action_buttons.size.x
+	action_buttons.position = Vector2((bar_size.x - action_button_width) / 2, 5)
+	
+	# Advance turn button - Right side  
+	var advance_turn_width = advance_turn_control.size.x
+	advance_turn_control.position = Vector2(bar_size.x - advance_turn_width - 40, 5)
+	
 func setup_stamina_display(bottom_bar: Control):
 	"""Setup the stamina display label"""
 	character_stamina.text = "Stamina: " + str(GameManager.get_current_stamina())

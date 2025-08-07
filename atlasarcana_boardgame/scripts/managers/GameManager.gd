@@ -23,6 +23,7 @@ func start_new_game():
 	character.stats = character_stats
 	character.initialize_from_stats()
 	
+	
 	add_child(turn_manager)
 	add_child(map_manager)
 	add_child(character)
@@ -38,6 +39,8 @@ func connect_signals():
 	turn_manager.turn_advanced.connect(_on_turn_manager_turn_advanced)
 #	Character
 	character.stamina_spent.connect(_on_character_stamina_spent)
+	#Map
+	map_manager.movement_requested.connect(_on_movement_requested)
 
 func _on_turn_manager_initial_turn(turn_number: int):
 	initial_turn.emit(turn_number)
@@ -48,6 +51,9 @@ func _on_turn_manager_turn_advanced(turn_number: int):
 	
 func _on_character_stamina_spent(current_stamina: int):
 	stamina_spent.emit(current_stamina)
+	
+func _on_movement_requested(target_grid_pos: Vector2i):
+	movement_manager.attempt_move_to(target_grid_pos)
 
 # Public methods to interact with managers
 func advance_turn():
