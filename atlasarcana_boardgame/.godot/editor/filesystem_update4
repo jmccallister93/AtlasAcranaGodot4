@@ -20,3 +20,4 @@ res://scripts/managers/TurnManager.gd
 res://scripts/managers/MovementManager.gd
 res://scripts/CameraController.gd
 res://scripts/managers/MapManager.gd
+res://scripts/map/BiomeTile.gd

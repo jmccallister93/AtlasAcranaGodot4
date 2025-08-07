@@ -4,7 +4,10 @@ class_name BiomeTile
 # Tile properties
 @export var grid_position: Vector2i  # Position in the grid
 @export var biome_type: BiomeType = BiomeType.GRASSLAND
-@export var tile_size: int = 64  # Size of each tile in pixels
+var tile_size: int = 64  # Set by MapManager - no longer exported
+
+# Reference to map manager for accessing map-wide functionality
+var map_manager: MapManager
 
 # Game logic data
 #var buildings: Array[Building] = []  # Buildings on this tile
@@ -93,7 +96,10 @@ func setup_tile():
 	resources = biome_data.base_resources.duplicate()
 	
 	# Position the tile in world space
-	global_position = Vector2(grid_position.x * tile_size, grid_position.y * tile_size)
+	global_position = Vector2(
+		grid_position.x * tile_size  + tile_size/2, 
+		grid_position.y * tile_size + tile_size/2
+		)
 
 func setup_hover_label():
 	"""Setup the hover label properties"""
@@ -164,14 +170,14 @@ func get_biome_data(biome: BiomeType) -> Dictionary:
 				"building_bonus": {"mine": 1.2},
 				"name": "Desert"
 			}
-		#BiomeType.SWAMP:
-			#return {
-				#"texture": preload("res://assets/tiles/swamp.png"),
-				#"movement_cost": 2.5,
-				#"base_resources": {"wood": 1, "herbs": 2},
-				#"building_bonus": {"farm": 0.8},
-				#"name": "Swamp"
-			#}
+		BiomeType.SWAMP:
+			return {
+				"texture": preload("res://assets/tiles/default.png"),
+				"movement_cost": 2.5,
+				"base_resources": {"wood": 1, "herbs": 2},
+				"building_bonus": {"farm": 0.8},
+				"name": "Swamp"
+			}
 		_:
 			return {
 				"texture": preload("res://assets/tiles/default.png"),
@@ -349,16 +355,9 @@ func get_distance_to(other_tile: BiomeTile) -> float:
 	"""Get distance to another tile"""
 	return abs(grid_position.x - other_tile.grid_position.x) + abs(grid_position.y - other_tile.grid_position.y)
 
-func get_neighbors(map_data: Array) -> Array[BiomeTile]:
-	"""Get neighboring tiles"""
-	var neighbors: Array[BiomeTile] = []
-	var directions = [Vector2i(0, 1), Vector2i(1, 0), Vector2i(0, -1), Vector2i(-1, 0)]
-	
-	for direction in directions:
-		var neighbor_pos = grid_position + direction
-		# Check if position is valid and get tile from map_data
-		if neighbor_pos.x >= 0 and neighbor_pos.y >= 0:
-			# This assumes map_data is a 2D array - adjust based on your map structure
-			pass
-	
-	return neighbors
+func get_neighbors() -> Array[BiomeTile]:
+	"""Get neighboring tiles using the map manager"""
+	if not map_manager:
+		push_warning("BiomeTile has no map_manager reference")
+		return []
+	return map_manager.get_neighbors(self)

@@ -47,14 +47,14 @@ func handle_input():
 	movement_input = Vector2.ZERO
 	
 	# WASD movement input
-	#if Input.is_action_pressed("ui_left"):
-		#movement_input.x -= 1
-	#if Input.is_action_pressed("ui_right"):
-		#movement_input.x += 1
-	#if Input.is_action_pressed("ui_up"):
-		#movement_input.y -= 1
-	#if Input.is_action_pressed("ui_down"):
-		#movement_input.y += 1
+	if Input.is_action_pressed("ui_left"):
+		movement_input.x -= 1
+	if Input.is_action_pressed("ui_right"):
+		movement_input.x += 1
+	if Input.is_action_pressed("ui_up"):
+		movement_input.y -= 1
+	if Input.is_action_pressed("ui_down"):
+		movement_input.y += 1
 	
 	# Normalize diagonal movement so it's not faster
 	movement_input = movement_input.normalized()

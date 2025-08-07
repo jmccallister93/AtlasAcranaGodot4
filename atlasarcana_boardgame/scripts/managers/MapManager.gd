@@ -4,6 +4,7 @@ class_name MapManager
 signal map_generated
 signal tile_clicked(tile: BiomeTile)
 
+# Map configuration - single source of truth
 var map_width: int = 32
 var map_height: int = 24
 var tile_size: int = 64
@@ -23,6 +24,7 @@ var biome_weights = {
 }
 
 func generate_map(width: int, height: int):
+	"""Generate a new map with the specified dimensions"""
 	map_width = width
 	map_height = height
 	
@@ -34,6 +36,7 @@ func generate_map(width: int, height: int):
 	map_generated.emit()
 
 func clear_existing_map():
+	"""Clear existing tiles from the map"""
 	# Clear existing tiles
 	for child in get_children():
 		if child is BiomeTile:
@@ -43,6 +46,7 @@ func clear_existing_map():
 	tile_lookup.clear()
 
 func create_tile_grid():
+	"""Create the grid of tiles"""
 	# Initialize 2D array
 	tiles.resize(map_height)
 	for y in range(map_height):
@@ -55,13 +59,16 @@ func create_tile_grid():
 			tile_lookup[Vector2i(x, y)] = tile
 
 func create_tile(grid_pos: Vector2i) -> BiomeTile:
+	"""Create a single tile at the specified grid position"""
 	var tile = BiomeTile.new()
 	tile.grid_position = grid_pos
-	tile.tile_size = tile_size
+	tile.tile_size = tile_size  # Set from manager's tile_size
+	tile.map_manager = self     # Give tile reference to this manager
 	add_child(tile)
 	return tile
 
 func generate_biomes():
+	"""Generate biomes for all tiles using noise"""
 	# Simple noise-based biome generation
 	var noise = FastNoiseLite.new()
 	noise.seed = randi()
@@ -74,6 +81,7 @@ func generate_biomes():
 			tiles[y][x].biome_type = biome_type
 
 func get_biome_from_noise(noise_value: float) -> BiomeTile.BiomeType:
+	"""Convert noise value to biome type"""
 	# Convert noise (-1 to 1) to biome type
 	var normalized = (noise_value + 1.0) / 2.0  # 0 to 1
 	
@@ -91,18 +99,22 @@ func get_biome_from_noise(noise_value: float) -> BiomeTile.BiomeType:
 		return BiomeTile.BiomeType.DESERT
 
 func connect_tile_signals():
+	"""Connect signals from all tiles"""
 	for y in range(map_height):
 		for x in range(map_width):
 			var tile = tiles[y][x]
 			tile.tile_clicked.connect(_on_tile_clicked)
 
 func _on_tile_clicked(tile: BiomeTile):
+	"""Handle tile click events"""
 	tile_clicked.emit(tile)
 
 func get_tile_at(grid_pos: Vector2i) -> BiomeTile:
+	"""Get tile at specified grid position"""
 	return tile_lookup.get(grid_pos)
 
 func get_neighbors(tile: BiomeTile) -> Array[BiomeTile]:
+	"""Get neighboring tiles for the specified tile"""
 	var neighbors: Array[BiomeTile] = []
 	var directions = [Vector2i(0, 1), Vector2i(1, 0), Vector2i(0, -1), Vector2i(-1, 0)]
 	
@@ -113,3 +125,51 @@ func get_neighbors(tile: BiomeTile) -> Array[BiomeTile]:
 			neighbors.append(neighbor)
 	
 	return neighbors
+
+func is_valid_position(grid_pos: Vector2i) -> bool:
+	"""Check if a grid position is valid"""
+	return grid_pos.x >= 0 and grid_pos.x < map_width and grid_pos.y >= 0 and grid_pos.y < map_height
+
+func get_tiles_in_radius(center_tile: BiomeTile, radius: int) -> Array[BiomeTile]:
+	"""Get all tiles within a specified radius of the center tile"""
+	var tiles_in_radius: Array[BiomeTile] = []
+	
+	for y in range(center_tile.grid_position.y - radius, center_tile.grid_position.y + radius + 1):
+		for x in range(center_tile.grid_position.x - radius, center_tile.grid_position.x + radius + 1):
+			var pos = Vector2i(x, y)
+			if is_valid_position(pos):
+				var distance = abs(pos.x - center_tile.grid_position.x) + abs(pos.y - center_tile.grid_position.y)
+				if distance <= radius:
+					var tile = get_tile_at(pos)
+					if tile:
+						tiles_in_radius.append(tile)
+	
+	return tiles_in_radius
+
+func get_tiles_of_biome(biome_type: BiomeTile.BiomeType) -> Array[BiomeTile]:
+	"""Get all tiles of a specific biome type"""
+	var biome_tiles: Array[BiomeTile] = []
+	
+	for y in range(map_height):
+		for x in range(map_width):
+			if tiles[y][x].biome_type == biome_type:
+				biome_tiles.append(tiles[y][x])
+	
+	return biome_tiles
+
+func update_tile_size(new_size: int):
+	"""Update the tile size for all tiles"""
+	tile_size = new_size
+	
+	# Update all existing tiles
+	for y in range(map_height):
+		for x in range(map_width):
+			tiles[y][x].update_tile_size(new_size)
+
+func get_map_bounds() -> Rect2i:
+	"""Get the bounds of the map in grid coordinates"""
+	return Rect2i(0, 0, map_width, map_height)
+
+func get_world_bounds() -> Rect2:
+	"""Get the bounds of the map in world coordinates"""
+	return Rect2(0, 0, map_width * tile_size, map_height * tile_size)
