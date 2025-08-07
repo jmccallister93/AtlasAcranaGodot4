@@ -2,7 +2,7 @@ extends Node
 
 signal turn_advanced(turn_number: int)
 signal initial_turn(turn_number: int)
-signal stamina_spent(current_stamina: int)
+signal action_points_spent(current_action_points: int)
 
 var turn_manager: TurnManager
 var map_manager: MapManager
@@ -38,7 +38,7 @@ func connect_signals():
 	turn_manager.initial_turn.connect(_on_turn_manager_initial_turn)
 	turn_manager.turn_advanced.connect(_on_turn_manager_turn_advanced)
 #	Character
-	character.stamina_spent.connect(_on_character_stamina_spent)
+	character.action_points_spent.connect(_on_character_action_points_spent)
 	#Map
 	map_manager.movement_requested.connect(_on_movement_requested)
 
@@ -49,8 +49,8 @@ func _on_turn_manager_turn_advanced(turn_number: int):
 	turn_advanced.emit(turn_number)
 	character.refresh_turn_resources()
 	
-func _on_character_stamina_spent(current_stamina: int):
-	stamina_spent.emit(current_stamina)
+func _on_character_action_points_spent(current_action_points: int):
+	action_points_spent.emit(current_action_points)
 	
 func _on_movement_requested(target_grid_pos: Vector2i):
 	movement_manager.attempt_move_to(target_grid_pos)
@@ -59,8 +59,8 @@ func _on_movement_requested(target_grid_pos: Vector2i):
 func advance_turn():
 	turn_manager.advance_turn()
 
-func spend_stamina():
-	character.spend_stamina()
+func spend_action_points():
+	character.spend_action_points()
 	
-func get_current_stamina() -> int:
-	return character.current_stamina
+func get_current_action_points() -> int:
+	return character.current_action_points

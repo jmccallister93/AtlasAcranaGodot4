@@ -10,5 +10,4 @@ class_name CharacterStats
 
 # You can even add stat calculation methods
 func get_action_points() -> int:
-	
-	return max_stamina  # or some formula based on stamina
+	return max_stamina

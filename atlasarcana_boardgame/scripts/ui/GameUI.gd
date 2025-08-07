@@ -52,7 +52,7 @@ var building_menu: BuildingMenu
 @onready var interact_button = $BottomBar/ActionButtons/InteractButton
 
 # Character UI
-@onready var character_stamina = Label.new()
+@onready var character_action_points = Label.new()
 
 # Signals for menu interactions
 signal inventory_opened
@@ -124,8 +124,9 @@ func setup_top_bar_layout():
 
 func setup_bottom_bar_layout():
 	"""Position elements within the bottom bar"""
-	# Set button text first
+	# Set Action buttons
 	move_button.text = "Move"
+	#advance_turn_button.pressed.connect(GameManager.)
 	build_button.text = "Build"
 	attack_button.text = "Attack"
 	interact_button.text = "Interact"
@@ -135,8 +136,8 @@ func setup_bottom_bar_layout():
 	if not advance_turn_button.pressed.is_connected(GameManager.advance_turn):
 		advance_turn_button.pressed.connect(GameManager.advance_turn)
 	
-	# Setup stamina display
-	setup_stamina_display(bottom_bar)
+	# Setup action_points display
+	setup_action_points_display(bottom_bar)
 	
 	# Position elements after UI layout is complete
 	call_deferred("_position_bottom_bar_elements")
@@ -157,11 +158,11 @@ func _position_bottom_bar_elements():
 	var advance_turn_width = advance_turn_control.size.x
 	advance_turn_control.position = Vector2(bar_size.x - advance_turn_width - 40, 5)
 	
-func setup_stamina_display(bottom_bar: Control):
-	"""Setup the stamina display label"""
-	character_stamina.text = "Stamina: " + str(GameManager.get_current_stamina())
-	character_stamina.position = Vector2(5, 40)
-	bottom_bar.add_child(character_stamina)
+func setup_action_points_display(bottom_bar: Control):
+	"""Setup the action_points display label"""
+	character_action_points.text = "action_points: " + str(GameManager.get_current_action_points())
+	character_action_points.position = Vector2(5, 40)
+	bottom_bar.add_child(character_action_points)
 
 func setup_menus():
 	"""Initialize and setup all menus"""
@@ -187,7 +188,7 @@ func connect_game_signals():
 	GameManager.turn_advanced.connect(_on_game_manager_turn_advanced)
 	
 	# Character signals
-	GameManager.stamina_spent.connect(_on_game_manager_stamina_spent)
+	GameManager.action_points_spent.connect(_on_game_manager_action_points_spent)
 
 func connect_menu_buttons():
 	"""Connect all menu button signals"""
@@ -254,5 +255,5 @@ func _on_game_manager_initial_turn(turn: int) -> void:
 func _on_game_manager_turn_advanced(turn: int) -> void:
 	turn_subtext.text = str(turn)
 
-func _on_game_manager_stamina_spent(current_stamina: int) -> void:
-	character_stamina.text = "Stamina: " + str(current_stamina)
+func _on_game_manager_action_points_spent(current_action_points: int) -> void:
+	character_action_points.text = "action_points: " + str(current_action_points)

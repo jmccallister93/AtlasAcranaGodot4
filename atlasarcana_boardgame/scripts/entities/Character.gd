@@ -2,7 +2,7 @@
 extends CharacterBody2D
 class_name Character
 
-signal stamina_spent(stamina: int)
+signal action_points_spent(action_points: int)
 
 @export var stats: CharacterStats
 var current_stamina: int
@@ -21,8 +21,6 @@ func _ready():
 	
 
 func initialize_from_stats():
-	current_stamina = stats.max_stamina
-	current_movement_points = stats.max_movement_points
 	current_action_points = stats.get_action_points()
 	grid_position = Vector2i(0, 0)
 	var tile_size = 64
@@ -34,23 +32,16 @@ func initialize_from_stats():
 func refresh_turn_resources():
 	if stats == null:
 		return
-	current_stamina = stats.max_stamina
-	current_movement_points = stats.max_movement_points
 	current_action_points = stats.get_action_points()
 	
 func can_perform_action(action_cost: int) -> bool:
 	return current_action_points >= action_cost
 
-func spend_action_points(cost: int) -> bool:
-	if can_perform_action(cost):
-		current_action_points -= cost
-		return true
-	return false
-
-func spend_stamina():
-	if current_stamina > 0:
-		current_stamina -= 1
-		stamina_spent.emit(current_stamina)
+func spend_action_points():
+	if current_action_points > 0:
+		current_action_points -= 1
+		action_points_spent.emit(current_action_points)
+		
 func create_sprite():
 	var color_rect = ColorRect.new()
 	color_rect.name = "CharacterSprite"

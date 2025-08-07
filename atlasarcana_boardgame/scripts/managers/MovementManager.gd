@@ -36,24 +36,24 @@ func grid_to_world(grid_pos: Vector2i) -> Vector2:
 func attempt_move_to(target_pos: Vector2i):
 	print("Attempting to move to: ", target_pos)
 	
-	# Check if character has stamina
-	if character.current_stamina <= 0:
-		print("No stamina remaining")
-		movement_failed.emit("No stamina remaining")
+	# Check if character has action_points
+	if character.current_action_points <= 0:
+		print("No action_points remaining")
+		movement_failed.emit("No action_points remaining")
 		return
 	
 	var current_pos = character.grid_position
 	
-	# Calculate distance for stamina cost
+	# Calculate distance for action_points cost
 	var distance = current_pos.distance_to(Vector2(target_pos))
-	var stamina_cost = int(ceil(distance))
+	var action_points_cost = int(ceil(distance))
 	
-	print("Distance: ", distance, " Stamina cost: ", stamina_cost)
+	print("Distance: ", distance, " action_points cost: ", action_points_cost)
 	
-	# Check if character has enough stamina for the move
-	if character.current_stamina < stamina_cost:
-		print("Not enough stamina: ", character.current_stamina, " needed: ", stamina_cost)
-		movement_failed.emit("Not enough stamina for this move")
+	# Check if character has enough action_points for the move
+	if character.current_action_points < action_points_cost:
+		print("Not enough action_points: ", character.current_action_points, " needed: ", action_points_cost)
+		movement_failed.emit("Not enough action_points for this move")
 		return
 	
 	# Emit attempt signal
@@ -62,10 +62,10 @@ func attempt_move_to(target_pos: Vector2i):
 	# Move character
 	move_character_to(target_pos)
 	
-	# Spend stamina based on distance
-	for i in stamina_cost:
-		if character.current_stamina > 0:
-			character.spend_stamina()
+	# Spend action_points based on distance
+	for i in action_points_cost:
+		if character.current_action_points > 0:
+			character.spend_action_points()
 	
 	# Emit completion signal
 	movement_completed.emit(target_pos)
