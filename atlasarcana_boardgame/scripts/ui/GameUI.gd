@@ -62,9 +62,13 @@ signal character_closed
 signal building_opened
 signal building_closed
 
+#Signals for actions
+signal move_action_requested
+
 func _ready():
 	setup_ui()
 	connect_menu_buttons()
+	connect_action_buttons()
 	setup_menus()
 	connect_game_signals()
 
@@ -126,7 +130,6 @@ func setup_bottom_bar_layout():
 	"""Position elements within the bottom bar"""
 	# Set Action buttons
 	move_button.text = "Move"
-	#advance_turn_button.pressed.connect(GameManager.)
 	build_button.text = "Build"
 	attack_button.text = "Attack"
 	interact_button.text = "Interact"
@@ -180,6 +183,19 @@ func setup_menus():
 	building_menu = building_menu_scene.instantiate()
 	add_child(building_menu)
 	building_menu.hide()
+
+func connect_action_buttons():
+	"""Connect all action button signals"""
+	move_button.pressed.connect(_on_move_button_pressed)
+	# Connect other action buttons as needed
+	# build_button.pressed.connect(_on_build_button_pressed)
+	# attack_button.pressed.connect(_on_attack_button_pressed)
+	# interact_button.pressed.connect(_on_interact_button_pressed)
+
+func _on_move_button_pressed():
+	"""Handle move button press - directly call GameManager since it's a singleton"""
+	print("Move button pressed")
+	GameManager.start_movement_mode()
 
 func connect_game_signals():
 	"""Connect to GameManager signals"""

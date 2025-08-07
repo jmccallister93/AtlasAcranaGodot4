@@ -20,6 +20,9 @@ var movement_cost: float = 1.0
 var sprite: Sprite2D
 var collision_shape: CollisionShape2D
 var hover_label: Label
+#Highlights for movement
+var is_highlighted: bool = false
+var highlight_overlay: ColorRect
 
 # Signals for game events
 signal tile_clicked(tile: BiomeTile)
@@ -51,6 +54,7 @@ func _ready():
 	# Initialize tile
 	setup_tile()
 	setup_hover_label()
+	setup_highlight_overlay()
 
 func create_sprite():
 	"""Create and setup the sprite component"""
@@ -127,6 +131,28 @@ func setup_hover_label():
 		style_box.content_margin_left = 8
 		style_box.content_margin_right = 8
 		hover_label.add_theme_stylebox_override("normal", style_box)
+
+func setup_highlight_overlay():
+	"""Setup the highlight overlay for movement indication"""
+	highlight_overlay = ColorRect.new()
+	highlight_overlay.color = Color(0, 1, 0, 0.3)  # Semi-transparent green
+	highlight_overlay.size = Vector2(tile_size, tile_size)
+	highlight_overlay.position = Vector2.ZERO
+	highlight_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE  # Don't block mouse events
+	highlight_overlay.visible = false
+	add_child(highlight_overlay)
+	
+func set_highlighted(highlighted: bool):
+	"""Set the highlight state of this tile"""
+	is_highlighted = highlighted
+	if highlight_overlay:
+		highlight_overlay.visible = highlighted
+	
+	# Optional: Add a subtle scale effect when highlighted
+	if highlighted:
+		create_tween().tween_property(self, "scale", Vector2(1.05, 1.05), 0.1)
+	else:
+		create_tween().tween_property(self, "scale", Vector2(1.0, 1.0), 0.1)
 
 func get_biome_data(biome: BiomeType) -> Dictionary:
 	"""Return biome-specific data"""
@@ -286,6 +312,10 @@ func update_tile_size(new_size: int):
 		var rect_shape = collision_shape.shape as RectangleShape2D
 		if rect_shape:
 			rect_shape.size = Vector2(tile_size, tile_size)
+			
+	# Update highlight overlay size
+	if highlight_overlay:
+		highlight_overlay.size = Vector2(tile_size, tile_size)
 
 # Building management
 func can_place_building(building_type: String) -> bool:

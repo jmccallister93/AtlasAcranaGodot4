@@ -33,6 +33,7 @@ func start_new_game():
 	
 	connect_signals()
 
+
 func connect_signals():
 #	Turns
 	turn_manager.initial_turn.connect(_on_turn_manager_initial_turn)
@@ -41,6 +42,9 @@ func connect_signals():
 	character.action_points_spent.connect(_on_character_action_points_spent)
 	#Map
 	map_manager.movement_requested.connect(_on_movement_requested)
+		# Movement Manager
+	movement_manager.movement_completed.connect(_on_movement_completed)
+	movement_manager.movement_failed.connect(_on_movement_failed)
 
 func _on_turn_manager_initial_turn(turn_number: int):
 	initial_turn.emit(turn_number)
@@ -54,7 +58,19 @@ func _on_character_action_points_spent(current_action_points: int):
 	
 func _on_movement_requested(target_grid_pos: Vector2i):
 	movement_manager.attempt_move_to(target_grid_pos)
+	
+func start_movement_mode():
+	"""Handle move button press from UI"""
+	print("Move action requested from UI")
+	movement_manager.start_movement_mode()
 
+func _on_movement_completed(new_pos: Vector2i):
+	"""Handle successful movement"""
+	print("Movement completed to: ", new_pos)
+
+func _on_movement_failed(reason: String):
+	"""Handle failed movement"""
+	print("Movement failed: ", reason)
 # Public methods to interact with managers
 func advance_turn():
 	turn_manager.advance_turn()
