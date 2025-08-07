@@ -82,5 +82,5 @@ func move_character_to(grid_pos: Vector2i):
 	print("Moving character from ", character.grid_position, " to ", grid_pos)
 	character.grid_position = grid_pos
 	var world_pos = grid_to_world(grid_pos)
-	character.position = world_pos
-	print("Character world position set to: ", character.position)
+	character.global_position = world_pos  # Change from position to global_position
+	print("Character world position set to: ", character.global_position)
