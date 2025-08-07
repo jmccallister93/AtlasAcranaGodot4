@@ -3,10 +3,8 @@ class_name TurnManager
 
 signal initial_turn(turn_number: int)
 signal turn_advanced(turn_number: int)
-signal player_turn_started(player_id: int)
 
 var current_turn: int = 1
-var current_player: int = 1
 
 func advance_turn():
 	current_turn += 1

@@ -2,7 +2,10 @@
 extends CharacterBody2D
 class_name Character
 
+signal stamina_spent(stamina: int)
+
 @export var stats: CharacterStats
+
 var current_stamina: int
 var current_movement_points: int
 var current_action_points: int
@@ -10,8 +13,11 @@ var grid_position: Vector2i
 var sprite: Sprite2D
 
 func _ready():
-	if stats:
-		initialize_from_stats()
+	if stats == null:
+		push_error("Character: stats must be set before adding to scene tree")
+		return
+	
+	initialize_from_stats()
 	create_sprite()
 
 func initialize_from_stats():
@@ -20,6 +26,8 @@ func initialize_from_stats():
 	current_action_points = stats.get_action_points()
 
 func refresh_turn_resources():
+	if stats == null:
+		return
 	current_movement_points = stats.max_movement_points
 	current_action_points = stats.get_action_points()
 
@@ -32,7 +40,20 @@ func spend_action_points(cost: int) -> bool:
 		return true
 	return false
 
+func spend_stamina():
+	if current_stamina > 0:
+		current_stamina -= 1
+		stamina_spent.emit(current_stamina)
+
 func create_sprite():
 	sprite = Sprite2D.new()
-	sprite.name = "Sprite2D"
+	sprite.name = "CharacterSprite"
+	
+	# Handle missing texture gracefully
+	var texture_path = "res://assets/character/character_sprite.png"
+	if ResourceLoader.exists(texture_path):
+		sprite.texture = load(texture_path)
+	else:
+		push_warning("Character sprite texture not found at: " + texture_path)
+	
 	add_child(sprite)

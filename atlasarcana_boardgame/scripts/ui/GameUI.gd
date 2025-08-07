@@ -38,7 +38,9 @@ var building_menu: BuildingMenu
 var current_turn: int = 1
 
 #Character 
-@onready var character = get_parent().get_parent().get_node_or_null("Character")
+@onready var character = GameManager.character
+@onready var character_stamina = Label.new()
+@onready var character_stamina_button = Button.new()
 
 # Signals for menu interactions
 signal inventory_opened
@@ -51,6 +53,7 @@ signal building_opened
 signal building_closed
 
 signal advance_turn_clicked
+signal use_stamina_clicked
 
 func _ready():
 	setup_ui()
@@ -65,6 +68,7 @@ func _ready():
 	add_child(building_menu)
 	building_menu.hide()
 	get_turn()
+	get_stamina()
 
 func setup_ui():
 	"""Initialize UI styling and properties"""
@@ -134,7 +138,17 @@ func setup_bottom_bar_layout():
 #	Advance turn button setup
 	action_control.position = Vector2(5, 5)
 	advance_turn_button.text = "Advance"
-	advance_turn_button.pressed.connect(turn_manager.advance_turn)
+	advance_turn_button.pressed.connect(GameManager.advance_turn)
+	
+	#Show stamina
+	character_stamina.text = "Stamina: " + str(GameManager.get_current_stamina())
+	character_stamina.position = Vector2(5,40)
+	bottom_bar.add_child(character_stamina)
+#	Use Stamina
+	character_stamina_button.text = "Use"
+	character_stamina_button.position = Vector2(100,35)
+	bottom_bar.add_child(character_stamina_button)
+	character_stamina_button.pressed.connect(GameManager.spend_stamina)
 
 # Handle screen resize 
 var _is_resizing = false
@@ -209,14 +223,23 @@ func _on_buildings_button_pressed():
 
 #Turn related
 func get_turn():
-	turn_manager.turn_advanced.connect(_on_turn_manager_turn_advanced)
-	turn_manager.initial_turn.connect(_on_turn_manager_initial_turn)
+	GameManager.initial_turn.connect(_on_game_manager_initial_turn)
+	GameManager.turn_advanced.connect(_on_game_manager_turn_advanced)
+	
 
-func _on_turn_manager_initial_turn(turn: int) -> void:
+func _on_game_manager_initial_turn(turn: int) -> void:
 	turn_subtext.text = str(turn)
 
-func _on_turn_manager_turn_advanced(turn: int) -> void:
+func _on_game_manager_turn_advanced(turn: int) -> void:
 	turn_subtext.text = str(turn)
 
 func _on_advance_click():
 	advance_turn_clicked.emit()
+
+func get_stamina():
+	GameManager.stamina_spent.connect(_on_game_manager_stamina_spent)
+
+func _on_game_manager_stamina_spent(current_stamina: int) -> void:
+	# Actually update the stamina display instead of just emitting a signal
+	character_stamina.text = "Stamina: " + str(current_stamina)
+	use_stamina_clicked.emit()  
