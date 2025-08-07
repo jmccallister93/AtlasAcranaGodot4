@@ -7,6 +7,7 @@ signal stamina_spent(current_stamina: int)
 var turn_manager: TurnManager
 var map_manager: MapManager
 var character: Character
+var movement_manager: MovementManager
 
 func _ready():
 	start_new_game()
@@ -15,18 +16,19 @@ func start_new_game():
 	turn_manager = TurnManager.new()
 	map_manager = MapManager.new()
 	map_manager.generate_map(32, 32)
+	movement_manager = MovementManager.new()
 	character = Character.new()
-	
+#	Initalize character stats
 	var character_stats = CharacterStats.new()
-	character_stats.max_stamina = 5
 	character.stats = character_stats
 	character.initialize_from_stats()
 	
 	add_child(turn_manager)
 	add_child(map_manager)
 	add_child(character)
+	add_child(movement_manager)
 	
-
+	movement_manager.initialize(character, map_manager) 
 	
 	connect_signals()
 
