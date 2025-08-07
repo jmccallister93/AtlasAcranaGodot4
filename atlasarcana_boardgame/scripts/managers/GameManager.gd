@@ -44,6 +44,7 @@ func _on_turn_manager_initial_turn(turn_number: int):
 
 func _on_turn_manager_turn_advanced(turn_number: int):
 	turn_advanced.emit(turn_number)
+	character.refresh_turn_resources()
 	
 func _on_character_stamina_spent(current_stamina: int):
 	stamina_spent.emit(current_stamina)

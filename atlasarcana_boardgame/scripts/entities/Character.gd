@@ -29,8 +29,10 @@ func initialize_from_stats():
 func refresh_turn_resources():
 	if stats == null:
 		return
+	current_stamina = stats.max_stamina
 	current_movement_points = stats.max_movement_points
 	current_action_points = stats.get_action_points()
+	stamina_spent.emit(current_stamina)
 
 func can_perform_action(action_cost: int) -> bool:
 	return current_action_points >= action_cost
