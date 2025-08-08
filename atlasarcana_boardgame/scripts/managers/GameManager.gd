@@ -107,7 +107,7 @@ func end_movement_mode():
 	if current_action_mode == ActionMode.MOVEMENT:
 		movement_manager.end_movement_mode()
 		current_action_mode = ActionMode.NONE
-		
+		print("current_action_mode", current_action_mode)
 		# Update UI
 		if game_ui:
 			game_ui.update_action_button_states(current_action_mode)
@@ -229,6 +229,7 @@ func confirm_movement(target_position: Vector2i):
 	print("Movement confirmed to: ", target_position)
 	movement_manager.confirm_movement()
 
+
 func confirm_building(target_position: Vector2i, building_type: String):
 	"""Confirm and execute building (placeholder)"""
 	print("Building confirmed: ", building_type, " at ", target_position)
@@ -247,6 +248,7 @@ func confirm_interaction(target_position: Vector2i, interaction_type: String):
 func _on_movement_completed(new_pos: Vector2i):
 	"""Handle successful movement"""
 	print("Movement completed to: ", new_pos)
+	end_movement_mode()
 	# Movement mode automatically ends after completion
 
 func _on_movement_failed(reason: String):
