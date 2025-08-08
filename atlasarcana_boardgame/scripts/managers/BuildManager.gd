@@ -1,5 +1,5 @@
 extends Node
-class_name BuildingSystem
+class_name BuildManager
 
 signal building_placed(building: Building, tile: BiomeTile)
 signal building_removed(building: Building, tile: BiomeTile)

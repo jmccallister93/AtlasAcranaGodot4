@@ -31,25 +31,26 @@ var character_menu: CharacterMenu
 @onready var building_menu_scene: PackedScene = preload("res://scenes/ui/menus/BuildingMenu.tscn")
 var building_menu: BuildingMenu
 
-#Top Bar
+# Top Bar
 @onready var top_bar = $TopBar
 
-#Bottom Bar
+# Bottom Bar
 @onready var bottom_bar = $BottomBar
 
-#Menu buttons
+# Menu buttons
 @onready var menu_buttons = $BottomBar/MenuButtons
 
 # Advance Turn Control
 @onready var advance_turn_control = $BottomBar/AdvanceTurnControl
 @onready var advance_turn_button = $BottomBar/AdvanceTurnControl/AdvanceTurn
 
-#Action Controls
+# Action Controls
 @onready var action_buttons = $BottomBar/ActionButtons
 @onready var move_button = $BottomBar/ActionButtons/MoveButton
 @onready var build_button = $BottomBar/ActionButtons/BuildButton
 @onready var attack_button = $BottomBar/ActionButtons/AttackButton
 @onready var interact_button = $BottomBar/ActionButtons/InteractButton
+@onready var action_confirmation_dialog: ActionConfirmationDialog
 
 # Character UI
 @onready var character_action_points = Label.new()
@@ -62,7 +63,7 @@ signal character_closed
 signal building_opened
 signal building_closed
 
-#Signals for actions
+# Signals for actions
 signal move_action_requested
 
 func _ready():
@@ -71,6 +72,22 @@ func _ready():
 	connect_action_buttons()
 	setup_menus()
 	connect_game_signals()
+	GameManager.register_game_ui(self)
+	
+	# Enable input processing for ESC key
+	set_process_input(true)
+
+func _exit_tree():
+	# Unregister when GameUI is being removed
+	if GameManager:
+		GameManager.unregister_game_ui()
+
+func _input(event: InputEvent):
+	"""Handle global input events"""
+	if event is InputEventKey and event.pressed:
+		if event.keycode == KEY_ESCAPE:
+			# Cancel current action mode
+			GameManager.end_all_action_modes()
 
 func setup_ui():
 	"""Initialize UI styling and properties"""
@@ -183,19 +200,224 @@ func setup_menus():
 	building_menu = building_menu_scene.instantiate()
 	add_child(building_menu)
 	building_menu.hide()
+	
+	# Confirmation Dialog
+	action_confirmation_dialog = ActionConfirmationDialog.new()
+	add_child(action_confirmation_dialog)
+	action_confirmation_dialog.hide_dialog()
+	
+	# Connect confirmation dialog signals
+	action_confirmation_dialog.confirmed.connect(_on_action_confirmation_dialog_confirmed)
+	action_confirmation_dialog.cancelled.connect(_on_action_confirmation_dialog_cancelled)
+
+# ═══════════════════════════════════════════════════════════
+# ACTION BUTTON SYSTEM WITH ENHANCED FEATURES
+# ═══════════════════════════════════════════════════════════
 
 func connect_action_buttons():
 	"""Connect all action button signals"""
 	move_button.pressed.connect(_on_move_button_pressed)
-	# Connect other action buttons as needed
-	# build_button.pressed.connect(_on_build_button_pressed)
-	# attack_button.pressed.connect(_on_attack_button_pressed)
-	# interact_button.pressed.connect(_on_interact_button_pressed)
+	build_button.pressed.connect(_on_build_button_pressed)
+	attack_button.pressed.connect(_on_attack_button_pressed)
+	interact_button.pressed.connect(_on_interact_button_pressed)
 
 func _on_move_button_pressed():
-	"""Handle move button press - directly call GameManager since it's a singleton"""
+	"""Handle move button press"""
 	print("Move button pressed")
-	GameManager.start_movement_mode()
+	
+	# If already in movement mode, toggle it off
+	if GameManager.get_current_action_mode() == GameManager.ActionMode.MOVEMENT:
+		GameManager.end_movement_mode()
+	else:
+		GameManager.start_movement_mode()
+
+func _on_build_button_pressed():
+	"""Handle build button press"""
+	print("Build button pressed")
+	
+	# If already in build mode, toggle it off
+	if GameManager.get_current_action_mode() == GameManager.ActionMode.BUILD:
+		GameManager.end_build_mode()
+	else:
+		GameManager.start_build_mode()
+
+func _on_attack_button_pressed():
+	"""Handle attack button press"""
+	print("Attack button pressed")
+	
+	# If already in attack mode, toggle it off
+	if GameManager.get_current_action_mode() == GameManager.ActionMode.ATTACK:
+		GameManager.end_all_action_modes()
+	else:
+		GameManager.start_attack_mode()
+
+func _on_interact_button_pressed():
+	"""Handle interact button press"""
+	print("Interact button pressed")
+	
+	# If already in interact mode, toggle it off
+	if GameManager.get_current_action_mode() == GameManager.ActionMode.INTERACT:
+		GameManager.end_all_action_modes()
+	else:
+		GameManager.start_interact_mode()
+
+# ═══════════════════════════════════════════════════════════
+# VISUAL FEEDBACK SYSTEM
+# ═══════════════════════════════════════════════════════════
+
+func update_action_button_states(active_mode):
+	"""Update button appearance based on active mode"""
+	# Reset all buttons to normal state
+	reset_action_button_styles()
+	
+	# Highlight the active button
+	match active_mode:
+		GameManager.ActionMode.MOVEMENT:
+			highlight_button(move_button, "Move (Active)")
+		GameManager.ActionMode.BUILD:
+			highlight_button(build_button, "Build (Active)")
+		GameManager.ActionMode.ATTACK:
+			highlight_button(attack_button, "Attack (Active)")
+		GameManager.ActionMode.INTERACT:
+			highlight_button(interact_button, "Interact (Active)")
+		GameManager.ActionMode.NONE:
+			# All buttons back to normal
+			pass
+
+func reset_action_button_styles():
+	"""Reset all action buttons to normal appearance"""
+	var buttons = [move_button, build_button, attack_button, interact_button]
+	var texts = ["Move", "Build", "Attack", "Interact"]
+	
+	for i in range(buttons.size()):
+		buttons[i].text = texts[i]
+		# Remove custom styling to return to theme default
+		buttons[i].remove_theme_stylebox_override("normal")
+		buttons[i].remove_theme_stylebox_override("hover")
+		buttons[i].remove_theme_stylebox_override("pressed")
+		buttons[i].remove_theme_color_override("font_color")
+
+func highlight_button(button: Button, active_text: String):
+	"""Highlight a button to show it's active with enhanced styling"""
+	button.text = active_text
+	
+	# Create active button style
+	var active_style = StyleBoxFlat.new()
+	active_style.bg_color = Color(0.2, 0.8, 0.2, 0.8)  # Semi-transparent green
+	active_style.border_color = Color.WHITE
+	active_style.border_width_left = 2
+	active_style.border_width_right = 2
+	active_style.border_width_top = 2
+	active_style.border_width_bottom = 2
+	active_style.corner_radius_top_left = 4
+	active_style.corner_radius_top_right = 4
+	active_style.corner_radius_bottom_left = 4
+	active_style.corner_radius_bottom_right = 4
+	
+	# Create hover style (slightly different for feedback)
+	var hover_style = active_style.duplicate()
+	hover_style.bg_color = Color(0.3, 0.9, 0.3, 0.9)
+	
+	button.add_theme_stylebox_override("normal", active_style)
+	button.add_theme_stylebox_override("hover", hover_style)
+	button.add_theme_stylebox_override("pressed", active_style)
+	button.add_theme_color_override("font_color", Color.WHITE)
+
+# ═══════════════════════════════════════════════════════════
+# NOTIFICATION SYSTEM
+# ═══════════════════════════════════════════════════════════
+
+func show_notification(message: String, duration: float = 3.0, color: Color = Color.RED):
+	"""Show a temporary notification to the player"""
+	var notification = Label.new()
+	notification.text = message
+	notification.add_theme_font_size_override("font_size", 16)
+	notification.add_theme_color_override("font_color", color)
+	notification.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	notification.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	
+	# Position in center of screen
+	var viewport_size = get_viewport().get_visible_rect().size
+	notification.position = Vector2(
+		viewport_size.x / 2 - 150,
+		viewport_size.y / 2 - 50
+	)
+	notification.size = Vector2(300, 100)
+	
+	# Add background for better readability
+	var background = StyleBoxFlat.new()
+	background.bg_color = Color(0, 0, 0, 0.8)
+	background.corner_radius_top_left = 8
+	background.corner_radius_top_right = 8
+	background.corner_radius_bottom_left = 8
+	background.corner_radius_bottom_right = 8
+	background.content_margin_top = 10
+	background.content_margin_bottom = 10
+	background.content_margin_left = 20
+	background.content_margin_right = 20
+	notification.add_theme_stylebox_override("normal", background)
+	
+	notification.z_index = 1000  # Ensure it appears above everything
+	add_child(notification)
+	
+	# Fade in animation
+	notification.modulate.a = 0.0
+	var tween = create_tween()
+	tween.tween_property(notification, "modulate:a", 1.0, 0.3)
+	tween.tween_delay(duration - 0.6)  # Show for most of duration
+	tween.tween_property(notification, "modulate:a", 0.0, 0.3)
+	tween.tween_callback(notification.queue_free)
+
+# ═══════════════════════════════════════════════════════════
+# CONFIRMATION DIALOG SYSTEM
+# ═══════════════════════════════════════════════════════════
+
+func _on_action_confirmation_dialog_confirmed(action_data: Dictionary):
+	"""Handle confirmation dialog confirmed"""
+	match action_data.get("action_type", ""):
+		"movement":
+			GameManager.confirm_movement(action_data.target_position)
+		"building":
+			GameManager.confirm_building(action_data.target_position, action_data.building_type)
+		"attack":
+			GameManager.confirm_attack(action_data.target_position)
+		"interaction":
+			GameManager.confirm_interaction(action_data.target_position, action_data.interaction_type)
+
+func _on_action_confirmation_dialog_cancelled():
+	"""Handle confirmation dialog cancelled"""
+	print("Action cancelled by user")
+	# End the current mode when user cancels
+	match GameManager.get_current_action_mode():
+		GameManager.ActionMode.MOVEMENT:
+			GameManager.end_movement_mode()
+		GameManager.ActionMode.BUILD:
+			GameManager.end_build_mode()
+		GameManager.ActionMode.ATTACK:
+			GameManager.end_all_action_modes()
+		GameManager.ActionMode.INTERACT:
+			GameManager.end_all_action_modes()
+
+# Public methods for other systems to show confirmations
+func show_movement_confirmation(target_tile: BiomeTile):
+	"""Show movement confirmation dialog"""
+	action_confirmation_dialog.show_movement_confirmation(target_tile)
+
+func show_build_confirmation(target_tile: BiomeTile, building_type: String):
+	"""Show building confirmation dialog"""
+	action_confirmation_dialog.show_build_confirmation(target_tile, building_type)
+
+func show_attack_confirmation(target_tile: BiomeTile):
+	"""Show attack confirmation dialog"""
+	action_confirmation_dialog.show_attack_confirmation(target_tile)
+
+func show_interact_confirmation(target_tile: BiomeTile, interaction_type: String):
+	"""Show interaction confirmation dialog"""
+	action_confirmation_dialog.show_interact_confirmation(target_tile, interaction_type)
+
+# ═══════════════════════════════════════════════════════════
+# GAME SIGNAL CONNECTIONS
+# ═══════════════════════════════════════════════════════════
 
 func connect_game_signals():
 	"""Connect to GameManager signals"""
@@ -205,6 +427,10 @@ func connect_game_signals():
 	
 	# Character signals
 	GameManager.action_points_spent.connect(_on_game_manager_action_points_spent)
+
+# ═══════════════════════════════════════════════════════════
+# MENU SYSTEM (EXISTING FUNCTIONALITY)
+# ═══════════════════════════════════════════════════════════
 
 func connect_menu_buttons():
 	"""Connect all menu button signals"""
@@ -264,7 +490,10 @@ func _on_buildings_button_pressed():
 			building_menu.show_menu()
 			building_opened.emit()
 
-# Game event handlers
+# ═══════════════════════════════════════════════════════════
+# GAME EVENT HANDLERS
+# ═══════════════════════════════════════════════════════════
+
 func _on_game_manager_initial_turn(turn: int) -> void:
 	turn_subtext.text = str(turn)
 

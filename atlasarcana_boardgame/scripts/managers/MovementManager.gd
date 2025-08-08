@@ -7,10 +7,12 @@ signal movement_completed(new_pos: Vector2i)
 signal movement_failed(reason: String)
 signal movement_mode_started
 signal movement_mode_ended
+signal movement_confirmation_requested(target_tile: BiomeTile)
 
 enum MovementState {
 	INACTIVE,
-	SELECTING_TARGET
+	SELECTING_TARGET,
+	AWAITING_CONFIRMATION
 }
 
 var character: Character
@@ -18,6 +20,7 @@ var map_manager: MapManager
 var tile_size: int = 32
 var current_state: MovementState = MovementState.INACTIVE
 var highlighted_tiles: Array[BiomeTile] = []
+var pending_target_position: Vector2i
 
 func initialize(char: Character, map: MapManager):
 	character = char
@@ -42,6 +45,7 @@ func end_movement_mode():
 	"""End the movement selection mode"""
 	current_state = MovementState.INACTIVE
 	clear_highlighted_tiles()
+	pending_target_position = Vector2i.ZERO
 	movement_mode_ended.emit()
 	print("Movement mode ended")
 
@@ -76,7 +80,7 @@ func is_tile_highlighted(target_pos: Vector2i) -> bool:
 	return false
 
 func attempt_move_to(target_pos: Vector2i):
-	"""Attempt to move to target position"""
+	"""Attempt to move to target position - now requests confirmation first"""
 	print("Attempting to move to: ", target_pos)
 	
 	# Only allow movement if in selecting mode and tile is highlighted
@@ -101,8 +105,34 @@ func attempt_move_to(target_pos: Vector2i):
 	# Check if target is within movement range
 	var distance = abs(target_pos.x - current_pos.x) + abs(target_pos.y - current_pos.y)
 	if distance > character.stats.max_movement_points:
-		print("Target too far: ", distance, " max: ", character.max_movement_points)
+		print("Target too far: ", distance, " max: ", character.stats.max_movement_points)
 		movement_failed.emit("Target is too far")
+		return
+	
+	# Store the target and request confirmation
+	pending_target_position = target_pos
+	current_state = MovementState.AWAITING_CONFIRMATION
+	
+	var target_tile = map_manager.get_tile_at(target_pos)
+	if target_tile:
+		movement_confirmation_requested.emit(target_tile)
+	else:
+		movement_failed.emit("Invalid target tile")
+		end_movement_mode()
+
+func confirm_movement():
+	"""Execute the confirmed movement"""
+	if current_state != MovementState.AWAITING_CONFIRMATION:
+		print("No movement awaiting confirmation")
+		return
+		
+	var current_pos = character.grid_position
+	var target_pos = pending_target_position
+	
+	# Final validation
+	if character.current_action_points <= 0:
+		movement_failed.emit("No action points remaining")
+		end_movement_mode()
 		return
 	
 	# Emit attempt signal
@@ -119,6 +149,13 @@ func attempt_move_to(target_pos: Vector2i):
 	
 	# Emit completion signal
 	movement_completed.emit(target_pos)
+
+func cancel_movement():
+	"""Cancel the pending movement and return to selection mode"""
+	if current_state == MovementState.AWAITING_CONFIRMATION:
+		current_state = MovementState.SELECTING_TARGET
+		pending_target_position = Vector2i.ZERO
+		print("Movement cancelled, returning to selection mode")
 
 func world_to_grid(world_pos: Vector2) -> Vector2i:
 	return Vector2i(int(world_pos.x / tile_size), int(world_pos.y / tile_size))

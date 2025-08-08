@@ -135,11 +135,12 @@ func setup_hover_label():
 func setup_highlight_overlay():
 	"""Setup the highlight overlay for movement indication"""
 	highlight_overlay = ColorRect.new()
-	highlight_overlay.color = Color(0, 1, 0, 0.3)  # Semi-transparent green
-	highlight_overlay.size = Vector2(tile_size, tile_size)
-	highlight_overlay.position = Vector2.ZERO
+	highlight_overlay.color = Color(0, 0, 1, 0.3)  # Semi-transparent green
+	highlight_overlay.size = Vector2(tile_size/2, tile_size/2)  # Use dynamic tile_size instead of hardcoded 64
+	highlight_overlay.position = Vector2(-tile_size/2, -tile_size/2) 
 	highlight_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE  # Don't block mouse events
 	highlight_overlay.visible = false
+
 	add_child(highlight_overlay)
 	
 func set_highlighted(highlighted: bool):
@@ -147,12 +148,6 @@ func set_highlighted(highlighted: bool):
 	is_highlighted = highlighted
 	if highlight_overlay:
 		highlight_overlay.visible = highlighted
-	
-	# Optional: Add a subtle scale effect when highlighted
-	if highlighted:
-		create_tween().tween_property(self, "scale", Vector2(1.05, 1.05), 0.1)
-	else:
-		create_tween().tween_property(self, "scale", Vector2(1.0, 1.0), 0.1)
 
 func get_biome_data(biome: BiomeType) -> Dictionary:
 	"""Return biome-specific data"""
