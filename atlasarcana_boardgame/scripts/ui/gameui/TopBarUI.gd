@@ -18,6 +18,8 @@ var action_points_label: Label
 # Resource labels
 var resource_labels: Dictionary = {}
 
+signal action_points_updated(current_action_points: int)
+
 func _ready():
 	create_ui_components()
 	connect_signals()
@@ -197,9 +199,12 @@ func _on_turn_changed(turn_number: int):
 	turn_subtext.text = str(turn_number)
 
 func _on_action_points_changed(current_action_points: int):
-	"""Update action points display"""
+	"""Update action points display and notify other components"""
 	action_points_label.text = "AP: " + str(current_action_points)
-
+	
+	# Emit signal so other UI components can react
+	action_points_updated.emit(current_action_points)
+	
 func update_resource(resource_name: String, amount: int):
 	"""Update a specific resource display"""
 	var key = resource_name.to_lower()

@@ -204,27 +204,59 @@ func _finalize_notification_position(notification: Control, y_offset: int):
 	)
 
 func animate_notification_in(notification: Control, duration: float):
-	"""Animate notification appearing"""
+	"""Animate notification appearing with correct Godot 4 syntax"""
+	if not notification or not is_instance_valid(notification):
+		print("Warning: Invalid notification passed to animate_notification_in")
+		return
+	
 	# Start invisible and slide in from the right
 	var start_pos = notification.position
 	notification.position.x += 300
 	notification.modulate.a = 0.0
 	
 	var tween = create_tween()
-	tween.parallel().tween_property(notification, "position:x", start_pos.x, fade_in_time)
-	tween.parallel().tween_property(notification, "modulate:a", 1.0, fade_in_time)
 	
-	# Auto-remove after duration
-	tween.tween_delay(duration - fade_in_time - fade_out_time)
-	tween.tween_callback(func(): animate_notification_out(notification))
+	# Ensure tween is valid
+	if not tween:
+		print("Error: Could not create tween for notification")
+		notification.position = start_pos  # Reset position
+		notification.modulate.a = 1.0     # Make visible
+		return
+	
+	# Set up tween properties (parallel animations)
+	tween.set_parallel(true)
+	tween.tween_property(notification, "position:x", start_pos.x, fade_in_time)
+	tween.tween_property(notification, "modulate:a", 1.0, fade_in_time)
+	
+	# Calculate display time with safety check
+	var display_time = max(0.1, duration - fade_in_time - fade_out_time)
+	
+	# Chain the delay and callback (sequential operations)
+	tween.set_parallel(false)
+	tween.tween_interval(display_time)  # FIX: Use tween_interval() instead of tween_delay()
+	tween.tween_callback(func(): 
+		if is_instance_valid(notification):
+			animate_notification_out(notification)
+	)
 
 func animate_notification_out(notification: Control):
-	"""Animate notification disappearing"""
+	"""Animate notification disappearing with error handling"""
+	if not notification or not is_instance_valid(notification):
+		return
+	
 	var tween = create_tween()
-	tween.parallel().tween_property(notification, "position:x", notification.position.x + 300, fade_out_time)
-	tween.parallel().tween_property(notification, "modulate:a", 0.0, fade_out_time)
-	tween.tween_callback(func(): remove_notification(notification))
-
+	if not tween:
+		remove_notification(notification)  # Fallback to immediate removal
+		return
+	
+	tween.set_parallel(true)
+	tween.tween_property(notification, "position:x", notification.position.x + 300, fade_out_time)
+	tween.tween_property(notification, "modulate:a", 0.0, fade_out_time)
+	tween.set_parallel(false)
+	tween.tween_callback(func(): 
+		if is_instance_valid(notification):
+			remove_notification(notification)
+	)
 func remove_notification(notification: Control):
 	"""Remove a notification and reposition others"""
 	if notification in active_notifications:

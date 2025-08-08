@@ -30,6 +30,7 @@ func start_new_game():
 	map_manager = MapManager.new()
 	map_manager.generate_map(32, 32)
 	movement_manager = MovementManager.new()
+	build_manager = BuildManager.new()
 	character = Character.new()
 	
 	# Initialize character stats
@@ -41,8 +42,10 @@ func start_new_game():
 	add_child(map_manager)
 	add_child(character)
 	add_child(movement_manager)
+	add_child(build_manager)
 	
 	movement_manager.initialize(character, map_manager) 
+	build_manager.initialize(character, map_manager)
 	
 	connect_signals()
 
@@ -59,7 +62,15 @@ func unregister_game_ui():
 # ═══════════════════════════════════════════════════════════
 # ACTION MODE MANAGEMENT SYSTEM
 # ═══════════════════════════════════════════════════════════
+func can_start_action_mode() -> bool:
+	"""Check if player has enough action points to start an action"""
+	return character.current_action_points > 0
 
+func show_no_action_points_notification():
+	"""Show notification when player tries to act without action points"""
+	if game_ui:
+		game_ui.show_error("No action points remaining! End your turn to refresh.")
+		
 func end_all_action_modes():
 	"""End all active action modes"""
 	match current_action_mode:
@@ -89,6 +100,11 @@ func start_movement_mode():
 	"""Handle move button press from UI"""
 	print("Move action requested from UI")
 	
+	# Check action points first
+	if not can_start_action_mode():
+		show_no_action_points_notification()
+		return
+	
 	# End any other active modes first
 	if current_action_mode != ActionMode.MOVEMENT:
 		end_all_action_modes()
@@ -96,6 +112,69 @@ func start_movement_mode():
 	# Start movement mode
 	current_action_mode = ActionMode.MOVEMENT
 	movement_manager.start_movement_mode()
+	
+	# Update UI
+	if game_ui:
+		game_ui.update_action_button_states(current_action_mode)
+
+func start_build_mode():
+	"""Handle build button press from UI"""
+	print("Build action requested from UI")
+	
+	# Check action points first
+	if not can_start_action_mode():
+		show_no_action_points_notification()
+		return
+	
+	# End any other active modes first
+	if current_action_mode != ActionMode.BUILD:
+		end_all_action_modes()
+	
+	# Start build mode
+	current_action_mode = ActionMode.BUILD
+	build_manager.start_build_mode()
+	
+	# Update UI
+	if game_ui:
+		game_ui.update_action_button_states(current_action_mode)
+
+func start_attack_mode():
+	"""Handle attack button press from UI"""
+	print("Attack action requested from UI")
+	
+	# Check action points first
+	if not can_start_action_mode():
+		show_no_action_points_notification()
+		return
+	
+	# End any other active modes first
+	if current_action_mode != ActionMode.ATTACK:
+		end_all_action_modes()
+	
+	# Start attack mode
+	current_action_mode = ActionMode.ATTACK
+	print("Attack mode started (not implemented yet)")
+	
+	# Update UI
+	if game_ui:
+		game_ui.update_action_button_states(current_action_mode)
+
+func start_interact_mode():
+	"""Handle interact button press from UI"""
+	print("Interact action requested from UI")
+	
+	# Check action points first
+	if not can_start_action_mode():
+		show_no_action_points_notification()
+		return
+	
+	# End any other active modes first
+	if current_action_mode != ActionMode.INTERACT:
+		end_all_action_modes()
+	
+	# Start interact mode
+	current_action_mode = ActionMode.INTERACT
+	print("Interact mode started (not implemented yet)")
 	
 	# Update UI
 	if game_ui:
@@ -112,70 +191,16 @@ func end_movement_mode():
 		if game_ui:
 			game_ui.update_action_button_states(current_action_mode)
 
-func start_build_mode():
-	"""Handle build button press from UI"""
-	print("Build action requested from UI")
-	
-	# End any other active modes first
-	if current_action_mode != ActionMode.BUILD:
-		end_all_action_modes()
-	
-	# Start build mode
-	current_action_mode = ActionMode.BUILD
-	if build_manager:
-		build_manager.start_build_mode()
-	else:
-		print("Build manager not implemented yet")
-	
-	# Update UI
-	if game_ui:
-		game_ui.update_action_button_states(current_action_mode)
-
 func end_build_mode():
 	"""Handle build mode end"""
 	print("Build action END requested from UI")
 	if current_action_mode == ActionMode.BUILD:
-		if build_manager:
-			build_manager.end_build_mode()
+		build_manager.end_build_mode()  # Update this line
 		current_action_mode = ActionMode.NONE
 		
 		# Update UI
 		if game_ui:
 			game_ui.update_action_button_states(current_action_mode)
-
-func start_attack_mode():
-	"""Handle attack button press from UI"""
-	print("Attack action requested from UI")
-	
-	# End any other active modes first
-	if current_action_mode != ActionMode.ATTACK:
-		end_all_action_modes()
-	
-	# Start attack mode
-	current_action_mode = ActionMode.ATTACK
-	# TODO: Implement attack manager
-	print("Attack mode started (not implemented yet)")
-	
-	# Update UI
-	if game_ui:
-		game_ui.update_action_button_states(current_action_mode)
-
-func start_interact_mode():
-	"""Handle interact button press from UI"""
-	print("Interact action requested from UI")
-	
-	# End any other active modes first
-	if current_action_mode != ActionMode.INTERACT:
-		end_all_action_modes()
-	
-	# Start interact mode
-	current_action_mode = ActionMode.INTERACT
-	# TODO: Implement interact manager
-	print("Interact mode started (not implemented yet)")
-	
-	# Update UI
-	if game_ui:
-		game_ui.update_action_button_states(current_action_mode)
 
 func get_current_action_mode() -> ActionMode:
 	"""Get the currently active action mode"""
@@ -195,12 +220,19 @@ func connect_signals():
 	turn_manager.turn_advanced.connect(_on_turn_manager_turn_advanced)
 	# Character
 	character.action_points_spent.connect(_on_character_action_points_spent)
+	character.action_points_refreshed.connect(_on_character_action_points_spent)
 	# Map
 	map_manager.movement_requested.connect(_on_movement_requested)
 	# Movement Manager
 	movement_manager.movement_completed.connect(_on_movement_completed)
 	movement_manager.movement_failed.connect(_on_movement_failed)
 	movement_manager.movement_confirmation_requested.connect(_on_movement_confirmation_requested)
+	
+	# Build Manager
+	build_manager.building_completed.connect(_on_building_completed)
+	build_manager.building_failed.connect(_on_building_failed)
+	build_manager.build_confirmation_requested.connect(_on_build_confirmation_requested)
+
 
 func _on_turn_manager_initial_turn(turn_number: int):
 	initial_turn.emit(turn_number)
@@ -213,7 +245,15 @@ func _on_character_action_points_spent(current_action_points: int):
 	action_points_spent.emit(current_action_points)
 	
 func _on_movement_requested(target_grid_pos: Vector2i):
-	movement_manager.attempt_move_to(target_grid_pos)
+	"""Handle click requests from map - route to appropriate manager"""
+	match current_action_mode:
+		ActionMode.MOVEMENT:
+			movement_manager.attempt_move_to(target_grid_pos)
+		ActionMode.BUILD:
+			build_manager.attempt_build_at(target_grid_pos)
+		_:
+			# No active mode, ignore click
+			pass
 	
 func _on_movement_confirmation_requested(target_tile: BiomeTile):
 	"""Handle movement confirmation request"""
@@ -223,17 +263,24 @@ func _on_movement_confirmation_requested(target_tile: BiomeTile):
 		print("Warning: No GameUI reference, auto-confirming movement")
 		movement_manager.confirm_movement()
 
+func _on_build_confirmation_requested(target_tile: BiomeTile, building_type: String):
+	"""Handle build confirmation request"""
+	if game_ui:
+		game_ui.show_build_confirmation(target_tile, building_type)
+	else:
+		print("Warning: No GameUI reference, auto-confirming building")
+		build_manager.confirm_building()
+
 # Confirmation methods that GameUI will call
 func confirm_movement(target_position: Vector2i):
 	"""Confirm and execute movement"""
 	print("Movement confirmed to: ", target_position)
 	movement_manager.confirm_movement()
 
-
 func confirm_building(target_position: Vector2i, building_type: String):
-	"""Confirm and execute building (placeholder)"""
+	"""Confirm and execute building placement"""
 	print("Building confirmed: ", building_type, " at ", target_position)
-	# TODO: Implement building system
+	build_manager.confirm_building()
 
 func confirm_attack(target_position: Vector2i):
 	"""Confirm and execute attack (placeholder)"""
@@ -251,9 +298,20 @@ func _on_movement_completed(new_pos: Vector2i):
 	end_movement_mode()
 	# Movement mode automatically ends after completion
 
+func _on_building_completed(new_building: Building, tile: BiomeTile):
+	"""Handle successful building placement"""
+	print("Building completed at: ", tile.grid_position)
+	# Building mode automatically ends after completion
+	end_build_mode()
+
 func _on_movement_failed(reason: String):
 	"""Handle failed movement"""
 	print("Movement failed: ", reason)
+
+func _on_building_failed(reason: String):
+	"""Handle failed building placement"""
+	print("Building failed: ", reason)
+
 
 # Public methods to interact with managers
 func advance_turn():

@@ -25,6 +25,7 @@ var advance_turn_button: Button
 # Signals
 signal menu_button_pressed(menu_type: String)
 signal action_button_pressed(action_type: String)
+signal action_failed(message: String)
 
 func _ready():
 	create_ui_components()
@@ -260,3 +261,21 @@ func style_button_normal(button: Button, accent_color: Color) -> Button:
 func get_action_buttons() -> Array:
 	"""Get all action buttons for external access"""
 	return [move_button, build_button, attack_button, interact_button]
+
+func update_action_buttons_availability(current_action_points: int):
+	"""Update action button appearance based on available action points"""
+	var has_action_points = current_action_points > 0
+	
+	var action_buttons = [move_button, build_button, attack_button, interact_button]
+	
+	for button in action_buttons:
+		if has_action_points:
+			# Enable button
+			button.disabled = false
+			button.modulate = Color.WHITE
+			button.tooltip_text = ""
+		else:
+			# Disable button and make it look disabled
+			button.disabled = true
+			button.modulate = Color(0.5, 0.5, 0.5, 0.8)  # Grayed out
+			button.tooltip_text = "No action points remaining"

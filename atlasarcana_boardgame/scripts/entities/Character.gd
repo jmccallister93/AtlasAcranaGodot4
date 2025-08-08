@@ -3,11 +3,13 @@ extends CharacterBody2D
 class_name Character
 
 signal action_points_spent(action_points: int)
+signal action_points_refreshed(action_points: int)
 
 @export var stats: CharacterStats
 var current_stamina: int
 var current_movement_points: int
 var current_action_points: int
+var current_build_points: int
 var grid_position: Vector2i
 var sprite: Sprite2D
 
@@ -33,6 +35,7 @@ func refresh_turn_resources():
 	if stats == null:
 		return
 	current_action_points = stats.get_action_points()
+	action_points_refreshed.emit(current_action_points)
 	
 func can_perform_action(action_cost: int) -> bool:
 	return current_action_points >= action_cost

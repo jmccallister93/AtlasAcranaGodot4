@@ -234,7 +234,7 @@ func show_build_confirmation(target_tile: BiomeTile, building_type: String):
 	"""Show building confirmation dialog"""
 	var biome_name = target_tile.get_biome_data(target_tile.biome_type).name
 	var title = "Confirm Building"
-	var message = "Build %s on %s at (%d, %d)?" % [building_type, biome_name, target_tile.grid_position.x, target_tile.grid_position.y]
+	var message = "Build %s on %s at (%d, %d)?" % [building_type.capitalize().replace("_", " "), biome_name, target_tile.grid_position.x, target_tile.grid_position.y]
 	var action_data = {
 		"action_type": "building",
 		"target_position": target_tile.grid_position,

@@ -109,6 +109,12 @@ func connect_signals():
 	# Connect bottom bar menu button signals
 	bottom_bar.menu_button_pressed.connect(_on_menu_button_pressed)
 	
+		# Connect GameManager signals to ActionModeManager
+	GameManager.action_points_spent.connect(action_mode_manager._on_action_points_changed)
+	
+	# Connect bottom bar menu button signals
+	bottom_bar.menu_button_pressed.connect(_on_menu_button_pressed)
+	
 	# Connect confirmation dialog signals
 	confirmation_dialog_manager.confirmed.connect(_on_confirmation_dialog_confirmed)
 	confirmation_dialog_manager.cancelled.connect(_on_confirmation_dialog_cancelled)

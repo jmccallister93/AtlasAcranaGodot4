@@ -38,10 +38,10 @@ func _on_action_button_pressed(action_type: String):
 	
 	# Validate if action can be performed
 	if not can_perform_action():
-		var message = "No action points remaining!"
+		var message = "No action points remaining! End your turn to refresh."
 		action_validation_failed.emit(message)
 		if notification_manager:
-			notification_manager.show_notification(message, 3.0, Color.ORANGE)
+			notification_manager.show_error(message)
 		return
 	
 	# Handle the specific action
@@ -55,6 +55,8 @@ func _on_action_button_pressed(action_type: String):
 		"interact":
 			handle_interact_action()
 
+
+			
 func handle_move_action():
 	"""Handle move button press with toggle functionality"""
 	var current_mode = GameManager.get_current_action_mode()
@@ -165,12 +167,19 @@ func can_start_interact() -> bool:
 	return can_perform_action() and not is_mode_active()
 
 # Event handlers for specific game events
+func update_button_availability():
+	"""Update button visual states based on action points"""
+	if bottom_bar:
+		bottom_bar.update_action_buttons_availability(GameManager.get_current_action_points())
+
+# Connect this to action points changes
 func _on_action_points_changed(new_amount: int):
 	"""Handle action points changing"""
+	update_button_availability()  # Add this line
+	
 	if new_amount <= 0:
-		# No action points left, might want to disable buttons or show feedback
 		if notification_manager:
-			notification_manager.show_notification("No action points remaining!", 3.0, Color.RED)
+			notification_manager.show_info("No action points remaining. End your turn to refresh.")
 
 func _on_turn_advanced():
 	"""Handle turn advancement"""
@@ -180,9 +189,10 @@ func _on_turn_advanced():
 
 # Debug methods
 func debug_print_state():
-	"""Print current state for debugging"""
-	print("=== ActionModeManager State ===")
-	print("Current mode: ", GameManager.get_current_action_mode())
-	print("Action points: ", GameManager.get_current_action_points())
-	print("Can perform action: ", can_perform_action())
-	print("==============================")
+	pass
+	#"""Print current state for debugging"""
+	#print("=== ActionModeManager State ===")
+	#print("Current mode: ", GameManager.get_current_action_mode())
+	#print("Action points: ", GameManager.get_current_action_points())
+	#print("Can perform action: ", can_perform_action())
+	#print("==============================")

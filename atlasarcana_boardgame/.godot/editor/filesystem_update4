@@ -31,3 +31,4 @@ res://scripts/managers/ActionManager.gd
 res://scripts/managers/NotificationManager.gd
 res://scripts/managers/ConfimationDialogManager.gd
 res://scripts/managers/MenuManager.gd
+res://scripts/entities/Building.gd

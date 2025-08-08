@@ -21,8 +21,11 @@ var sprite: Sprite2D
 var collision_shape: CollisionShape2D
 var hover_label: Label
 #Highlights for movement
-var is_highlighted: bool = false
-var highlight_overlay: ColorRect
+var is_movement_highlighted: bool = false
+var movement_highlight_overlay: ColorRect
+#Highlights for building
+var is_build_highlighted: bool = false
+var build_highlight_overlay: ColorRect
 
 # Signals for game events
 signal tile_clicked(tile: BiomeTile)
@@ -54,7 +57,8 @@ func _ready():
 	# Initialize tile
 	setup_tile()
 	setup_hover_label()
-	setup_highlight_overlay()
+	setup_movement_highlight_overlay()
+	setup_build_highlight_overlay()
 
 func create_sprite():
 	"""Create and setup the sprite component"""
@@ -71,6 +75,7 @@ func create_collision_shape():
 	var shape = RectangleShape2D.new()
 	shape.size = Vector2(tile_size, tile_size)
 	collision_shape.shape = shape
+
 	
 	add_child(collision_shape)
 
@@ -132,22 +137,39 @@ func setup_hover_label():
 		style_box.content_margin_right = 8
 		hover_label.add_theme_stylebox_override("normal", style_box)
 
-func setup_highlight_overlay():
+func setup_movement_highlight_overlay():
 	"""Setup the highlight overlay for movement indication"""
-	highlight_overlay = ColorRect.new()
-	highlight_overlay.color = Color(0, 0, 1, 0.3)  # Semi-transparent green
-	highlight_overlay.size = Vector2(tile_size/2, tile_size/2)  # Use dynamic tile_size instead of hardcoded 64
-	highlight_overlay.position = Vector2(-tile_size/2, -tile_size/2) 
-	highlight_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE  # Don't block mouse events
-	highlight_overlay.visible = false
+	movement_highlight_overlay = ColorRect.new()
+	movement_highlight_overlay.color = Color(0, 0, 1, 0.3)  # Semi-transparent green
+	movement_highlight_overlay.size = Vector2(tile_size/2, tile_size/2)  # Use dynamic tile_size instead of hardcoded 64
+	movement_highlight_overlay.position = Vector2(-tile_size/2, -tile_size/2) 
+	movement_highlight_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE  # Don't block mouse events
+	movement_highlight_overlay.visible = false
 
-	add_child(highlight_overlay)
+	add_child(movement_highlight_overlay)
 	
-func set_highlighted(highlighted: bool):
+func setup_build_highlight_overlay():
+	"""Setup the build highlight overlay"""
+	build_highlight_overlay = ColorRect.new()
+	build_highlight_overlay.color = Color(0.8, 0.4, 0.8, 0.3)  # Semi-transparent purple
+	build_highlight_overlay.size = Vector2(tile_size/2, tile_size/2)
+	build_highlight_overlay.position = Vector2(-tile_size/2, -tile_size/2)
+	build_highlight_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	build_highlight_overlay.visible = false
+	add_child(build_highlight_overlay)
+	
+func set_movement_highlighted(highlighted: bool):
 	"""Set the highlight state of this tile"""
-	is_highlighted = highlighted
-	if highlight_overlay:
-		highlight_overlay.visible = highlighted
+	is_movement_highlighted = highlighted
+	if movement_highlight_overlay:
+		movement_highlight_overlay.visible = highlighted
+
+func set_build_highlighted(highlighted: bool):
+	"""Set the build highlight state of this tile"""
+	is_build_highlighted = highlighted
+	if build_highlight_overlay:
+		build_highlight_overlay.visible = highlighted
+	
 
 func get_biome_data(biome: BiomeType) -> Dictionary:
 	"""Return biome-specific data"""
@@ -308,9 +330,14 @@ func update_tile_size(new_size: int):
 		if rect_shape:
 			rect_shape.size = Vector2(tile_size, tile_size)
 			
-	# Update highlight overlay size
-	if highlight_overlay:
-		highlight_overlay.size = Vector2(tile_size, tile_size)
+	# Update movement highlight overlay size
+	if movement_highlight_overlay:
+		movement_highlight_overlay.size = Vector2(tile_size, tile_size)
+	
+		# Update build highlight overlay
+	if build_highlight_overlay:
+		build_highlight_overlay.size = Vector2(tile_size, tile_size)
+		build_highlight_overlay.position = Vector2(-tile_size/2, -tile_size/2)
 
 # Building management
 func can_place_building(building_type: String) -> bool:

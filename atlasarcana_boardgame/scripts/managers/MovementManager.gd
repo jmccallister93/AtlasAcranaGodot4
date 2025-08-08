@@ -63,13 +63,13 @@ func highlight_movement_tiles():
 	for tile in tiles_in_range:
 		# Don't highlight the current position
 		if tile.grid_position != character.grid_position:
-			tile.set_highlighted(true)
+			tile.set_movement_highlighted(true)
 			highlighted_tiles.append(tile)
 
 func clear_highlighted_tiles():
 	"""Clear all highlighted tiles"""
 	for tile in highlighted_tiles:
-		tile.set_highlighted(false)
+		tile.set_movement_highlighted(false)
 	highlighted_tiles.clear()
 
 func is_tile_highlighted(target_pos: Vector2i) -> bool:
