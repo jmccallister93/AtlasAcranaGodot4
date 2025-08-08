@@ -1,3 +1,4 @@
+#GameManager.gd
 extends Node
 
 signal turn_advanced(turn_number: int)
@@ -21,6 +22,7 @@ var character: Character
 var movement_manager: MovementManager
 var build_manager: BuildManager
 var interact_manager: InteractManager
+var attack_manager: AttackManager
 var game_ui: GameUI
 
 func _ready():
@@ -33,6 +35,7 @@ func start_new_game():
 	movement_manager = MovementManager.new()
 	build_manager = BuildManager.new()
 	interact_manager = InteractManager.new()
+	attack_manager = AttackManager.new()
 	character = Character.new()
 	
 	# Initialize character stats
@@ -46,14 +49,17 @@ func start_new_game():
 	add_child(movement_manager)
 	add_child(build_manager)
 	add_child(interact_manager)
+	add_child(attack_manager)
 	
 	movement_manager.initialize(character, map_manager) 
 	build_manager.initialize(character, map_manager)
 	interact_manager.initialize(character, map_manager)
+	attack_manager.initialize(character, map_manager)
 	
 	connect_signals()
 	
 	create_test_interactables()
+	create_test_enemies()
 
 func create_test_interactables():
 	"""Create test interactable entities"""
@@ -74,6 +80,26 @@ func create_test_interactables():
 	interact_manager.add_entity(test_item, Vector2i(2, 6))
 	
 	print("Created test interactables at positions: (3,3), (5,5), (7,2), (2,6)")
+
+func create_test_enemies():
+	"""Create test enemies for combat"""
+	# Create a goblin warrior at position (4, 6)
+	var goblin = attack_manager.create_goblin_warrior(Vector2i(4, 6))
+	attack_manager.add_enemy(goblin, Vector2i(4, 6))
+	
+	# Create an orc brute at position (8, 4)
+	var orc = attack_manager.create_orc_brute(Vector2i(8, 4))
+	attack_manager.add_enemy(orc, Vector2i(8, 4))
+	
+	# Create a skeleton archer at position (6, 8)
+	var skeleton = attack_manager.create_skeleton_archer(Vector2i(6, 8))
+	attack_manager.add_enemy(skeleton, Vector2i(6, 8))
+	
+	# Create a random enemy at position (10, 2)
+	var random_enemy = attack_manager.create_random_enemy(Vector2i(10, 2))
+	attack_manager.add_enemy(random_enemy, Vector2i(10, 2))
+	
+	print("Created test enemies at positions: (4,6), (8,4), (6,8), (10,2)")
 
 func register_game_ui(ui: GameUI):
 	"""Called by GameUI to register itself with GameManager"""
@@ -108,7 +134,7 @@ func end_all_action_modes():
 				build_manager.end_build_mode()
 			print("Ended build mode")
 		ActionMode.ATTACK:
-			# TODO: Add attack manager when implemented
+			attack_manager.end_attack_mode()  
 			print("Ended attack mode")
 		ActionMode.INTERACT:
 			interact_manager.end_interact_mode()  
@@ -179,7 +205,7 @@ func start_attack_mode():
 	
 	# Start attack mode
 	current_action_mode = ActionMode.ATTACK
-	print("Attack mode started (not implemented yet)")
+	attack_manager.start_attack_mode()  # Actually use the attack manager
 	
 	# Update UI
 	if game_ui:
@@ -272,6 +298,11 @@ func connect_signals():
 	interact_manager.interaction_completed.connect(_on_interaction_completed)
 	interact_manager.interaction_failed.connect(_on_interaction_failed)
 	interact_manager.interact_confirmation_requested.connect(_on_interact_confirmation_requested)
+	# Attack Manager signals 
+	attack_manager.attack_completed.connect(_on_attack_completed)
+	attack_manager.attack_failed.connect(_on_attack_failed)
+	attack_manager.attack_confirmation_requested.connect(_on_attack_confirmation_requested)
+	attack_manager.enemy_died.connect(_on_enemy_died)
 
 
 func _on_turn_manager_initial_turn(turn_number: int):
@@ -291,6 +322,8 @@ func _on_movement_requested(target_grid_pos: Vector2i):
 			movement_manager.attempt_move_to(target_grid_pos)
 		ActionMode.BUILD:
 			build_manager.attempt_build_at(target_grid_pos)
+		ActionMode.ATTACK:
+			attack_manager.attempt_attack_at(target_grid_pos)
 		ActionMode.INTERACT:
 			interact_manager.attempt_interact_at(target_grid_pos)
 		_:
@@ -321,6 +354,14 @@ func _on_interact_confirmation_requested(target_tile: BiomeTile, entity: Interac
 		print("Warning: No GameUI reference, auto-confirming interaction")
 		interact_manager.confirm_interaction()
 
+func _on_attack_confirmation_requested(target_tile: BiomeTile, enemy: Enemy):
+	"""Handle attack confirmation request"""
+	if game_ui:
+		game_ui.show_attack_confirmation(target_tile)
+	else:
+		print("Warning: No GameUI reference, auto-confirming attack")
+		attack_manager.confirm_attack()
+
 # Confirmation methods that GameUI will call
 func confirm_movement(target_position: Vector2i):
 	"""Confirm and execute movement"""
@@ -333,9 +374,9 @@ func confirm_building(target_position: Vector2i, building_type: String):
 	build_manager.confirm_building()
 
 func confirm_attack(target_position: Vector2i):
-	"""Confirm and execute attack (placeholder)"""
+	"""Confirm and execute attack"""
 	print("Attack confirmed at: ", target_position)
-	# TODO: Implement attack system
+	attack_manager.confirm_attack() 
 
 func confirm_interaction(target_position: Vector2i, interaction_type: String):
 	"""Confirm and execute interaction"""
@@ -364,6 +405,21 @@ func _on_interaction_completed(character: Character, entity: InteractableEntity,
 	# Interaction mode automatically ends after completion
 	end_interact_mode()
 
+func _on_attack_completed(character: Character, enemy: Enemy, result: Dictionary):
+	"""Handle successful attack"""
+	var damage = result.get("damage_dealt", 0)
+	var enemy_died = result.get("enemy_died", false)
+	
+	if enemy_died:
+		var exp_gained = result.get("experience", 0)
+		print("Attack completed: %s defeated! Gained %d experience." % [enemy.enemy_name, exp_gained])
+		if game_ui:
+			game_ui.show_success("%s defeated! +%d EXP" % [enemy.enemy_name, exp_gained])
+	else:
+		print("Attack completed: %d damage dealt to %s" % [damage, enemy.enemy_name])
+		if game_ui:
+			game_ui.show_info("Hit %s for %d damage!" % [enemy.enemy_name, damage])
+
 func _on_movement_failed(reason: String):
 	"""Handle failed movement"""
 	print("Movement failed: ", reason)
@@ -378,6 +434,29 @@ func _on_interaction_failed(reason: String):
 	if game_ui:
 		game_ui.show_error(reason)
 
+func _on_attack_failed(reason: String):
+	"""Handle failed attack"""
+	print("Attack failed: ", reason)
+	if game_ui:
+		game_ui.show_error(reason)
+
+func _on_enemy_died(enemy: Enemy):
+	"""Handle enemy death notification"""
+	print("Enemy died: ", enemy.enemy_name)
+	# Additional handling for enemy death (quest updates, etc.)
+
+
+# Add end_attack_mode() method:
+func end_attack_mode():
+	"""Handle attack mode end"""
+	print("Attack action END requested from UI")
+	if current_action_mode == ActionMode.ATTACK:
+		attack_manager.end_attack_mode()
+		current_action_mode = ActionMode.NONE
+		
+		# Update UI
+		if game_ui:
+			game_ui.update_action_button_states(current_action_mode)
 
 # Public methods to interact with managers
 func advance_turn():

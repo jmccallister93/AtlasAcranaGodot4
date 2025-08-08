@@ -29,12 +29,14 @@ var build_highlight_overlay: ColorRect
 #Interact highlights
 var is_interact_highlighted: bool = false
 var interact_highlight_overlay: ColorRect
+#Attack highlights
+var is_attack_highlighted: bool = false
+var attack_highlight_overlay: ColorRect
+
 
 # Signals for game events
 signal tile_clicked(tile: BiomeTile)
 signal tile_hovered(tile: BiomeTile)
-#signal building_placed(tile: Tile, building: Building)
-#signal character_entered(tile: Tile, character: Character)
 
 enum BiomeType {
 	GRASSLAND,
@@ -57,6 +59,7 @@ func _ready():
 	setup_movement_highlight_overlay()
 	setup_build_highlight_overlay()
 	setup_interact_highlight_overlay()
+	setup_attack_highlight_overlay()
 
 func create_sprite():
 	"""Create and setup the sprite component"""
@@ -166,7 +169,17 @@ func setup_interact_highlight_overlay():
 	interact_highlight_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	interact_highlight_overlay.visible = false
 	add_child(interact_highlight_overlay)
-	
+
+func setup_attack_highlight_overlay():
+	"""Setup the attack highlight overlay"""
+	attack_highlight_overlay = ColorRect.new()
+	attack_highlight_overlay.color = Color(1.0, 0.0, 0.0, 0.4)  # Semi-transparent red
+	attack_highlight_overlay.size = Vector2(tile_size, tile_size)
+	attack_highlight_overlay.position = Vector2(-tile_size/2, -tile_size/2)
+	attack_highlight_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	attack_highlight_overlay.visible = false
+	add_child(attack_highlight_overlay)
+
 func set_movement_highlighted(highlighted: bool):
 	"""Set the highlight state of this tile"""
 	is_movement_highlighted = highlighted
@@ -190,6 +203,26 @@ func set_interact_highlighted(highlighted: bool):
 		create_tween().tween_property(self, "scale", Vector2(1.02, 1.02), 0.1)
 	else:
 		create_tween().tween_property(self, "scale", Vector2(1.0, 1.0), 0.1)
+
+func set_attack_highlighted(highlighted: bool):
+	"""Set the attack highlight state of this tile"""
+	is_attack_highlighted = highlighted
+	if attack_highlight_overlay:
+		attack_highlight_overlay.visible = highlighted
+	
+	# Optional: Different visual effect for attack mode (pulsing red)
+	if highlighted:
+		var tween = create_tween()
+		tween.set_loops()
+		tween.tween_property(attack_highlight_overlay, "modulate:a", 0.6, 0.5)
+		tween.tween_property(attack_highlight_overlay, "modulate:a", 0.3, 0.5)
+	else:
+		var tweens = get_tree().get_processed_tweens()
+		for tween in tweens:
+			if tween.is_valid():
+				tween.kill()
+		if attack_highlight_overlay:
+			attack_highlight_overlay.modulate.a = 0.4
 
 func get_biome_data(biome: BiomeType) -> Dictionary:
 	"""Return biome-specific data"""
@@ -363,7 +396,10 @@ func update_tile_size(new_size: int):
 	if interact_highlight_overlay:
 		interact_highlight_overlay.size = Vector2(tile_size, tile_size)
 		interact_highlight_overlay.position = Vector2(-tile_size/2, -tile_size/2)
-
+	#Update attack highlight overlay
+	if attack_highlight_overlay:
+		attack_highlight_overlay.size = Vector2(tile_size, tile_size)
+		attack_highlight_overlay.position = Vector2(-tile_size/2, -tile_size/2)
 # Building management
 func can_place_building(building_type: String) -> bool:
 	"""Check if a building can be placed on this tile"""

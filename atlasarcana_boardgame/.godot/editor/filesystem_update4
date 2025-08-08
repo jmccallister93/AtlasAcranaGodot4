@@ -35,3 +35,5 @@ res://scripts/entities/Building.gd
 res://scripts/entities/InteractableEntity.gd
 res://scripts/managers/InteractManager.gd
 res://scripts/entities/TreasureChest.gd
+res://scripts/entities/Enemy.gd
+res://scripts/managers/AttackManager.gd
