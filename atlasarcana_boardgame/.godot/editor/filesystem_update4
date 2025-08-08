@@ -32,3 +32,6 @@ res://scripts/managers/NotificationManager.gd
 res://scripts/managers/ConfimationDialogManager.gd
 res://scripts/managers/MenuManager.gd
 res://scripts/entities/Building.gd
+res://scripts/entities/InteractableEntity.gd
+res://scripts/managers/InteractManager.gd
+res://scripts/entities/TreasureChest.gd

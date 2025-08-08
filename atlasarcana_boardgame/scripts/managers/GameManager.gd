@@ -20,6 +20,7 @@ var map_manager: MapManager
 var character: Character
 var movement_manager: MovementManager
 var build_manager: BuildManager
+var interact_manager: InteractManager
 var game_ui: GameUI
 
 func _ready():
@@ -31,6 +32,7 @@ func start_new_game():
 	map_manager.generate_map(32, 32)
 	movement_manager = MovementManager.new()
 	build_manager = BuildManager.new()
+	interact_manager = InteractManager.new()
 	character = Character.new()
 	
 	# Initialize character stats
@@ -43,11 +45,35 @@ func start_new_game():
 	add_child(character)
 	add_child(movement_manager)
 	add_child(build_manager)
+	add_child(interact_manager)
 	
 	movement_manager.initialize(character, map_manager) 
 	build_manager.initialize(character, map_manager)
+	interact_manager.initialize(character, map_manager)
 	
 	connect_signals()
+	
+	create_test_interactables()
+
+func create_test_interactables():
+	"""Create test interactable entities"""
+	# Create a treasure chest at position (3,3)
+	var treasure_chest = interact_manager.create_treasure_chest(Vector2i(3, 3))
+	interact_manager.add_entity(treasure_chest, Vector2i(3, 3))
+	
+	# Create a magic crystal at position (5, 5)
+	var magic_crystal = interact_manager.create_magic_crystal(Vector2i(5, 5))
+	interact_manager.add_entity(magic_crystal, Vector2i(5, 5))
+	
+	# Create an herb patch at position (7, 2)
+	var herb_patch = interact_manager.create_herb_patch(Vector2i(7, 2))
+	interact_manager.add_entity(herb_patch, Vector2i(7, 2))
+	
+	# Create a simple test interactable at position (2, 6)
+	var test_item = interact_manager.create_test_interactable(Vector2i(2, 6), "mysterious_box", Color.CYAN)
+	interact_manager.add_entity(test_item, Vector2i(2, 6))
+	
+	print("Created test interactables at positions: (3,3), (5,5), (7,2), (2,6)")
 
 func register_game_ui(ui: GameUI):
 	"""Called by GameUI to register itself with GameManager"""
@@ -85,7 +111,7 @@ func end_all_action_modes():
 			# TODO: Add attack manager when implemented
 			print("Ended attack mode")
 		ActionMode.INTERACT:
-			# TODO: Add interact manager when implemented
+			interact_manager.end_interact_mode()  
 			print("Ended interact mode")
 		ActionMode.NONE:
 			pass  # No mode to end
@@ -174,12 +200,12 @@ func start_interact_mode():
 	
 	# Start interact mode
 	current_action_mode = ActionMode.INTERACT
-	print("Interact mode started (not implemented yet)")
+	interact_manager.start_interact_mode()  # Update this line
 	
 	# Update UI
 	if game_ui:
 		game_ui.update_action_button_states(current_action_mode)
-
+		
 func end_movement_mode():
 	"""Handle movement mode end"""
 	print("Move action END requested from UI")
@@ -196,6 +222,17 @@ func end_build_mode():
 	print("Build action END requested from UI")
 	if current_action_mode == ActionMode.BUILD:
 		build_manager.end_build_mode()  # Update this line
+		current_action_mode = ActionMode.NONE
+		
+		# Update UI
+		if game_ui:
+			game_ui.update_action_button_states(current_action_mode)
+
+func end_interact_mode():
+	"""Handle interact mode end"""
+	print("Interact action END requested from UI")
+	if current_action_mode == ActionMode.INTERACT:
+		interact_manager.end_interact_mode()
 		current_action_mode = ActionMode.NONE
 		
 		# Update UI
@@ -227,11 +264,14 @@ func connect_signals():
 	movement_manager.movement_completed.connect(_on_movement_completed)
 	movement_manager.movement_failed.connect(_on_movement_failed)
 	movement_manager.movement_confirmation_requested.connect(_on_movement_confirmation_requested)
-	
 	# Build Manager
 	build_manager.building_completed.connect(_on_building_completed)
 	build_manager.building_failed.connect(_on_building_failed)
 	build_manager.build_confirmation_requested.connect(_on_build_confirmation_requested)
+	# Interact Manager 
+	interact_manager.interaction_completed.connect(_on_interaction_completed)
+	interact_manager.interaction_failed.connect(_on_interaction_failed)
+	interact_manager.interact_confirmation_requested.connect(_on_interact_confirmation_requested)
 
 
 func _on_turn_manager_initial_turn(turn_number: int):
@@ -251,6 +291,8 @@ func _on_movement_requested(target_grid_pos: Vector2i):
 			movement_manager.attempt_move_to(target_grid_pos)
 		ActionMode.BUILD:
 			build_manager.attempt_build_at(target_grid_pos)
+		ActionMode.INTERACT:
+			interact_manager.attempt_interact_at(target_grid_pos)
 		_:
 			# No active mode, ignore click
 			pass
@@ -271,6 +313,14 @@ func _on_build_confirmation_requested(target_tile: BiomeTile, building_type: Str
 		print("Warning: No GameUI reference, auto-confirming building")
 		build_manager.confirm_building()
 
+func _on_interact_confirmation_requested(target_tile: BiomeTile, entity: InteractableEntity):
+	"""Handle interact confirmation request"""
+	if game_ui:
+		game_ui.show_interact_confirmation(target_tile, entity.interaction_name)
+	else:
+		print("Warning: No GameUI reference, auto-confirming interaction")
+		interact_manager.confirm_interaction()
+
 # Confirmation methods that GameUI will call
 func confirm_movement(target_position: Vector2i):
 	"""Confirm and execute movement"""
@@ -288,10 +338,10 @@ func confirm_attack(target_position: Vector2i):
 	# TODO: Implement attack system
 
 func confirm_interaction(target_position: Vector2i, interaction_type: String):
-	"""Confirm and execute interaction (placeholder)"""
+	"""Confirm and execute interaction"""
 	print("Interaction confirmed: ", interaction_type, " at ", target_position)
-	# TODO: Implement interaction system
-
+	interact_manager.confirm_interaction()
+	
 func _on_movement_completed(new_pos: Vector2i):
 	"""Handle successful movement"""
 	print("Movement completed to: ", new_pos)
@@ -304,6 +354,16 @@ func _on_building_completed(new_building: Building, tile: BiomeTile):
 	# Building mode automatically ends after completion
 	end_build_mode()
 
+func _on_interaction_completed(character: Character, entity: InteractableEntity, result: Dictionary):
+	"""Handle successful interaction"""
+	print("Interaction completed: ", result.get("message", "Success"))
+	# Show notification about the interaction result
+	if game_ui and result.has("message"):
+		game_ui.show_success(result.message)
+	
+	# Interaction mode automatically ends after completion
+	end_interact_mode()
+
 func _on_movement_failed(reason: String):
 	"""Handle failed movement"""
 	print("Movement failed: ", reason)
@@ -311,6 +371,12 @@ func _on_movement_failed(reason: String):
 func _on_building_failed(reason: String):
 	"""Handle failed building placement"""
 	print("Building failed: ", reason)
+
+func _on_interaction_failed(reason: String):
+	"""Handle failed interaction"""
+	print("Interaction failed: ", reason)
+	if game_ui:
+		game_ui.show_error(reason)
 
 
 # Public methods to interact with managers

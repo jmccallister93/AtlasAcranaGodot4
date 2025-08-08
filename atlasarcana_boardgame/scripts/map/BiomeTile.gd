@@ -26,6 +26,9 @@ var movement_highlight_overlay: ColorRect
 #Highlights for building
 var is_build_highlighted: bool = false
 var build_highlight_overlay: ColorRect
+#Interact highlights
+var is_interact_highlighted: bool = false
+var interact_highlight_overlay: ColorRect
 
 # Signals for game events
 signal tile_clicked(tile: BiomeTile)
@@ -48,17 +51,12 @@ func _ready():
 	create_collision_shape()
 	create_hover_label()
 	
-	# Connect signals
-#	TODO
-	#input_event.connect(_on_input_event)
-	#mouse_entered.connect(_on_mouse_entered)
-	#mouse_exited.connect(_on_mouse_exited)
-	
 	# Initialize tile
 	setup_tile()
 	setup_hover_label()
 	setup_movement_highlight_overlay()
 	setup_build_highlight_overlay()
+	setup_interact_highlight_overlay()
 
 func create_sprite():
 	"""Create and setup the sprite component"""
@@ -75,6 +73,7 @@ func create_collision_shape():
 	var shape = RectangleShape2D.new()
 	shape.size = Vector2(tile_size, tile_size)
 	collision_shape.shape = shape
+
 
 	
 	add_child(collision_shape)
@@ -157,6 +156,16 @@ func setup_build_highlight_overlay():
 	build_highlight_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	build_highlight_overlay.visible = false
 	add_child(build_highlight_overlay)
+
+func setup_interact_highlight_overlay():
+	"""Setup the interact highlight overlay"""
+	interact_highlight_overlay = ColorRect.new()
+	interact_highlight_overlay.color = Color(1.0, 1.0, 0.0, 0.4)  # Semi-transparent yellow
+	interact_highlight_overlay.size = Vector2(tile_size, tile_size)
+	interact_highlight_overlay.position = Vector2(-tile_size/2, -tile_size/2)
+	interact_highlight_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	interact_highlight_overlay.visible = false
+	add_child(interact_highlight_overlay)
 	
 func set_movement_highlighted(highlighted: bool):
 	"""Set the highlight state of this tile"""
@@ -169,7 +178,18 @@ func set_build_highlighted(highlighted: bool):
 	is_build_highlighted = highlighted
 	if build_highlight_overlay:
 		build_highlight_overlay.visible = highlighted
+
+func set_interact_highlighted(highlighted: bool):
+	"""Set the interact highlight state of this tile"""
+	is_interact_highlighted = highlighted
+	if interact_highlight_overlay:
+		interact_highlight_overlay.visible = highlighted
 	
+	# Optional: Different visual effect for interact mode
+	if highlighted:
+		create_tween().tween_property(self, "scale", Vector2(1.02, 1.02), 0.1)
+	else:
+		create_tween().tween_property(self, "scale", Vector2(1.0, 1.0), 0.1)
 
 func get_biome_data(biome: BiomeType) -> Dictionary:
 	"""Return biome-specific data"""
@@ -338,6 +358,11 @@ func update_tile_size(new_size: int):
 	if build_highlight_overlay:
 		build_highlight_overlay.size = Vector2(tile_size, tile_size)
 		build_highlight_overlay.position = Vector2(-tile_size/2, -tile_size/2)
+		
+	# Update interact highlight overlay
+	if interact_highlight_overlay:
+		interact_highlight_overlay.size = Vector2(tile_size, tile_size)
+		interact_highlight_overlay.position = Vector2(-tile_size/2, -tile_size/2)
 
 # Building management
 func can_place_building(building_type: String) -> bool:

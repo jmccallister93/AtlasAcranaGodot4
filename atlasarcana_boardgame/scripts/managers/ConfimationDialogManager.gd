@@ -255,16 +255,16 @@ func show_attack_confirmation(target_tile: BiomeTile):
 	}
 	show_dialog(title, message, action_data)
 
-func show_interact_confirmation(target_tile: BiomeTile, interaction_type: String):
+func show_interact_confirmation(target_tile: BiomeTile, interaction_name: String):
 	"""Show interaction confirmation dialog"""
 	var biome_name = target_tile.get_biome_data(target_tile.biome_type).name
 	var title = "Confirm Interaction"
-	var message = "%s with %s at (%d, %d)?" % [interaction_type, biome_name, target_tile.grid_position.x, target_tile.grid_position.y]
+	var message = "%s on %s at (%d, %d)?" % [interaction_name, biome_name, target_tile.grid_position.x, target_tile.grid_position.y]
 	var action_data = {
 		"action_type": "interaction",
 		"target_position": target_tile.grid_position,
 		"target_tile": target_tile,
-		"interaction_type": interaction_type
+		"interaction_type": interaction_name
 	}
 	show_dialog(title, message, action_data)
 

@@ -30,7 +30,8 @@ func show_notification(message: String, duration: float = 0.0, color: Color = Co
 		"message": message,
 		"duration": duration,
 		"color": color,
-		"type": notification_type
+		"type": notification_type,
+		
 	}
 	
 	# Add to queue or show immediately
@@ -288,7 +289,7 @@ func show_warning(message: String, duration: float = 4.0):
 	"""Show a warning notification"""
 	show_notification(message, duration, Color.ORANGE, "warning")
 
-func show_error(message: String, duration: float = 5.0):
+func show_error(message: String, duration: float = 999.0):
 	"""Show an error notification"""
 	show_notification(message, duration, Color.RED, "error")
 
