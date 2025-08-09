@@ -118,7 +118,8 @@ func connect_signals():
 	# Connect confirmation dialog signals
 	confirmation_dialog_manager.confirmed.connect(_on_confirmation_dialog_confirmed)
 	confirmation_dialog_manager.cancelled.connect(_on_confirmation_dialog_cancelled)
-	
+
+	call_deferred("connect_build_manager_signals_deferred")
 	print("✅ All signals connected")
 
 # ═══════════════════════════════════════════════════════════
@@ -165,6 +166,10 @@ func _on_buildings_button_pressed():
 			building_closed.emit()
 		else:
 			close_all_menus()
+			
+			# Refresh building data before showing
+			building_menu.refresh_display()
+			
 			building_menu.show_menu()
 			building_opened.emit()
 
@@ -216,6 +221,17 @@ func _on_confirmation_dialog_cancelled():
 # PUBLIC INTERFACE METHODS
 # ═══════════════════════════════════════════════════════════
 
+func connect_build_manager_signals():
+	"""Connect BuildManager signals after it's initialized"""
+	if GameManager and GameManager.build_manager:
+		GameManager.build_manager.building_completed.connect(_on_building_placed)
+		GameManager.build_manager.building_data_changed.connect(_on_building_data_changed)
+		print("✅ Connected to BuildManager signals")
+		
+func connect_build_manager_signals_deferred():
+	await get_tree().process_frame
+	connect_build_manager_signals()
+	
 func show_movement_confirmation(target_tile: BiomeTile):
 	"""Show movement confirmation dialog"""
 	confirmation_dialog_manager.show_movement_confirmation(target_tile)
@@ -278,7 +294,18 @@ func update_character_info(name: String = "", level: int = -1, current_hp: int =
 		top_bar.update_character_level(level)
 	if current_hp >= 0 and max_hp > 0:
 		top_bar.update_character_hp(current_hp, max_hp)
+# Add these new signal handlers
+func _on_building_placed(new_building: Building, tile: BiomeTile):
+	"""Handle new building placement - update BuildingMenu"""
+	print("GameUI: Building placed, updating building menu")
+	if building_menu:
+		building_menu.refresh_display()
 
+func _on_building_data_changed():
+	"""Handle building data changes - refresh BuildingMenu"""
+	print("GameUI: Building data changed, refreshing building menu")
+	if building_menu:
+		building_menu.refresh_display()
 # ═══════════════════════════════════════════════════════════
 # DEBUG AND UTILITY METHODS
 # ═══════════════════════════════════════════════════════════

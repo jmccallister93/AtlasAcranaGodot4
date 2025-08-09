@@ -41,3 +41,6 @@ res://resources/entities/BuildingData.gd
 res://scripts/ui/gameui/BuildingSelectionMenu.gd
 res://scripts/managers/ResourceManager.gd
 res://scripts/ui/menus/BuildingButton.gd
+res://scripts/ui/menus/BuildingMenu.gd
+res://scripts/buildings/BuildManager.gd
+res://scripts/buildings/Building.gd

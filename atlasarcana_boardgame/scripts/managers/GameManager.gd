@@ -57,6 +57,7 @@ func start_new_game():
 	
 	movement_manager.initialize(character, map_manager) 
 	build_manager.initialize(character, map_manager)
+	
 	interact_manager.initialize(character, map_manager)
 	attack_manager.initialize(character, map_manager)
 	
@@ -298,6 +299,7 @@ func connect_signals():
 	build_manager.building_completed.connect(_on_building_completed)
 	build_manager.building_failed.connect(_on_building_failed)
 	build_manager.build_confirmation_requested.connect(_on_build_confirmation_requested)
+	build_manager.building_data_changed.connect(_on_building_data_changed)
 	# Interact Manager 
 	interact_manager.interaction_completed.connect(_on_interaction_completed)
 	interact_manager.interaction_failed.connect(_on_interaction_failed)
@@ -354,6 +356,10 @@ func _on_build_confirmation_requested(target_tile: BiomeTile, building_type: Str
 	else:
 		print("Warning: No GameUI reference, auto-confirming building")
 		build_manager.confirm_building()
+		
+func _on_building_data_changed():
+	if game_ui:
+		game_ui._on_building_data_changed()
 
 func _on_interact_confirmation_requested(target_tile: BiomeTile, entity: InteractableEntity):
 	"""Handle interact confirmation request"""

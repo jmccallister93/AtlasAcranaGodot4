@@ -11,6 +11,8 @@ signal build_mode_started
 signal build_mode_ended
 signal build_mode_failed
 signal build_confirmation_requested(target_tile: BiomeTile, building_type: String)
+signal building_data_changed
+
 
 # Build mode states
 enum BuildState {
@@ -264,17 +266,20 @@ func confirm_building():
 		# Spend action point
 		character.spend_action_points()
 		
+		# Get the placed building
+		var placed_buildings = get_buildings_on_tile(target_tile)
+		var new_building = placed_buildings[-1] if placed_buildings.size() > 0 else null
+		
+		# Emit completion signals
+		if new_building:
+			building_completed.emit(new_building, target_tile)
+			building_data_changed.emit()  # New signal for menu updates
+		
 		# End build mode
 		end_build_mode()
-		
-		# Emit completion signal
-		var placed_buildings = get_buildings_on_tile(target_tile)
-		if placed_buildings.size() > 0:
-			building_completed.emit(placed_buildings[-1], target_tile)
 	else:
 		building_failed.emit("Failed to place building")
 		end_build_mode()
-
 func cancel_building():
 	"""Cancel the pending building and return to selection mode"""
 	if current_state == BuildState.AWAITING_CONFIRMATION:
@@ -326,13 +331,15 @@ func add_building_to_tile(building: Building, tile: BiomeTile):
 		buildings_by_tile[grid_pos] = []
 	buildings_by_tile[grid_pos].append(building)
 	
-	var building_name = BuildingData.get_building_data(building.building_type).get("name", "Unknown")
+	# Use the building's actual name for consistent tracking
+	var building_name = building.get_building_name()
 	if building_name not in buildings_by_type:
 		buildings_by_type[building_name] = []
 	buildings_by_type[building_name].append(building)
 	
 	tile.is_occupied = true
-
+	
+	print("Building added to tracking: %s at %s" % [building_name, grid_pos])
 # Building query methods
 func get_buildings_on_tile(tile: BiomeTile) -> Array[Building]:
 	var buildings = buildings_by_tile.get(tile.grid_position, [])
@@ -341,7 +348,8 @@ func get_buildings_on_tile(tile: BiomeTile) -> Array[Building]:
 	return result
 
 func get_buildings_of_type(building_type: String) -> Array[Building]:
-	var buildings = buildings_by_type.get(building_type, [])
+	"""Get buildings by their display name (string) rather than enum"""
+	var buildings = buildings_by_type.get(building_type, [])  # ✅ Fixed
 	var result: Array[Building] = []
 	result.assign(buildings)
 	return result
@@ -383,6 +391,26 @@ func set_building_type(building_type: BuildingData.BuildingType):
 	var building_data = BuildingData.get_building_data(building_type)
 	print("Building type set to: ", building_data.get("name", "Unknown"))
 
+func get_buildings_of_type_by_name(building_name: String) -> Array[Building]:
+	"""Get buildings by their display name (string) rather than enum"""
+	var buildings = buildings_by_type.get(building_name, [])
+	var result: Array[Building] = []
+	result.assign(buildings)
+	return result
+# Add method to get all building type names
+func get_all_building_type_names() -> Array[String]:
+	"""Get all building type names that have been placed"""
+	var names: Array[String] = []
+	names.assign(buildings_by_type.keys())
+	return names
+
+# Add method to get total count of all buildings
+func get_total_building_count() -> int:
+	"""Get total number of buildings placed"""
+	var total = 0
+	for building_list in buildings_by_tile.values():
+		total += building_list.size()
+	return total
 # Debug methods
 func debug_print_state():
 	"""Print current state for debugging"""
@@ -398,14 +426,19 @@ func debug_print_state():
 	print("Total production per turn: ", total_production)
 	print("===========================")
 
+# Update debug method to show more info
 func debug_list_all_buildings():
 	"""Debug method to list all placed buildings"""
 	print("=== ALL BUILDINGS ===")
+	print("Total buildings: ", get_total_building_count())
+	print("Building types: ", get_all_building_type_names())
+	
 	for tile_pos in buildings_by_tile:
 		var buildings = buildings_by_tile[tile_pos]
 		for building in buildings:
-			var info = building.get_info()
-			print("- %s at %s (Production: %s)" % [info.type, info.position, info.total_production])
+			var building_name = building.get_building_name()
+			var production = building.get_production()
+			print("- %s at %s (Production: %s)" % [building_name, tile_pos, production])
 	print("====================")
 
 

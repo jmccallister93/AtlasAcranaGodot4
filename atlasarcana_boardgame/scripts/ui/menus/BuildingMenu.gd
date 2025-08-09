@@ -2,76 +2,77 @@ extends BaseMenu
 class_name BuildingMenu
 
 # Building data structure
-var building_data = {
-	"Farm": {
-		"type": "production",
-		"owned": 3,
-		"coordinates": [Vector2(10, 15), Vector2(12, 18), Vector2(8, 20)],
-		"production_rate": 25,
-		"production_type": "Food",
-		"description": "Produces food to feed your population. Essential for growth.",
-		"upgrade_levels": ["Basic Farm", "Advanced Farm", "Mega Farm"],
-		"current_level": 1,
-		"can_craft": false
-	},
-	"Lumber Mill": {
-		"type": "production",
-		"owned": 2,
-		"coordinates": [Vector2(5, 8), Vector2(22, 12)],
-		"production_rate": 18,
-		"production_type": "Wood",
-		"description": "Harvests and processes wood for construction projects.",
-		"upgrade_levels": ["Basic Mill", "Steam Mill", "Industrial Mill"],
-		"current_level": 0,
-		"can_craft": false
-	},
-	"Forge": {
-		"type": "crafting",
-		"owned": 1,
-		"coordinates": [Vector2(15, 10)],
-		"production_rate": 0,
-		"production_type": "",
-		"description": "Crafts weapons, tools, and metal goods from raw materials.",
-		"upgrade_levels": ["Basic Forge", "Master Forge", "Legendary Forge"],
-		"current_level": 0,
-		"can_craft": true,
-		"craft_options": ["Iron Sword", "Steel Hammer", "Bronze Shield", "Iron Pickaxe"]
-	},
-	"Stables": {
-		"type": "utility",
-		"owned": 1,
-		"coordinates": [Vector2(18, 14)],
-		"production_rate": 0,
-		"production_type": "",
-		"description": "Houses and trains horses for faster movement and cavalry units.",
-		"upgrade_levels": ["Basic Stables", "War Stables", "Royal Stables"],
-		"current_level": 0,
-		"can_craft": false
-	},
-	"Docks": {
-		"type": "utility",
-		"owned": 0,
-		"coordinates": [],
-		"production_rate": 0,
-		"production_type": "",
-		"description": "Enables water trade routes and naval unit construction.",
-		"upgrade_levels": ["Wooden Dock", "Stone Harbor", "Naval Fortress"],
-		"current_level": 0,
-		"can_craft": false
-	},
-	"Mine": {
-		"type": "production",
-		"owned": 0,
-		"coordinates": [],
-		"production_rate": 30,
-		"production_type": "Stone & Ore",
-		"description": "Extracts valuable stone and metal ore from underground deposits.",
-		"upgrade_levels": ["Shallow Mine", "Deep Mine", "Excavation Complex"],
-		"current_level": 0,
-		"can_craft": false
-	}
-}
-
+#var building_data = {
+	#"Farm": {
+		#"type": "production",
+		#"owned": 3,
+		#"coordinates": [Vector2(10, 15), Vector2(12, 18), Vector2(8, 20)],
+		#"production_rate": 25,
+		#"production_type": "Food",
+		#"description": "Produces food to feed your population. Essential for growth.",
+		#"upgrade_levels": ["Basic Farm", "Advanced Farm", "Mega Farm"],
+		#"current_level": 1,
+		#"can_craft": false
+	#},
+	#"Lumber Mill": {
+		#"type": "production",
+		#"owned": 2,
+		#"coordinates": [Vector2(5, 8), Vector2(22, 12)],
+		#"production_rate": 18,
+		#"production_type": "Wood",
+		#"description": "Harvests and processes wood for construction projects.",
+		#"upgrade_levels": ["Basic Mill", "Steam Mill", "Industrial Mill"],
+		#"current_level": 0,
+		#"can_craft": false
+	#},
+	#"Forge": {
+		#"type": "crafting",
+		#"owned": 1,
+		#"coordinates": [Vector2(15, 10)],
+		#"production_rate": 0,
+		#"production_type": "",
+		#"description": "Crafts weapons, tools, and metal goods from raw materials.",
+		#"upgrade_levels": ["Basic Forge", "Master Forge", "Legendary Forge"],
+		#"current_level": 0,
+		#"can_craft": true,
+		#"craft_options": ["Iron Sword", "Steel Hammer", "Bronze Shield", "Iron Pickaxe"]
+	#},
+	#"Stables": {
+		#"type": "utility",
+		#"owned": 1,
+		#"coordinates": [Vector2(18, 14)],
+		#"production_rate": 0,
+		#"production_type": "",
+		#"description": "Houses and trains horses for faster movement and cavalry units.",
+		#"upgrade_levels": ["Basic Stables", "War Stables", "Royal Stables"],
+		#"current_level": 0,
+		#"can_craft": false
+	#},
+	#"Docks": {
+		#"type": "utility",
+		#"owned": 0,
+		#"coordinates": [],
+		#"production_rate": 0,
+		#"production_type": "",
+		#"description": "Enables water trade routes and naval unit construction.",
+		#"upgrade_levels": ["Wooden Dock", "Stone Harbor", "Naval Fortress"],
+		#"current_level": 0,
+		#"can_craft": false
+	#},
+	#"Mine": {
+		#"type": "production",
+		#"owned": 0,
+		#"coordinates": [],
+		#"production_rate": 30,
+		#"production_type": "Stone & Ore",
+		#"description": "Extracts valuable stone and metal ore from underground deposits.",
+		#"upgrade_levels": ["Shallow Mine", "Deep Mine", "Excavation Complex"],
+		#"current_level": 0,
+		#"can_craft": false
+	#}
+#}
+var build_manager: BuildManager
+var building_data: Dictionary = {}
 # UI References
 var building_tooltip: PanelContainer
 var building_tooltip_timer: Timer
@@ -82,62 +83,115 @@ var building_panels: Dictionary = {}
 func ready_post():
 	menu_title = "Building Management"
 	title_label.text = menu_title
+	# Connect to BuildManager for real data
+	connect_to_build_manager()
+	
+	# Load initial building data
+	refresh_building_data()
 	create_building_interface()
 
-func create_building_interface():
-	# Clear existing items
-	for child in item_container.get_children():
-		child.queue_free()
-	
-	# Clear panel references
-	building_panels.clear()
-	
-	# Create main building container
-	var buildings_container = create_buildings_container()
-	item_container.add_child(buildings_container)
-	
-	# Create tooltip system
-	create_building_tooltip_system()
-	
-	# Create detail view system
-	create_building_detail_system()
+func connect_to_build_manager():
+	"""Connect to BuildManager to get real building data"""
+	if GameManager and GameManager.build_manager:
+		build_manager = GameManager.build_manager
+		
+		# Connect to building events for real-time updates
+		build_manager.building_completed.connect(_on_building_placed)
+		# Remove this line: build_manager.building_placed.connect(_on_building_placed_direct)
+		
+		print("✅ BuildingMenu connected to BuildManager")
 
-func create_buildings_container() -> VBoxContainer:
-	var container = VBoxContainer.new()
-	container.add_theme_constant_override("separation", 15)
-	
-	# Create header
-	var header = create_building_header("Building Overview")
-	container.add_child(header)
-	
-	# Create categories
-	create_building_categories(container)
-	
-	return container
+func _on_building_placed(new_building: Building, tile: BiomeTile):
+	"""Handle new building placement"""
+	print("BuildingMenu: New building placed - ", new_building.get_building_name())
+	refresh_building_data()
+	create_building_interface()
 
-func create_building_header(text: String) -> Label:
-	var header = Label.new()
-	header.text = text
-	header.add_theme_font_size_override("font_size", 24)
-	header.add_theme_color_override("font_color", Color("#8B4513"))  # Brown theme
-	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	
-	# Construction-themed styling
-	var stylebox = StyleBoxFlat.new()
-	stylebox.bg_color = Color("#F4A460")  # Sandy brown
-	stylebox.border_width_top = 3
-	stylebox.border_width_bottom = 3
-	stylebox.border_color = Color("#8B4513")  # Dark brown
-	stylebox.corner_radius_top_left = 8
-	stylebox.corner_radius_top_right = 8
-	stylebox.corner_radius_bottom_left = 8
-	stylebox.corner_radius_bottom_right = 8
-	stylebox.content_margin_top = 10
-	stylebox.content_margin_bottom = 10
-	header.add_theme_stylebox_override("normal", stylebox)
-	
-	return header
+func _on_building_placed_direct():
+	"""Handle direct building placement signal"""
+	print("BuildingMenu: Building placed (direct signal)")
+	refresh_building_data()
+	create_building_interface()
 
+func refresh_building_data():
+	"""Load real building data from BuildManager and BuildingData"""
+	building_data.clear()
+	
+	if not build_manager:
+		create_fallback_data()
+		return
+	
+	# Get all building types from BuildingData
+	var building_definitions = BuildingData.get_building_definitions()
+	
+	for building_type in building_definitions:
+		var building_definition = building_definitions[building_type]
+		var building_name = building_data.get("name", "Unknown")
+		
+		# Get actual buildings of this type from BuildManager
+		var placed_buildings = build_manager.get_buildings_of_type(building_name)
+		
+		# Calculate coordinates and production
+		var coordinates = []
+		var total_production = 0
+		var production_type = ""
+		
+		for building in placed_buildings:
+			coordinates.append(building.tile.grid_position)
+			var building_production = building.get_production()
+			for resource in building_production:
+				total_production += building_production[resource]
+				if production_type == "":
+					production_type = resource.capitalize()
+		
+		# Create building data entry
+		building_data[building_name] = {
+			"type": _determine_building_type(building_data),
+			"owned": placed_buildings.size(),
+			"coordinates": coordinates,
+			"production_rate": total_production,
+			"production_type": production_type,
+			"description": building_data.get("description", "No description available."),
+			"upgrade_levels": ["Basic", "Advanced", "Master"],  # Could be from BuildingData
+			"current_level": 0,  # Could be tracked per building
+			"can_craft": building_data.get("crafting_recipes", {}).size() > 0,
+			"craft_options": building_data.get("crafting_recipes", {}).keys(),
+			"building_type_enum": building_type  # Store for building new ones
+		}
+	
+	print("BuildingMenu: Refreshed data for ", building_data.size(), " building types")
+
+func _determine_building_type(building_data: Dictionary) -> String:
+	"""Determine building category from building data"""
+	var base_production = building_data.get("base_production", {})
+	var crafting_recipes = building_data.get("crafting_recipes", {})
+	
+	if crafting_recipes.size() > 0:
+		return "crafting"
+	elif base_production.size() > 0:
+		return "production"
+	else:
+		return "utility"
+
+func create_fallback_data():
+	"""Create minimal fallback data if BuildManager not available"""
+	building_data = {
+		"Basic Structure": {
+			"type": "utility",
+			"owned": 0,
+			"coordinates": [],
+			"production_rate": 0,
+			"production_type": "",
+			"description": "A basic building structure.",
+			"upgrade_levels": ["Basic"],
+			"current_level": 0,
+			"can_craft": false,
+			"craft_options": [],
+			"building_type_enum": BuildingData.BuildingType.BASIC_STRUCTURE
+		}
+	}
+
+# Update all methods that used building_data to use real_building_data
 func create_building_categories(container: VBoxContainer):
 	# Group buildings by type
 	var production_buildings = []
@@ -162,37 +216,16 @@ func create_building_categories(container: VBoxContainer):
 	if utility_buildings.size() > 0:
 		create_building_section(container, "Utility Buildings", utility_buildings, Color("#4682B4"))
 
-func create_building_section(container: VBoxContainer, section_name: String, buildings: Array, accent_color: Color):
-	# Section header
-	var section_label = Label.new()
-	section_label.text = section_name
-	section_label.add_theme_font_size_override("font_size", 18)
-	section_label.add_theme_color_override("font_color", accent_color)
-	container.add_child(section_label)
-	
-	# Buildings grid for this section
-	var grid = GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 12)
-	grid.add_theme_constant_override("v_separation", 8)
-	
-	for building_name in buildings:
-		var building_panel = create_building_panel(building_name, accent_color)
-		building_panels[building_name] = building_panel
-		grid.add_child(building_panel)
-	
-	container.add_child(grid)
-
 func create_building_panel(building_name: String, accent_color: Color) -> PanelContainer:
 	var panel = PanelContainer.new()
 	panel.custom_minimum_size = Vector2(280, 100)
 	panel.name = "BuildingPanel_" + building_name
 	
-	var building = building_data[building_name]
+	var building = building_data[building_name]  # Use real_building_data
 	
-	# Create panel style with construction theme
+	# Create panel style with construction theme (keep existing styling)
 	var stylebox = StyleBoxFlat.new()
-	stylebox.bg_color = Color("#2F1B14")  # Dark brown
+	stylebox.bg_color = Color("#2F1B14")
 	stylebox.border_width_left = 2
 	stylebox.border_width_right = 2
 	stylebox.border_width_top = 2
@@ -250,7 +283,7 @@ func create_building_panel(building_name: String, accent_color: Color) -> PanelC
 		right_vbox.add_child(production_label)
 		
 		var rate_label = Label.new()
-		rate_label.text = "%d %s/turn" % [building.production_rate * building.owned, building.production_type]
+		rate_label.text = "%d %s/turn" % [building.production_rate, building.production_type]
 		rate_label.add_theme_font_size_override("font_size", 14)
 		rate_label.add_theme_color_override("font_color", Color("#32CD32"))
 		rate_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -279,6 +312,183 @@ func create_building_panel(building_name: String, accent_color: Color) -> PanelC
 	panel.gui_input.connect(_on_building_panel_input.bind(building_name))
 	
 	return panel
+
+func create_building_detail_content(building_name: String) -> VBoxContainer:
+	var container = VBoxContainer.new()
+	container.add_theme_constant_override("separation", 12)
+	
+	var building = building_data[building_name]  # Use real_building_data
+	
+	# Header with close button (keep existing code)
+	var header_container = HBoxContainer.new()
+	
+	var title = Label.new()
+	title.text = building_name + " Management"
+	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_color_override("font_color", Color("#F4A460"))
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header_container.add_child(title)
+	
+	var close_button = Button.new()
+	close_button.text = "×"
+	close_button.add_theme_font_size_override("font_size", 20)
+	close_button.custom_minimum_size = Vector2(30, 30)
+	close_button.pressed.connect(_on_building_detail_close)
+	header_container.add_child(close_button)
+	
+	container.add_child(header_container)
+	
+	# Building information (updated with real data)
+	var info_text = RichTextLabel.new()
+	info_text.custom_minimum_size = Vector2(400, 150)
+	info_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	info_text.bbcode_enabled = true
+	
+	var info_content = "[b]%s[/b]\n[color=lightgray]%s[/color]\n\n" % [building_name, building.description]
+	info_content += "[color=orange]Owned:[/color] %d buildings\n" % building.owned
+	
+	if building.owned > 0:
+		info_content += "[color=orange]Locations:[/color] %s\n" % _format_coordinates(building.coordinates)
+	
+	if building.type == "production" and building.production_rate > 0:
+		info_content += "[color=lightgreen]Total Production:[/color] %d %s per turn\n" % [building.production_rate, building.production_type]
+	
+	info_content += "[color=yellow]Upgrade Level:[/color] %s" % building.upgrade_levels[building.current_level]
+	
+	info_text.text = info_content
+	container.add_child(info_text)
+	
+	# Spacer to push action buttons to bottom
+	var spacer = Control.new()
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	container.add_child(spacer)
+	
+	# Action buttons at the bottom
+	var action_container = create_building_actions(building_name)
+	container.add_child(action_container)
+	
+	return container
+
+# Update the build new function to use real building system
+func _on_build_new(building_name: String):
+	print("Building new ", building_name)
+	
+	# Hide this menu
+	hide_menu()
+	
+	# Start build mode for this specific building type
+	if build_manager and GameManager:
+		var building_data = building_data[building_name]
+		var building_type_enum = building_data.get("building_type_enum", BuildingData.BuildingType.BASIC_STRUCTURE)
+		
+		# Set the building type in build manager
+		build_manager.set_building_type(building_type_enum)
+		
+		# Start build mode through GameManager
+		GameManager.start_build_mode()
+		
+		print("Started build mode for: ", building_name)
+
+# Add refresh method for external calls
+func refresh_display():
+	"""Public method to refresh the building display"""
+	refresh_building_data()
+	create_building_interface()
+
+# Update tooltip to use real data
+func _on_show_building_tooltip(building_name: String):
+	var tooltip_label = building_tooltip.get_node("BuildingTooltipLabel")
+	tooltip_label.text = building_data[building_name].description  # Use real_building_data
+	
+	# Position tooltip using local coordinates (keep existing positioning code)
+	var global_mouse_pos = get_global_mouse_position()
+	var local_mouse_pos = global_mouse_pos - global_position
+	
+	var tooltip_pos = local_mouse_pos + Vector2(15, -15)
+	
+	var menu_rect = get_rect()
+	tooltip_pos.x = clamp(tooltip_pos.x, 10, menu_rect.size.x - building_tooltip.custom_minimum_size.x - 10)
+	tooltip_pos.y = clamp(tooltip_pos.y, 10, menu_rect.size.y - 120)
+	
+	building_tooltip.position = tooltip_pos
+	building_tooltip.visible = true
+
+func create_building_interface():
+	# Clear existing items
+	for child in item_container.get_children():
+		child.queue_free()
+	
+	# Clear panel references
+	building_panels.clear()
+	
+	# Create main building container
+	var buildings_container = create_buildings_container()
+	item_container.add_child(buildings_container)
+	
+	# Create tooltip system
+	create_building_tooltip_system()
+	
+	# Create detail view system
+	create_building_detail_system()
+
+func create_buildings_container() -> VBoxContainer:
+	var container = VBoxContainer.new()
+	container.add_theme_constant_override("separation", 15)
+	
+	# Create header
+	var header = create_building_header("Building Overview")
+	container.add_child(header)
+	
+	# Create categories
+	create_building_categories(container)
+	
+	return container
+
+func create_building_header(text: String) -> Label:
+	var header = Label.new()
+	header.text = text
+	header.add_theme_font_size_override("font_size", 24)
+	header.add_theme_color_override("font_color", Color("#8B4513"))  # Brown theme
+	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	
+	# Construction-themed styling
+	var stylebox = StyleBoxFlat.new()
+	stylebox.bg_color = Color("#F4A460")  # Sandy brown
+	stylebox.border_width_top = 3
+	stylebox.border_width_bottom = 3
+	stylebox.border_color = Color("#8B4513")  # Dark brown
+	stylebox.corner_radius_top_left = 8
+	stylebox.corner_radius_top_right = 8
+	stylebox.corner_radius_bottom_left = 8
+	stylebox.corner_radius_bottom_right = 8
+	stylebox.content_margin_top = 10
+	stylebox.content_margin_bottom = 10
+	header.add_theme_stylebox_override("normal", stylebox)
+	
+	return header
+
+
+func create_building_section(container: VBoxContainer, section_name: String, buildings: Array, accent_color: Color):
+	# Section header
+	var section_label = Label.new()
+	section_label.text = section_name
+	section_label.add_theme_font_size_override("font_size", 18)
+	section_label.add_theme_color_override("font_color", accent_color)
+	container.add_child(section_label)
+	
+	# Buildings grid for this section
+	var grid = GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 12)
+	grid.add_theme_constant_override("v_separation", 8)
+	
+	for building_name in buildings:
+		var building_panel = create_building_panel(building_name, accent_color)
+		building_panels[building_name] = building_panel
+		grid.add_child(building_panel)
+	
+	container.add_child(grid)
+
 
 func create_building_tooltip_system():
 	# Create timer
@@ -356,62 +566,6 @@ func create_building_detail_system():
 	
 	add_child(building_detail_view)
 
-func create_building_detail_content(building_name: String) -> VBoxContainer:
-	var container = VBoxContainer.new()
-	container.add_theme_constant_override("separation", 12)
-	
-	var building = building_data[building_name]
-	
-	# Header with close button
-	var header_container = HBoxContainer.new()
-	
-	var title = Label.new()
-	title.text = building_name + " Management"
-	title.add_theme_font_size_override("font_size", 20)
-	title.add_theme_color_override("font_color", Color("#F4A460"))
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header_container.add_child(title)
-	
-	var close_button = Button.new()
-	close_button.text = "×"
-	close_button.add_theme_font_size_override("font_size", 20)
-	close_button.custom_minimum_size = Vector2(30, 30)
-	close_button.pressed.connect(_on_building_detail_close)
-	header_container.add_child(close_button)
-	
-	container.add_child(header_container)
-	
-	# Building information (expandable area)
-	var info_text = RichTextLabel.new()
-	info_text.custom_minimum_size = Vector2(400, 150)
-	info_text.size_flags_vertical = Control.SIZE_EXPAND_FILL  # Take up remaining space
-	info_text.bbcode_enabled = true
-	
-	var info_content = "[b]%s[/b]\n[color=lightgray]%s[/color]\n\n" % [building_name, building.description]
-	info_content += "[color=orange]Owned:[/color] %d buildings\n" % building.owned
-	
-	if building.owned > 0:
-		info_content += "[color=orange]Locations:[/color] %s\n" % _format_coordinates(building.coordinates)
-	
-	if building.type == "production":
-		var total_production = building.production_rate * building.owned
-		info_content += "[color=lightgreen]Total Production:[/color] %d %s per turn\n" % [total_production, building.production_type]
-	
-	info_content += "[color=yellow]Upgrade Level:[/color] %s" % building.upgrade_levels[building.current_level]
-	
-	info_text.text = info_content
-	container.add_child(info_text)
-	
-	# Spacer to push action buttons to bottom
-	var spacer = Control.new()
-	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	container.add_child(spacer)
-	
-	# Action buttons at the bottom
-	var action_container = create_building_actions(building_name)
-	container.add_child(action_container)
-	
-	return container
 
 func create_building_actions(building_name: String) -> VBoxContainer:
 	var container = VBoxContainer.new()
@@ -516,23 +670,6 @@ func _on_building_tooltip_timer_timeout():
 	if current_hovered_building != "":
 		_on_show_building_tooltip(current_hovered_building)
 
-func _on_show_building_tooltip(building_name: String):
-	var tooltip_label = building_tooltip.get_node("BuildingTooltipLabel")
-	tooltip_label.text = building_data[building_name].description
-	
-	# Position tooltip using local coordinates
-	var global_mouse_pos = get_global_mouse_position()
-	var local_mouse_pos = global_mouse_pos - global_position
-	
-	var tooltip_pos = local_mouse_pos + Vector2(15, -15)
-	
-	# Keep within bounds
-	var menu_rect = get_rect()
-	tooltip_pos.x = clamp(tooltip_pos.x, 10, menu_rect.size.x - building_tooltip.custom_minimum_size.x - 10)
-	tooltip_pos.y = clamp(tooltip_pos.y, 10, menu_rect.size.y - 120)
-	
-	building_tooltip.position = tooltip_pos
-	building_tooltip.visible = true
 
 func _on_building_detail_close():
 	building_detail_view.visible = false
@@ -550,15 +687,6 @@ func _on_craft_item(building_name: String, item_name: String):
 	print("Crafting ", item_name, " at ", building_name)
 	# Placeholder - implement actual crafting logic
 
-func _on_build_new(building_name: String):
-	print("Building new ", building_name)
-	# Placeholder - implement actual building logic
-	# For demo, add a random coordinate
-	var new_coord = Vector2(randi() % 30, randi() % 30)
-	building_data[building_name].coordinates.append(new_coord)
-	building_data[building_name].owned += 1
-	# Refresh interface
-	create_building_interface()
 
 # Utility functions
 func _format_coordinates(coords: Array) -> String:
