@@ -23,6 +23,7 @@ var movement_manager: MovementManager
 var build_manager: BuildManager
 var interact_manager: InteractManager
 var attack_manager: AttackManager
+var resource_manager: ResourceManager
 var game_ui: GameUI
 
 func _ready():
@@ -37,6 +38,8 @@ func start_new_game():
 	interact_manager = InteractManager.new()
 	attack_manager = AttackManager.new()
 	character = Character.new()
+	resource_manager = ResourceManager.new()
+	
 	
 	# Initialize character stats
 	var character_stats = CharacterStats.new()
@@ -50,6 +53,7 @@ func start_new_game():
 	add_child(build_manager)
 	add_child(interact_manager)
 	add_child(attack_manager)
+	add_child(resource_manager)
 	
 	movement_manager.initialize(character, map_manager) 
 	build_manager.initialize(character, map_manager)
@@ -58,8 +62,8 @@ func start_new_game():
 	
 	connect_signals()
 	
-	create_test_interactables()
-	create_test_enemies()
+	#create_test_interactables()
+	#create_test_enemies()
 
 func create_test_interactables():
 	"""Create test interactable entities"""
@@ -303,6 +307,10 @@ func connect_signals():
 	attack_manager.attack_failed.connect(_on_attack_failed)
 	attack_manager.attack_confirmation_requested.connect(_on_attack_confirmation_requested)
 	attack_manager.enemy_died.connect(_on_enemy_died)
+	# Resource Manager signals
+	resource_manager.resource_changed.connect(_on_resource_changed)
+	resource_manager.resources_spent.connect(_on_resources_spent)
+	resource_manager.insufficient_resources.connect(_on_insufficient_resources)
 
 
 func _on_turn_manager_initial_turn(turn_number: int):
@@ -311,6 +319,7 @@ func _on_turn_manager_initial_turn(turn_number: int):
 func _on_turn_manager_turn_advanced(turn_number: int):
 	turn_advanced.emit(turn_number)
 	character.refresh_turn_resources()
+	resource_manager.apply_turn_income()
 	
 func _on_character_action_points_spent(current_action_points: int):
 	action_points_spent.emit(current_action_points)
@@ -361,6 +370,26 @@ func _on_attack_confirmation_requested(target_tile: BiomeTile, enemy: Enemy):
 	else:
 		print("Warning: No GameUI reference, auto-confirming attack")
 		attack_manager.confirm_attack()
+
+func _on_resource_changed(resource_name: String, new_amount: int):
+	"""Handle resource amount changes"""
+	if game_ui:
+		game_ui.update_resource(resource_name, new_amount)
+
+func _on_resources_spent(spent_resources: Dictionary):
+	"""Handle resources being spent"""
+	print("Resources spent: ", spent_resources)
+
+func _on_insufficient_resources(required: Dictionary, available: Dictionary):
+	"""Handle insufficient resources"""
+	var message = "Not enough resources! Need: "
+	for resource in required:
+		var need = required[resource]
+		var have = available.get(resource, 0)
+		message += "%d %s (have %d), " % [need, resource, have]
+	
+	if game_ui:
+		game_ui.show_error(message.trim_suffix(", "))
 
 # Confirmation methods that GameUI will call
 func confirm_movement(target_position: Vector2i):
@@ -469,3 +498,35 @@ func spend_action_points():
 	
 func get_current_action_points() -> int:
 	return character.current_action_points
+
+func add_resource(resource_name: String, amount: int):
+	"""Add resources to the player"""
+	resource_manager.add_resource(resource_name, amount)
+
+func spend_resource(resource_name: String, amount: int) -> bool:
+	"""Spend a single resource"""
+	return resource_manager.spend_resource(resource_name, amount)
+
+func spend_resources(cost: Dictionary) -> bool:
+	"""Spend multiple resources"""
+	return resource_manager.spend_resources(cost)
+
+func has_resource(resource_name: String, amount: int) -> bool:
+	"""Check if player has enough of a resource"""
+	return resource_manager.has_resource(resource_name, amount)
+
+func can_afford(cost: Dictionary) -> bool:
+	"""Check if player can afford a cost"""
+	return resource_manager.can_afford(cost)
+
+func get_resource(resource_name: String) -> int:
+	"""Get current amount of a resource"""
+	return resource_manager.get_resource(resource_name)
+
+func get_all_resources() -> Dictionary:
+	"""Get all current resources"""
+	return resource_manager.get_all_resources()
+
+func set_resource(resource_name: String, amount: int):
+	"""Set a resource to a specific amount"""
+	resource_manager.set_resource(resource_name, amount)

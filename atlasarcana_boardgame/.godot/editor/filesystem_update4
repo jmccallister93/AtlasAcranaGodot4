@@ -37,3 +37,7 @@ res://scripts/managers/InteractManager.gd
 res://scripts/entities/TreasureChest.gd
 res://scripts/entities/Enemy.gd
 res://scripts/managers/AttackManager.gd
+res://resources/entities/BuildingData.gd
+res://scripts/ui/gameui/BuildingSelectionMenu.gd
+res://scripts/managers/ResourceManager.gd
+res://scripts/ui/menus/BuildingButton.gd

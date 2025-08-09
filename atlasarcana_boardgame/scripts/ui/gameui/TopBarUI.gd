@@ -18,8 +18,6 @@ var action_points_label: Label
 # Resource labels
 var resource_labels: Dictionary = {}
 
-signal action_points_updated(current_action_points: int)
-
 func _ready():
 	create_ui_components()
 	connect_signals()
@@ -103,6 +101,27 @@ func create_resource_display(resource_name: String, color: Color) -> HBoxContain
 	resource_labels[resource_name.to_lower()] = label
 	
 	return container
+
+func update_resource(resource_name: String, amount: int):
+	"""Update the display of a specific resource"""
+	if resource_name in resource_labels:
+		var label = resource_labels[resource_name]
+		label.text = "%s: %d" % [resource_name.capitalize(), amount]
+		
+		# Optional: Add visual feedback for resource changes
+		create_resource_change_animation(label)
+
+func create_resource_change_animation(label: Label):
+	"""Create a brief animation when resources change"""
+	var original_scale = label.scale
+	var tween = create_tween()
+	tween.tween_property(label, "scale", original_scale * 1.2, 0.1)
+	tween.tween_property(label, "scale", original_scale, 0.1)
+
+func update_all_resources(resources: Dictionary):
+	"""Update all resource displays"""
+	for resource_name in resources:
+		update_resource(resource_name, resources[resource_name])
 
 func create_character_section():
 	"""Create character information section"""
@@ -199,17 +218,14 @@ func _on_turn_changed(turn_number: int):
 	turn_subtext.text = str(turn_number)
 
 func _on_action_points_changed(current_action_points: int):
-	"""Update action points display and notify other components"""
+	"""Update action points display"""
 	action_points_label.text = "AP: " + str(current_action_points)
-	
-	# Emit signal so other UI components can react
-	action_points_updated.emit(current_action_points)
-	
-func update_resource(resource_name: String, amount: int):
-	"""Update a specific resource display"""
-	var key = resource_name.to_lower()
-	if key in resource_labels:
-		resource_labels[key].text = resource_name.capitalize() + ": " + str(amount)
+
+#func update_resource(resource_name: String, amount: int):
+	#"""Update a specific resource display"""
+	#var key = resource_name.to_lower()
+	#if key in resource_labels:
+		#resource_labels[key].text = resource_name.capitalize() + ": " + str(amount)
 
 func update_character_name(name: String):
 	"""Update character name"""
