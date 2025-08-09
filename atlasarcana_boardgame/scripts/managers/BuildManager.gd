@@ -34,6 +34,8 @@ var building_selection_menu: BuildingSelectionMenu
 # Building storage
 var buildings_by_tile: Dictionary = {}  # Vector2i -> Array[Building]
 var buildings_by_type: Dictionary = {}  # String -> Array[Building]
+#UI Layering
+var ui_layer: CanvasLayer
 
 func initialize(char: Character, map: MapManager):
 	"""Initialize the build manager with character and map references"""
@@ -60,9 +62,16 @@ func create_building_selection_menu():
 	building_selection_menu.building_selected.connect(_on_building_selected)
 	building_selection_menu.menu_closed.connect(_on_building_menu_closed)
 	
-	# Add to scene tree directly (not to GameUI) for slide-up animation
-	get_tree().current_scene.add_child(building_selection_menu)
-	print("Building selection menu added to scene tree")
+	# Create a CanvasLayer for UI to ensure proper positioning
+	ui_layer = CanvasLayer.new()
+	ui_layer.layer = 100  # High layer to ensure it's on top
+	ui_layer.name = "BuildingMenuUILayer"
+	
+	# Add both to scene tree
+	get_tree().current_scene.add_child(ui_layer)
+	ui_layer.add_child(building_selection_menu)
+	
+	print("Building selection menu added to UI layer for proper positioning")
 
 func start_build_mode():
 	"""Start the building selection mode"""
@@ -398,3 +407,8 @@ func debug_list_all_buildings():
 			var info = building.get_info()
 			print("- %s at %s (Production: %s)" % [info.type, info.position, info.total_production])
 	print("====================")
+
+
+func _exit_tree():
+	if ui_layer and is_instance_valid(ui_layer):
+		ui_layer.queue_free()

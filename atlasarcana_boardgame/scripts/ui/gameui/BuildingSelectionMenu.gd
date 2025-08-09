@@ -61,7 +61,7 @@ func create_info_panel():
 	var scroll_container = item_container.get_parent()
 	if scroll_container:
 		scroll_container.anchor_right = 0.65  # Take up left 65% instead of full width
-		#scroll_container.offset_right = -10
+		scroll_container.offset_right = -10
 	
 	info_panel = Control.new()
 	info_panel.name = "InfoPanel"
