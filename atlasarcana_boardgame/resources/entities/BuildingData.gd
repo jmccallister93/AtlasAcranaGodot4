@@ -4,6 +4,7 @@ class_name BuildingData
 
 # Building types enum
 enum BuildingType {
+	ESSENCE_COLLECTOR,
 	FARM,
 	LUMBER_MILL,
 	MINE,
@@ -12,8 +13,7 @@ enum BuildingType {
 	ARCHERY_RANGE,
 	MAGE_TOWER,
 	DOCK,
-
-	
+	OUTPOST,
 	BASIC_STRUCTURE
 }
 
@@ -21,13 +21,26 @@ enum BuildingType {
 enum BuildingCategory {
 	RESOURCE_PRODUCTION,
 	UTILITY,
-	MILITARY,
-	INFRASTRUCTURE
+	WARBAND,
+	INFRASTRUCTURE,
+	DEFENSE
 }
 
 # Static building definitions
 static func get_building_definitions() -> Dictionary:
 	return {
+		BuildingType.ESSENCE_COLLECTOR: {
+			"name": "Essenece Collector",
+			"description": "Produces essence each turn.",
+			"category": BuildingCategory.RESOURCE_PRODUCTION,
+			"cost": {"gold": 50, },
+			"base_production": {"essence": 10},
+			#"biome_bonuses": {
+				#BiomeTile.BiomeType.GRASSLAND: {"food": 5}
+			#},
+			"sprite_color": Color(0.2, 0.2, 0.8),  # Bright green for farms
+
+		},
 		#FOOD
 		BuildingType.FARM: {
 			"name": "Farm",
@@ -97,7 +110,7 @@ static func get_building_definitions() -> Dictionary:
 		BuildingType.BARRACKS: {
 			"name": "Barracks",
 			"description": "Trains close combat units for combat.",
-			"category": BuildingCategory.MILITARY,
+			"category": BuildingCategory.WARBAND,
 			"cost": {"gold": 150,},
 			"base_production": {},
 			"biome_bonuses": {},
@@ -108,7 +121,7 @@ static func get_building_definitions() -> Dictionary:
 			BuildingType.ARCHERY_RANGE: {
 			"name": "Archery Range",
 			"description": "Trains ranged units for combat.",
-			"category": BuildingCategory.MILITARY,
+			"category": BuildingCategory.WARBAND,
 			"cost": {"gold": 150,},
 			"base_production": {},
 			"biome_bonuses": {},
@@ -119,7 +132,7 @@ static func get_building_definitions() -> Dictionary:
 			BuildingType.MAGE_TOWER: {
 			"name": "Mage Tower",
 			"description": "Trains magic units for combat.",
-			"category": BuildingCategory.MILITARY,
+			"category": BuildingCategory.WARBAND,
 			"cost": {"gold": 150,},
 			"base_production": {},
 			"biome_bonuses": {},
@@ -127,6 +140,19 @@ static func get_building_definitions() -> Dictionary:
 
 			"utility_type": "unit_training"
 		},
+		
+		BuildingType.OUTPOST: {
+			"name": "Outpost",
+			"description": "Helps defend areas from attacks.",
+			"category": BuildingCategory.DEFENSE,
+			"cost": {"gold": 50,},
+			"base_production": {},
+			"biome_bonuses": {},
+			"sprite_color": Color(0.5, 0.5, 0.1),  
+
+			"utility_type": "defense"
+		},
+
 
 		#BuildingType.BASIC_STRUCTURE: {
 			#"name": "Basic Structure",

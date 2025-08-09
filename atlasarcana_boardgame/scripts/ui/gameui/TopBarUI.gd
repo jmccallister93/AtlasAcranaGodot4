@@ -66,8 +66,8 @@ func create_resources_section():
 	background_panel.add_child(resources_section)
 	
 	# Create resource displays
-	var resources = ["Gold", "Food", "Wood", "Stone"]
-	var colors = [Color.YELLOW, Color.GREEN, Color(0.6, 0.4, 0.2), Color.GRAY]
+	var resources = ["Essence", "Gold", "Food", "Wood", "Stone"]
+	var colors = [Color.PURPLE, Color.YELLOW, Color.GREEN, Color(0.6, 0.4, 0.2), Color.GRAY]
 	
 	for i in range(resources.size()):
 		var resource_container = create_resource_display(resources[i], colors[i])

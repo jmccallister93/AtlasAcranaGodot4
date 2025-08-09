@@ -8,6 +8,7 @@ signal insufficient_resources(required: Dictionary, available: Dictionary)
 
 # Player resources
 var resources: Dictionary = {
+	"essence": 100,
 	"gold": 200,      # Starting gold for building
 	"food": 10,
 	"wood": 15,
@@ -17,6 +18,7 @@ var resources: Dictionary = {
 
 # Resource display names
 var resource_display_names: Dictionary = {
+	"essence": "Essence",
 	"gold": "Gold",
 	"food": "Food", 
 	"wood": "Wood",
@@ -122,9 +124,9 @@ func reset_resources():
 	resources = {
 		"gold": 200,
 		"food": 10,
-		"wood": 15,
-		"stone": 5,
-		"metal": 0
+		"wood": 10,
+		"stone": 10,
+		"metal": 10
 	}
 	
 	# Emit signals for all resources

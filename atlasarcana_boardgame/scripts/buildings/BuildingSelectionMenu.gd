@@ -12,6 +12,12 @@ var info_description: Label
 var info_cost: RichTextLabel
 var info_production: RichTextLabel
 
+# Category system
+var category_sections: Dictionary = {}  # BuildingCategory -> CategorySection
+var category_headers: Dictionary = {}   # BuildingCategory -> Button
+var category_containers: Dictionary = {} # BuildingCategory -> GridContainer
+var category_expanded: Dictionary = {}   # BuildingCategory -> bool
+
 # Building buttons
 var building_buttons: Array[BuildingButton] = []
 
@@ -24,8 +30,8 @@ func ready_post():
 	menu_title = "Select Building to Construct"
 	title_label.text = menu_title
 	
-	# Customize the grid for building buttons
-	item_container.columns = 3  # 3 buildings per row
+	# Convert item_container from GridContainer to VBoxContainer for categories
+	setup_category_layout()
 	
 	# Create the info panel AFTER BaseMenu has set everything up
 	create_info_panel()
@@ -34,9 +40,18 @@ func ready_post():
 	inventory_closed.connect(func(): menu_closed.emit())
 	resize_to_screen()
 
+
+func setup_category_layout():
+	"""Convert the layout to support categories"""
+	# Work with the existing GridContainer but configure it for vertical layout
+	if item_container:
+		item_container.columns = 1  # Single column = vertical layout like VBoxContainer
+		item_container.add_theme_constant_override("v_separation", 10)  # Spacing between categories
+		print("✅ Configured GridContainer for category layout")
+		
 func resize_to_screen():
 	var screen_size = get_viewport().get_visible_rect().size
-	var target_size = screen_size * 0.6
+	var target_size = screen_size * 0.7  # Slightly larger for categories
 	size = target_size
 	pivot_offset = size / 2
 	
@@ -160,48 +175,192 @@ func show_menu_with_data(tile: BiomeTile, resources: Dictionary):
 	target_tile = tile
 	player_resources = resources
 	
-	create_building_buttons()
+	create_category_sections()
 	show_menu()  # Call BaseMenu's show_menu()
 
-func create_building_buttons():
-	"""Create buttons for all available buildings"""
-	# Clear existing buttons
-	cleanup_buttons()
+# ============================================================================
+# CATEGORY SYSTEM
+# ============================================================================
+
+func create_category_sections():
+	"""Create collapsible sections for each building category"""
+	cleanup_categories()
 	
 	var building_definitions = BuildingData.get_building_definitions()
 	
-	print("=== BUILDING MENU DEBUG ===")
-	print("Creating building buttons for biome: ", target_tile.biome_type)
+	print("=== BUILDING CATEGORY MENU DEBUG ===")
+	print("Creating category sections for biome: ", target_tile.biome_type)
 	print("Player resources: ", player_resources)
 	
-	var buttons_created = 0
+	# Group buildings by category
+	var buildings_by_category = group_buildings_by_category(building_definitions)
 	
-	# Create buttons for building types
+	# Create sections for categories that have buildings
+	for category in BuildingData.BuildingCategory.values():
+		if category in buildings_by_category and buildings_by_category[category].size() > 0:
+			create_category_section(category, buildings_by_category[category])
+	
+	print("Created %d category sections" % category_sections.size())
+	print("===================================")
+
+func group_buildings_by_category(building_definitions: Dictionary) -> Dictionary:
+	"""Group buildings by their category"""
+	var buildings_by_category = {}
+	
+	# Initialize all categories
+	for category in BuildingData.BuildingCategory.values():
+		buildings_by_category[category] = []
+	
+	# Group buildings
 	for building_type in BuildingData.BuildingType.values():
 		if building_type in building_definitions:
 			var building_data = building_definitions[building_type]
 			
-			# Check if building can be built on this biome
+			# Check if building can be built on this biome (optional filtering)
 			var can_build = BuildingData.can_build_on_biome(building_type, target_tile.biome_type)
+			# SHOW ALL BUILDINGS FOR NOW (uncomment next line to enable biome restriction)
+			# if not can_build: continue
 			
-			# SHOW ALL BUILDINGS FOR NOW (comment out to enable biome restriction)
-			# if not can_build:
-			#     continue
-			
-			var button = create_building_button(building_type, building_data)
-			if button:
-				building_buttons.append(button)
-				item_container.add_child(button)  # Use BaseMenu's item_container
-				buttons_created += 1
-				print("✅ Created button %d for: %s" % [buttons_created, building_data.get("name", "Unknown")])
+			var category = building_data.get("category", BuildingData.BuildingCategory.INFRASTRUCTURE)
+			buildings_by_category[category].append({
+				"type": building_type,
+				"data": building_data
+			})
 	
-	print("Total buttons created: ", buttons_created)
-	print("=========================")
+	return buildings_by_category
+
+func create_category_section(category: BuildingData.BuildingCategory, buildings: Array):
+	"""Create a collapsible section for a building category"""
+	# Create category header button
+	var header_button = create_category_header(category)
+	item_container.add_child(header_button)
 	
-	# Show info for first building if any exist
-	if building_buttons.size() > 0:
-		var first_building_type = building_buttons[0].building_type
-		update_info_panel(first_building_type)
+	# Create buildings container (initially hidden)
+	var buildings_container = create_buildings_container_for_category(category, buildings)
+	item_container.add_child(buildings_container)
+	
+	# Store references
+	category_headers[category] = header_button
+	category_containers[category] = buildings_container
+	category_expanded[category] = false  # Start collapsed
+	
+	# Set initial visibility
+	buildings_container.visible = false
+	
+	print("Created category section: %s with %d buildings" % [get_category_name(category), buildings.size()])
+
+func create_category_header(category: BuildingData.BuildingCategory) -> Button:
+	"""Create a header button for a category"""
+	var header = Button.new()
+	header.text = "▶ " + get_category_name(category)
+	header.custom_minimum_size = Vector2(0, 40)
+	header.add_theme_font_size_override("font_size", 14)
+	
+	# Style the header button
+	var header_style = StyleBoxFlat.new()
+	header_style.bg_color = get_category_color(category)
+	header_style.border_color = Color.WHITE
+	header_style.border_width_top = 1
+	header_style.border_width_bottom = 1
+	header_style.corner_radius_top_left = 5
+	header_style.corner_radius_top_right = 5
+	header_style.corner_radius_bottom_left = 5
+	header_style.corner_radius_bottom_right = 5
+	header_style.content_margin_left = 15
+	header_style.content_margin_right = 15
+	header_style.content_margin_top = 8
+	header_style.content_margin_bottom = 8
+	
+	header.add_theme_stylebox_override("normal", header_style)
+	header.add_theme_stylebox_override("hover", header_style)
+	header.add_theme_stylebox_override("pressed", header_style)
+	header.add_theme_color_override("font_color", Color.WHITE)
+	
+	# Connect toggle signal
+	header.pressed.connect(_on_category_header_pressed.bind(category))
+	
+	return header
+
+func create_buildings_container_for_category(category: BuildingData.BuildingCategory, buildings: Array) -> GridContainer:
+	"""Create a container with buildings for a specific category"""
+	var container = GridContainer.new()
+	container.columns = 2  # 2 buildings per row within category
+	container.add_theme_constant_override("h_separation", 10)
+	container.add_theme_constant_override("v_separation", 8)
+	
+	# Add padding directly to the GridContainer
+	container.add_theme_constant_override("margin_left", 20)
+	container.add_theme_constant_override("margin_right", 20)
+	container.add_theme_constant_override("margin_top", 5)
+	container.add_theme_constant_override("margin_bottom", 10)
+	
+	# Create building buttons
+	for building_info in buildings:
+		var building_type = building_info.type
+		var building_data = building_info.data
+		
+		var button = create_building_button(building_type, building_data)
+		if button:
+			building_buttons.append(button)
+			container.add_child(button)
+	
+	return container
+func get_category_name(category: BuildingData.BuildingCategory) -> String:
+	"""Get display name for a category"""
+	match category:
+		BuildingData.BuildingCategory.RESOURCE_PRODUCTION:
+			return "Resource Production"
+		BuildingData.BuildingCategory.UTILITY:
+			return "Utility Buildings"
+		BuildingData.BuildingCategory.WARBAND:
+			return "Military & Warband"
+		BuildingData.BuildingCategory.INFRASTRUCTURE:
+			return "Infrastructure"
+		BuildingData.BuildingCategory.DEFENSE:
+			return "Defensive Structures"
+		_:
+			return "Other"
+
+func get_category_color(category: BuildingData.BuildingCategory) -> Color:
+	"""Get color theme for a category"""
+	match category:
+		BuildingData.BuildingCategory.RESOURCE_PRODUCTION:
+			return Color(0.2, 0.7, 0.2)  # Green
+		BuildingData.BuildingCategory.UTILITY:
+			return Color(0.4, 0.6, 0.8)  # Blue
+		BuildingData.BuildingCategory.WARBAND:
+			return Color(0.8, 0.2, 0.2)  # Red
+		BuildingData.BuildingCategory.INFRASTRUCTURE:
+			return Color(0.6, 0.4, 0.8)  # Purple
+		BuildingData.BuildingCategory.DEFENSE:
+			return Color(0.6, 0.6, 0.6)  # Gray
+		_:
+			return Color(0.5, 0.5, 0.5)  # Default gray
+
+func _on_category_header_pressed(category: BuildingData.BuildingCategory):
+	"""Handle category header button press"""
+	var is_expanded = category_expanded.get(category, false)
+	var container = category_containers.get(category)
+	var header = category_headers.get(category)
+	
+	if container and header:
+		# Toggle visibility
+		is_expanded = !is_expanded
+		category_expanded[category] = is_expanded
+		container.visible = is_expanded
+		
+		# Update header text
+		var category_name = get_category_name(category)
+		if is_expanded:
+			header.text = "▼ " + category_name
+		else:
+			header.text = "▶ " + category_name
+		
+		print("Toggled category %s: %s" % [category_name, "expanded" if is_expanded else "collapsed"])
+
+# ============================================================================
+# BUILDING BUTTON MANAGEMENT
+# ============================================================================
 
 func create_building_button(building_type: BuildingData.BuildingType, building_data: Dictionary) -> BuildingButton:
 	"""Create a single building button"""
@@ -244,7 +403,6 @@ func update_info_panel(building_type: BuildingData.BuildingType):
 	var building_data = BuildingData.get_building_data(building_type)
 	
 	# Title
-	#info_title.text = building_data.get("name", "Unknown")
 	info_title.text = building_data.get("name")
 	
 	# Description
@@ -288,18 +446,68 @@ func update_info_panel(building_type: BuildingData.BuildingType):
 	
 	info_production.text = production_text
 
+# ============================================================================
+# CLEANUP AND UTILITIES
+# ============================================================================
+
+func cleanup_categories():
+	"""Clean up all category sections"""
+	# Clear category data
+	category_sections.clear()
+	category_headers.clear()
+	category_containers.clear()
+	category_expanded.clear()
+	
+	# Clean up buttons
+	cleanup_buttons()
+	
+	# Clear item container children
+	for child in item_container.get_children():
+		child.queue_free()
+
 func cleanup_buttons():
 	"""Clean up building buttons"""
 	for button in building_buttons:
 		if button and is_instance_valid(button):
 			button.queue_free()
 	building_buttons.clear()
-	
-	# Clear item container children (BaseMenu's grid container)
-	for child in item_container.get_children():
-		child.queue_free()
 
 # Override BaseMenu's hide_menu to add cleanup
 func hide_menu():
 	super.hide_menu()  # Call BaseMenu's hide_menu()
-	cleanup_buttons()
+	cleanup_categories()
+
+# ============================================================================
+# UTILITY METHODS FOR CATEGORIES
+# ============================================================================
+
+func expand_all_categories():
+	"""Expand all category sections"""
+	for category in category_expanded.keys():
+		if not category_expanded[category]:
+			_on_category_header_pressed(category)
+
+func collapse_all_categories():
+	"""Collapse all category sections"""
+	for category in category_expanded.keys():
+		if category_expanded[category]:
+			_on_category_header_pressed(category)
+
+func expand_category(category: BuildingData.BuildingCategory):
+	"""Expand a specific category"""
+	if category in category_expanded and not category_expanded[category]:
+		_on_category_header_pressed(category)
+
+func get_buildings_in_category(category: BuildingData.BuildingCategory) -> Array:
+	"""Get all building types in a specific category"""
+	var buildings_in_category = []
+	var building_definitions = BuildingData.get_building_definitions()
+	
+	for building_type in BuildingData.BuildingType.values():
+		if building_type in building_definitions:
+			var building_data = building_definitions[building_type]
+			var building_category = building_data.get("category", BuildingData.BuildingCategory.INFRASTRUCTURE)
+			if building_category == category:
+				buildings_in_category.append(building_type)
+	
+	return buildings_in_category
