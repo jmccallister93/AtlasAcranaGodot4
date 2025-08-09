@@ -141,10 +141,6 @@ func clear_highlighted_tiles():
 	highlighted_tiles.clear()
 
 func can_build_on_tile(tile: BiomeTile) -> bool:
-	"""Check if building is allowed on this tile"""
-	# Don't allow building on character's current position
-	if tile.grid_position == character.grid_position:
-		return false
 	
 	# Don't allow building on occupied tiles
 	if tile.is_occupied:

@@ -124,9 +124,9 @@ func create_info_panel():
 	info_description.anchor_right = 1.0
 	info_description.anchor_bottom = 0.0
 	info_description.offset_left = 10
-	info_description.offset_top = 45
+	info_description.offset_top = 55
 	info_description.offset_right = -10
-	info_description.offset_bottom = 145
+	info_description.offset_bottom = 55
 	info_panel.add_child(info_description)
 	
 	info_cost = RichTextLabel.new()
@@ -139,7 +139,7 @@ func create_info_panel():
 	info_cost.offset_left = 10
 	info_cost.offset_top = 155
 	info_cost.offset_right = -10
-	info_cost.offset_bottom = 255
+	info_cost.offset_bottom = 75
 	info_panel.add_child(info_cost)
 	
 	info_production = RichTextLabel.new()
@@ -244,7 +244,8 @@ func update_info_panel(building_type: BuildingData.BuildingType):
 	var building_data = BuildingData.get_building_data(building_type)
 	
 	# Title
-	info_title.text = building_data.get("name", "Unknown")
+	#info_title.text = building_data.get("name", "Unknown")
+	info_title.text = building_data.get("name")
 	
 	# Description
 	info_description.text = building_data.get("description", "No description available.")
@@ -283,7 +284,7 @@ func update_info_panel(building_type: BuildingData.BuildingType):
 				break
 		
 		if has_bonus:
-			production_text += "\n[color=yellow]✨ Biome bonus active![/color]"
+			production_text += "\n[color=yellow]Biome bonus: +5[/color]"
 	
 	info_production.text = production_text
 
