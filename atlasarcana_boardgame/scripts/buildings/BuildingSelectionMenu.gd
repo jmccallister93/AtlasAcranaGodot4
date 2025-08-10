@@ -221,7 +221,7 @@ func group_buildings_by_category(building_definitions: Dictionary) -> Dictionary
 			# SHOW ALL BUILDINGS FOR NOW (uncomment next line to enable biome restriction)
 			# if not can_build: continue
 			
-			var category = building_data.get("category", BuildingData.BuildingCategory.INFRASTRUCTURE)
+			var category = building_data.get("category", BuildingData.BuildingCategory.BASIC_STRUCTURE)
 			buildings_by_category[category].append({
 				"type": building_type,
 				"data": building_data
@@ -308,30 +308,26 @@ func create_buildings_container_for_category(category: BuildingData.BuildingCate
 func get_category_name(category: BuildingData.BuildingCategory) -> String:
 	"""Get display name for a category"""
 	match category:
-		BuildingData.BuildingCategory.RESOURCE_PRODUCTION:
+		BuildingData.BuildingCategory.RESOURCE:
 			return "Resource Production"
-		BuildingData.BuildingCategory.UTILITY:
-			return "Utility Buildings"
+		BuildingData.BuildingCategory.CHARACTER:
+			return "Character Buildings"
 		BuildingData.BuildingCategory.WARBAND:
-			return "Military & Warband"
-		BuildingData.BuildingCategory.INFRASTRUCTURE:
-			return "Infrastructure"
+			return "Warband Buildings"
 		BuildingData.BuildingCategory.DEFENSE:
-			return "Defensive Structures"
+			return "Defensive Buildings"
 		_:
 			return "Other"
 
 func get_category_color(category: BuildingData.BuildingCategory) -> Color:
 	"""Get color theme for a category"""
 	match category:
-		BuildingData.BuildingCategory.RESOURCE_PRODUCTION:
+		BuildingData.BuildingCategory.RESOURCE:
 			return Color(0.2, 0.7, 0.2)  # Green
-		BuildingData.BuildingCategory.UTILITY:
+		BuildingData.BuildingCategory.CHARACTER:
 			return Color(0.4, 0.6, 0.8)  # Blue
 		BuildingData.BuildingCategory.WARBAND:
 			return Color(0.8, 0.2, 0.2)  # Red
-		BuildingData.BuildingCategory.INFRASTRUCTURE:
-			return Color(0.6, 0.4, 0.8)  # Purple
 		BuildingData.BuildingCategory.DEFENSE:
 			return Color(0.6, 0.6, 0.6)  # Gray
 		_:
@@ -506,7 +502,7 @@ func get_buildings_in_category(category: BuildingData.BuildingCategory) -> Array
 	for building_type in BuildingData.BuildingType.values():
 		if building_type in building_definitions:
 			var building_data = building_definitions[building_type]
-			var building_category = building_data.get("category", BuildingData.BuildingCategory.INFRASTRUCTURE)
+			var building_category = building_data.get("category", BuildingData.BuildingCategory.BASIC_STRUCTURE)
 			if building_category == category:
 				buildings_in_category.append(building_type)
 	

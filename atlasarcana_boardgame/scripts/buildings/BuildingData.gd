@@ -4,26 +4,33 @@ class_name BuildingData
 
 # Building types enum
 enum BuildingType {
+#	Resource
 	ESSENCE_COLLECTOR,
 	FARM,
 	LUMBER_MILL,
 	MINE,
+	#Character
+	BLACKSMITH,
+	ESSENCESMITH,
 	FORGE,
+	#Warband
 	BARRACKS,
 	ARCHERY_RANGE,
 	MAGE_TOWER,
-	DOCK,
+	#Defensive
 	OUTPOST,
+	BUNKER,
+	BASTION,
 	BASIC_STRUCTURE
 }
 
 # Building categories
 enum BuildingCategory {
-	RESOURCE_PRODUCTION,
-	UTILITY,
+	RESOURCE,
+	CHARACTER,
 	WARBAND,
-	INFRASTRUCTURE,
-	DEFENSE
+	DEFENSE,
+	BASIC_STRUCTURE
 }
 
 # Static building definitions
@@ -32,142 +39,139 @@ static func get_building_definitions() -> Dictionary:
 		BuildingType.ESSENCE_COLLECTOR: {
 			"name": "Essenece Collector",
 			"description": "Produces essence each turn.",
-			"category": BuildingCategory.RESOURCE_PRODUCTION,
+			"category": BuildingCategory.RESOURCE,
 			"cost": {"gold": 50, },
 			"base_production": {"essence": 10},
-			#"biome_bonuses": {
-				#BiomeTile.BiomeType.GRASSLAND: {"food": 5}
-			#},
-			"sprite_color": Color(0.2, 0.2, 0.8),  # Bright green for farms
-
+			"sprite_color": Color(0.2, 0.2, 0.8), 
 		},
 		#FOOD
 		BuildingType.FARM: {
 			"name": "Farm",
 			"description": "Produces food each turn. Gets bonus on grassland tiles.",
-			"category": BuildingCategory.RESOURCE_PRODUCTION,
+			"category": BuildingCategory.RESOURCE,
 			"cost": {"gold": 50, },
 			"base_production": {"food": 10},
 			"biome_bonuses": {
 				BiomeTile.BiomeType.GRASSLAND: {"food": 5}
 			},
-			"sprite_color": Color(0.2, 0.8, 0.2),  # Bright green for farms
-
+			"sprite_color": Color(0.2, 0.8, 0.2),  
 		},
-			BuildingType.DOCK: {
-			"name": "Dock",
-			"description": "Provides fish and enables water trade routes.",
-			"category": BuildingCategory.INFRASTRUCTURE,
-			"cost": {"gold": 80},
-			"base_production": {"food": 10},
-			"biome_bonuses": {
-				BiomeTile.BiomeType.WATER: {"food": 5}
-			},
-			"sprite_color": Color(0.1, 0.5, 0.9),  # Blue for water buildings
-			"allowed_biomes": [
-				BiomeTile.BiomeType.WATER
-			]
-		},
-#		WOOD
+		#WOOD
 		BuildingType.LUMBER_MILL: {
 			"name": "Lumber Mill",
 			"description": "Produces wood each turn. Gets large bonus on forest tiles.",
-			"category": BuildingCategory.RESOURCE_PRODUCTION,
+			"category": BuildingCategory.RESOURCE,
 			"cost": {"gold": 75,},
 			"base_production": {"wood": 10},
 			"biome_bonuses": {
 				BiomeTile.BiomeType.FOREST: {"wood": 5}
 			},
-			"sprite_color": Color(0.6, 0.3, 0.1),  # Brown for lumber
-
+			"sprite_color": Color(0.6, 0.3, 0.1),  
 		},
 #		STONE
 		BuildingType.MINE: {
 			"name": "Mine",
 			"description": "Produces stone and metal. Gets huge bonus on mountain tiles.",
-			"category": BuildingCategory.RESOURCE_PRODUCTION,
+			"category": BuildingCategory.RESOURCE,
 			"cost": {"gold": 100, },
 			"base_production": {"stone": 10},
 			"biome_bonuses": {
 				BiomeTile.BiomeType.MOUNTAIN: {"stone": 5, }
 			},
 			"sprite_color": Color(0.5, 0.5, 0.5),  # Gray for mines
-
 		},
 #		CHARACTER ITEMS
 		BuildingType.FORGE: {
 			"name": "Forge",
 			"description": "Allows creation of weapons and tools. Requires metal.",
-			"category": BuildingCategory.UTILITY,
+			"category": BuildingCategory.CHARACTER,
 			"cost": {"gold": 120, },
 			"base_production": {},
 			"biome_bonuses": {},
 			"sprite_color": Color(1.0, 0.3, 0.1),  # Orange-red for forge
-
-			"utility_type": "weapon_crafting"
+			"utility_type": "character"
+		},
+		BuildingType.BLACKSMITH: {
+			"name": "Blacksmith",
+			"description": "Allows creation of weapons and tools. Requires metal.",
+			"category": BuildingCategory.CHARACTER,
+			"cost": {"gold": 120, },
+			"base_production": {},
+			"biome_bonuses": {},
+			"sprite_color": Color(1.0, 0.3, 0.1),  # Orange-red for forge
+			"utility_type": "character"
+		},
+		BuildingType.ESSENCESMITH: {
+			"name": "Essencesmith",
+			"description": "Allows creation of weapons and tools. Requires metal.",
+			"category": BuildingCategory.CHARACTER,
+			"cost": {"gold": 120, },
+			"base_production": {},
+			"biome_bonuses": {},
+			"sprite_color": Color(1.0, 0.3, 0.1),  # Orange-red for forge
+			"utility_type": "character"
 		},
 #		UNITS
 		BuildingType.BARRACKS: {
 			"name": "Barracks",
-			"description": "Trains close combat units for combat.",
+			"description": "Provides close combat unit recruitment for warband.",
 			"category": BuildingCategory.WARBAND,
 			"cost": {"gold": 150,},
 			"base_production": {},
 			"biome_bonuses": {},
 			"sprite_color": Color(0.8, 0.1, 0.1),  # Dark red for military
-
-			"utility_type": "unit_training"
+			"utility_type": "warband"
 		},
 			BuildingType.ARCHERY_RANGE: {
 			"name": "Archery Range",
-			"description": "Trains ranged units for combat.",
+			"description": "Provides ranged unit recruitment for warband.",
 			"category": BuildingCategory.WARBAND,
 			"cost": {"gold": 150,},
 			"base_production": {},
 			"biome_bonuses": {},
 			"sprite_color": Color(0.8, 0.1, 0.1),  # Dark red for military
-
-			"utility_type": "unit_training"
+			"utility_type": "warband"
 		},
 			BuildingType.MAGE_TOWER: {
 			"name": "Mage Tower",
-			"description": "Trains magic units for combat.",
+			"description": "Provides magic units recruitment for warband.",
 			"category": BuildingCategory.WARBAND,
 			"cost": {"gold": 150,},
 			"base_production": {},
 			"biome_bonuses": {},
 			"sprite_color": Color(0.8, 0.1, 0.1),  # Dark red for military
-
-			"utility_type": "unit_training"
+			"utility_type": "warband"
 		},
-		
 		BuildingType.OUTPOST: {
 			"name": "Outpost",
-			"description": "Helps defend areas from attacks.",
+			"description": "Provides ranged defense for buildings in area.",
 			"category": BuildingCategory.DEFENSE,
 			"cost": {"gold": 50,},
 			"base_production": {},
 			"biome_bonuses": {},
 			"sprite_color": Color(0.5, 0.5, 0.1),  
-
 			"utility_type": "defense"
 		},
-
-
-		#BuildingType.BASIC_STRUCTURE: {
-			#"name": "Basic Structure",
-			#"description": "A simple building with no special function.",
-			#"category": BuildingCategory.INFRASTRUCTURE,
-			#"cost": {"gold": 25},
-			#"base_production": {},
-			#"biome_bonuses": {},
-			#"sprite_color": Color(0.6, 0.4, 0.8),  # Purple for basic
-			#"allowed_biomes": [
-				#BiomeTile.BiomeType.GRASSLAND,
-				#BiomeTile.BiomeType.FOREST,
-				#BiomeTile.BiomeType.DESERT
-			#]
-		#}
+		BuildingType.BUNKER: {
+			"name": "Bunker",
+			"description": "Provides close combat defense for buildings in area.",
+			"category": BuildingCategory.DEFENSE,
+			"cost": {"gold": 50,},
+			"base_production": {},
+			"biome_bonuses": {},
+			"sprite_color": Color(0.5, 0.5, 0.1),  
+			"utility_type": "defense"
+		},
+		BuildingType.BASTION: {
+			"name": "Bastion",
+			"description": "Provides magic defense for buildings in area.",
+			"category": BuildingCategory.DEFENSE,
+			"cost": {"gold": 50,},
+			"base_production": {},
+			"biome_bonuses": {},
+			"sprite_color": Color(0.5, 0.5, 0.1),  
+			"utility_type": "defense"
+		},
 	}
 
 static func get_building_data(building_type: BuildingType) -> Dictionary:

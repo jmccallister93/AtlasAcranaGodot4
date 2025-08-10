@@ -7,7 +7,7 @@ var building_type: BuildingData.BuildingType
 var building_type_string: String = ""
 var tile_position: Vector2i
 var target_tile: BiomeTile
-var tile: BiomeTile  # Add this alias for BuildingMenu compatibility
+var tile: BiomeTile  
 var is_active: bool = true
 var health: int = 100
 var max_health: int = 100
@@ -72,7 +72,7 @@ func create_visual_components():
 	# Create colored square placeholder
 	sprite = ColorRect.new()
 	sprite.size = Vector2(32, 32)
-	sprite.position = Vector2(-16, -16)  # Center on building position
+	sprite.position = Vector2(-16, -16)  # bottom corner
 	sprite.z_index = 15
 	
 	# Set a default color first
