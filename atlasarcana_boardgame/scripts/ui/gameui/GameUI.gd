@@ -13,7 +13,7 @@ var building_detail_view: BuildingDetailView
 
 # Legacy menu references (for compatibility)
 var inventory_menu: InventoryMenu
-var character_menu: CharacterMenu
+var character_menu: EnhancedCharacterMenu
 var building_menu: BuildingMenu
 
 # Signals for menu interactions (for compatibility)
@@ -67,7 +67,6 @@ func create_legacy_menus():
 	
 	# Create the actual menu instances
 	var inventory_menu_scene: PackedScene = preload("res://scenes/ui/menus/InventoryMenu.tscn")
-	var character_menu_scene: PackedScene = preload("res://scenes/ui/menus/CharacterMenu.tscn")
 	var building_menu_scene: PackedScene = preload("res://scenes/ui/menus/BuildingMenu.tscn")
 	
 	if inventory_menu_scene:
@@ -75,15 +74,131 @@ func create_legacy_menus():
 		menu_manager.add_child(inventory_menu)
 		inventory_menu.hide()
 	
-	if character_menu_scene:
-		character_menu = character_menu_scene.instantiate()
-		menu_manager.add_child(character_menu)
-		character_menu.hide()
+	# Create enhanced character menu programmatically
+	character_menu = EnhancedCharacterMenu.new()
+	menu_manager.add_child(character_menu)
+	character_menu.hide()
 	
 	if building_menu_scene:
 		building_menu = building_menu_scene.instantiate()
 		menu_manager.add_child(building_menu)
 		building_menu.hide()
+	
+	# Connect character menu signals
+	if character_menu:
+		character_menu.equipment_slot_clicked.connect(_on_equipment_slot_clicked)
+		character_menu.item_equipped.connect(_on_item_equipped)
+		character_menu.item_unequipped.connect(_on_item_unequipped)
+
+
+func _on_equipment_slot_clicked(slot_type: EquipmentSlot.SlotType):
+	"""Handle equipment slot clicks"""
+	print("Equipment slot clicked in GameUI: ", EquipmentSlot.SlotType.keys()[slot_type])
+	
+	# For demonstration, create and equip a random item
+	# In a real game, this would open an inventory or item selection dialog
+	if GameManager and GameManager.character:
+		create_demo_item_for_slot(slot_type)
+
+func create_demo_item_for_slot(slot_type: EquipmentSlot.SlotType):
+	"""Create a demo item for the clicked slot"""
+	# Initialize item database if not done already
+	ItemDatabase.initialize()
+	
+	var character = GameManager.character
+	var current_item = character.get_equipped_item(slot_type)
+	
+	if current_item:
+		# Unequip current item
+		character.unequip_item(slot_type)
+		show_info("Unequipped " + current_item.item_name)
+	else:
+		# Equip a demo item based on slot type
+		var demo_item = create_demo_item_for_slot_type(slot_type)
+		if demo_item and character.equip_item(demo_item, slot_type):
+			show_success("Equipped " + demo_item.item_name)
+		else:
+			show_error("Failed to equip item")
+
+func create_demo_item_for_slot_type(slot_type: EquipmentSlot.SlotType) -> EquipmentItem:
+	"""Create a demo item for a specific slot type"""
+	var demo_item = EquipmentItem.new()
+	demo_item.compatible_slots = [slot_type]
+	
+	match slot_type:
+		EquipmentSlot.SlotType.MAIN_HAND:
+			demo_item.item_id = "demo_sword"
+			demo_item.item_name = "Demo Sword"
+			demo_item.description = "A demonstration weapon"
+			demo_item.stat_modifiers = {"Attack": 10, "Critical_Chance": 3}
+			demo_item.rarity = EquipmentItem.ItemRarity.UNCOMMON
+			
+		EquipmentSlot.SlotType.OFF_HAND:
+			demo_item.item_id = "demo_shield"
+			demo_item.item_name = "Demo Shield"
+			demo_item.description = "A demonstration shield"
+			demo_item.stat_modifiers = {"Defense": 6, "Health": 8}
+			
+		EquipmentSlot.SlotType.HELMET:
+			demo_item.item_id = "demo_helmet"
+			demo_item.item_name = "Demo Helmet"
+			demo_item.description = "A demonstration helmet"
+			demo_item.stat_modifiers = {"Defense": 4, "Health": 12}
+			
+		EquipmentSlot.SlotType.CHEST:
+			demo_item.item_id = "demo_chest"
+			demo_item.item_name = "Demo Chestplate"
+			demo_item.description = "A demonstration chestplate"
+			demo_item.stat_modifiers = {"Defense": 12, "Health": 20}
+			demo_item.rarity = EquipmentItem.ItemRarity.RARE
+			
+		EquipmentSlot.SlotType.LEGS:
+			demo_item.item_id = "demo_legs"
+			demo_item.item_name = "Demo Leggings"
+			demo_item.description = "Demonstration leg armor"
+			demo_item.stat_modifiers = {"Defense": 8, "Movement": 2}
+			
+		EquipmentSlot.SlotType.HANDS:
+			demo_item.item_id = "demo_gloves"
+			demo_item.item_name = "Demo Gloves"
+			demo_item.description = "Demonstration gloves"
+			demo_item.stat_modifiers = {"Attack": 3, "Build": 2}
+			
+		EquipmentSlot.SlotType.FEET:
+			demo_item.item_id = "demo_boots"
+			demo_item.item_name = "Demo Boots"
+			demo_item.description = "Demonstration boots"
+			demo_item.stat_modifiers = {"Movement": 3, "Defense": 2}
+			
+		EquipmentSlot.SlotType.RING_1, EquipmentSlot.SlotType.RING_2:
+			demo_item.item_id = "demo_ring"
+			demo_item.item_name = "Demo Ring"
+			demo_item.description = "A demonstration ring"
+			demo_item.stat_modifiers = {"Critical_Chance": 2, "Critical_Damage": 8}
+			demo_item.rarity = EquipmentItem.ItemRarity.EPIC
+			
+		EquipmentSlot.SlotType.NECKLACE:
+			demo_item.item_id = "demo_necklace"
+			demo_item.item_name = "Demo Necklace"
+			demo_item.description = "A demonstration necklace"
+			demo_item.stat_modifiers = {"Leadership": 4, "Morale_Bonus": 2}
+			demo_item.rarity = EquipmentItem.ItemRarity.RARE
+			
+		EquipmentSlot.SlotType.BELT:
+			demo_item.item_id = "demo_belt"
+			demo_item.item_name = "Demo Belt"
+			demo_item.description = "A demonstration belt"
+			demo_item.stat_modifiers = {"Health": 15, "Supply_Management": 3}
+	
+	return demo_item
+
+func _on_item_equipped(item: EquipmentItem, slot: EquipmentSlot.SlotType):
+	"""Handle item equipped"""
+	show_success("Equipped " + item.item_name)
+
+func _on_item_unequipped(item: EquipmentItem, slot: EquipmentSlot.SlotType):
+	"""Handle item unequipped"""
+	show_info("Unequipped " + item.item_name)
 
 func create_building_detail_view():
 	"""Create the building detail view as part of the UI system"""
@@ -192,6 +307,11 @@ func _on_character_button_pressed():
 			character_closed.emit()
 		else:
 			close_all_menus()
+			
+			# Refresh character data before showing
+			if character_menu is EnhancedCharacterMenu:
+				character_menu.refresh_all_displays()
+			
 			character_menu.show_menu()
 			character_opened.emit()
 

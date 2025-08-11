@@ -48,3 +48,15 @@ res://scripts/buildings/BuildingSelectionMenu.gd
 res://scripts/buildings/BuildingData.gd
 res://scripts/buildings/BuildingDetailView.gd
 res://scripts/ui/menus/BaseMenu.gd
+res://scripts/equipment/EquipmentSlot.gd
+res://scripts/equipment/EquipmentItem.gd
+res://scripts/equipment/EquipmentManager.gd
+res://scripts/character/StatCategory.gd
+res://scripts/character/StatData.gd
+res://scripts/character/EnhancedCharacterStats.gd
+res://scripts/character/SkillNode.gd
+res://scripts/character/SkillTree.gd
+res://scripts/character/SkillManager.gd
+res://scripts/character/EnhancedCharacterMenu.gd
+res://scripts/character/Character.gd
+res://scripts/entities/ItemDatabase.gd

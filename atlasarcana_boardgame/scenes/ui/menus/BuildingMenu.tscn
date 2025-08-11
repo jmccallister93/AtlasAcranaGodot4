@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://dgacetpg4rddc"]
 
-[ext_resource type="Script" uid="uid://o0gi1cpy3uo8" path="res://scripts/ui/menus/BuildingMenu.gd" id="1_h42fg"]
+[ext_resource type="Script" uid="uid://o0gi1cpy3uo8" path="res://scripts/buildings/BuildingMenu.gd" id="1_h42fg"]
 
 [node name="BuildingMenu" type="Control"]
 layout_mode = 3

@@ -12,7 +12,7 @@ var build_manager: BuildManager
 
 # UI Components (created fresh each time)
 var building_selection_container: VBoxContainer  # Temporary reference
-var building_info_container: VBoxContainer  # Temporary reference
+var building_info_container: HBoxContainer  # Temporary reference
 
 # States
 enum ViewState {
@@ -172,7 +172,7 @@ func create_building_details_ui():
 		title_label.text = current_building.get_building_name() + " Details"
 	
 	# Create fresh info container each time
-	building_info_container = VBoxContainer.new()
+	building_info_container = HBoxContainer.new()
 	building_info_container.name = "BuildingInfo"
 	building_info_container.add_theme_constant_override("separation", 12)
 	

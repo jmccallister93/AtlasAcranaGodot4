@@ -38,15 +38,17 @@ func start_new_game():
 	build_manager = BuildManager.new()
 	interact_manager = InteractManager.new()
 	attack_manager = AttackManager.new()
-	character = Character.new()
 	resource_manager = ResourceManager.new()
 	
-	
-	# Initialize character stats
-	var character_stats = CharacterStats.new()
-	character.stats = character_stats
+	# Create character with enhanced stats
+	character = Character.new()
+	var enhanced_stats = EnhancedCharacterStats.new()
+	enhanced_stats.character_name = "Hero"
+	enhanced_stats.character_level = 1
+	character.stats = enhanced_stats
 	character.initialize_from_stats()
 	
+	# Add all to scene tree
 	add_child(turn_manager)
 	add_child(map_manager)
 	add_child(character)
@@ -56,9 +58,9 @@ func start_new_game():
 	add_child(attack_manager)
 	add_child(resource_manager)
 	
-	movement_manager.initialize(character, map_manager) 
+	# Initialize managers
+	movement_manager.initialize(character, map_manager)
 	build_manager.initialize(character, map_manager)
-	
 	interact_manager.initialize(character, map_manager)
 	attack_manager.initialize(character, map_manager)
 	
