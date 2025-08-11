@@ -11,8 +11,8 @@ enum BuildingType {
 	MINE,
 	#Character
 	BLACKSMITH,
-	ESSENCESMITH,
-	FORGE,
+	ACADEMY,
+	SHOP,
 	#Warband
 	BARRACKS,
 	ARCHERY_RANGE,
@@ -81,35 +81,38 @@ static func get_building_definitions() -> Dictionary:
 			"sprite_color": Color(0.5, 0.5, 0.5),  # Gray for mines
 		},
 #		CHARACTER ITEMS
-		BuildingType.FORGE: {
-			"name": "Forge",
-			"description": "Allows creation of weapons and tools. Requires metal.",
+		BuildingType.SHOP: {
+			"name": "Shop",
+			"description": "Allows purchase of items.",
 			"category": BuildingCategory.CHARACTER,
 			"cost": {"gold": 120, },
 			"base_production": {},
 			"biome_bonuses": {},
 			"sprite_color": Color(1.0, 0.3, 0.1),  # Orange-red for forge
-			"utility_type": "character"
+			"utility_type": "character",
+			"utility_description": "Create Character items."
 		},
 		BuildingType.BLACKSMITH: {
 			"name": "Blacksmith",
-			"description": "Allows creation of weapons and tools. Requires metal.",
+			"description": "Allows creation of weapons and armor.",
 			"category": BuildingCategory.CHARACTER,
 			"cost": {"gold": 120, },
 			"base_production": {},
 			"biome_bonuses": {},
 			"sprite_color": Color(1.0, 0.3, 0.1),  # Orange-red for forge
-			"utility_type": "character"
+			"utility_type": "character",
+			"utility_description": "Create Character weapons and armor."
 		},
-		BuildingType.ESSENCESMITH: {
-			"name": "Essencesmith",
-			"description": "Allows creation of weapons and tools. Requires metal.",
+		BuildingType.ACADEMY: {
+			"name": "Academy",
+			"description": "Research into character skills.",
 			"category": BuildingCategory.CHARACTER,
 			"cost": {"gold": 120, },
 			"base_production": {},
 			"biome_bonuses": {},
 			"sprite_color": Color(1.0, 0.3, 0.1),  # Orange-red for forge
-			"utility_type": "character"
+			"utility_type": "character",
+			"utility_description": "Create Character skills/abilities."
 		},
 #		UNITS
 		BuildingType.BARRACKS: {
@@ -120,7 +123,8 @@ static func get_building_definitions() -> Dictionary:
 			"base_production": {},
 			"biome_bonuses": {},
 			"sprite_color": Color(0.8, 0.1, 0.1),  # Dark red for military
-			"utility_type": "warband"
+			"utility_type": "warband",
+			"utility_description": "Purchase Tanks, Heavy Melee, Fast Melee units."
 		},
 			BuildingType.ARCHERY_RANGE: {
 			"name": "Archery Range",
@@ -130,7 +134,8 @@ static func get_building_definitions() -> Dictionary:
 			"base_production": {},
 			"biome_bonuses": {},
 			"sprite_color": Color(0.8, 0.1, 0.1),  # Dark red for military
-			"utility_type": "warband"
+			"utility_type": "warband",
+			"utility_description": "Purchase Heavy Ranged, Fast Ranged, Utility (trap) Ranged units."
 		},
 			BuildingType.MAGE_TOWER: {
 			"name": "Mage Tower",
@@ -140,7 +145,8 @@ static func get_building_definitions() -> Dictionary:
 			"base_production": {},
 			"biome_bonuses": {},
 			"sprite_color": Color(0.8, 0.1, 0.1),  # Dark red for military
-			"utility_type": "warband"
+			"utility_type": "warband",
+			"utility_description": "Purchase AoE, Single Target, Crowd Control magic units."
 		},
 		BuildingType.OUTPOST: {
 			"name": "Outpost",
@@ -150,7 +156,8 @@ static func get_building_definitions() -> Dictionary:
 			"base_production": {},
 			"biome_bonuses": {},
 			"sprite_color": Color(0.5, 0.5, 0.1),  
-			"utility_type": "defense"
+			"utility_type": "defense",
+			"utility_description": "Create Ranged defense structure."
 		},
 		BuildingType.BUNKER: {
 			"name": "Bunker",
@@ -160,7 +167,8 @@ static func get_building_definitions() -> Dictionary:
 			"base_production": {},
 			"biome_bonuses": {},
 			"sprite_color": Color(0.5, 0.5, 0.1),  
-			"utility_type": "defense"
+			"utility_type": "defense",
+			"utility_description": "Create Close combat defense structure."
 		},
 		BuildingType.BASTION: {
 			"name": "Bastion",
@@ -170,7 +178,8 @@ static func get_building_definitions() -> Dictionary:
 			"base_production": {},
 			"biome_bonuses": {},
 			"sprite_color": Color(0.5, 0.5, 0.1),  
-			"utility_type": "defense"
+			"utility_type": "defense",
+			"utility_description": "Create Magic defense structure."
 		},
 	}
 
@@ -212,3 +221,7 @@ static func get_building_cost(building_type: BuildingType) -> Dictionary:
 	"""Get the cost to build this building"""
 	var data = get_building_data(building_type)
 	return data.get("cost", {})
+	
+static func get_utility_description(building_type: BuildingType) -> String:
+	var data = get_building_data(building_type)
+	return data.get("utility_description", "")

@@ -79,6 +79,7 @@ var building_tooltip_timer: Timer
 var building_detail_view: PanelContainer
 var current_hovered_building: String = ""
 var building_panels: Dictionary = {}
+var current_detail_building: String = ""
 
 func ready_post():
 	menu_title = "Building Management"
@@ -112,7 +113,6 @@ func _on_building_placed_direct():
 	print("BuildingMenu: Building placed (direct signal)")
 	refresh_building_data()
 	create_building_interface()
-
 func refresh_building_data():
 	"""Load real building data from BuildManager and BuildingData"""
 	building_data.clear()
@@ -126,7 +126,7 @@ func refresh_building_data():
 	
 	for building_type in building_definitions:
 		var building_definition = building_definitions[building_type]
-		var building_name = building_data.get("name", "Unknown")
+		var building_name = building_definition.get("name", "Unknown")  # Fixed: use building_definition instead of building_data
 		
 		# Get actual buildings of this type from BuildManager
 		var placed_buildings = build_manager.get_buildings_of_type(building_name)
@@ -146,20 +146,18 @@ func refresh_building_data():
 		
 		# Create building data entry
 		building_data[building_name] = {
-			"type": _determine_building_type(building_data),
+			"type": _determine_building_type(building_definition),  # Fixed: use building_definition
 			"owned": placed_buildings.size(),
 			"coordinates": coordinates,
 			"production_rate": total_production,
 			"production_type": production_type,
-			"description": building_data.get("description", "No description available."),
+			"description": building_definition.get("description", "No description available."),  # Fixed: use building_definition
 			"upgrade_levels": ["Basic", "Advanced", "Master"],  # Could be from BuildingData
 			"current_level": 0,  # Could be tracked per building
-			"can_craft": building_data.get("crafting_recipes", {}).size() > 0,
-			"craft_options": building_data.get("crafting_recipes", {}).keys(),
+			"can_craft": building_definition.get("crafting_recipes", {}).size() > 0,  # Fixed: use building_definition
+			"craft_options": building_definition.get("crafting_recipes", {}).keys(),  # Fixed: use building_definition
 			"building_type_enum": building_type  # Store for building new ones
 		}
-	
-	print("BuildingMenu: Refreshed data for ", building_data.size(), " building types")
 
 func _determine_building_type(building_data: Dictionary) -> String:
 	"""Determine building category from building data"""
@@ -317,9 +315,9 @@ func create_building_detail_content(building_name: String) -> VBoxContainer:
 	var container = VBoxContainer.new()
 	container.add_theme_constant_override("separation", 12)
 	
-	var building = building_data[building_name]  # Use real_building_data
+	var building = building_data[building_name]
 	
-	# Header with close button (keep existing code)
+	# Header with close button
 	var header_container = HBoxContainer.new()
 	
 	var title = Label.new()
@@ -333,12 +331,14 @@ func create_building_detail_content(building_name: String) -> VBoxContainer:
 	close_button.text = "×"
 	close_button.add_theme_font_size_override("font_size", 20)
 	close_button.custom_minimum_size = Vector2(30, 30)
-	close_button.pressed.connect(_on_building_detail_close)
+	# Make sure to connect to the instance method, not create a new connection each time
+	if not close_button.pressed.is_connected(_on_building_detail_close):
+		close_button.pressed.connect(_on_building_detail_close)
 	header_container.add_child(close_button)
 	
 	container.add_child(header_container)
 	
-	# Building information (updated with real data)
+	# Building information
 	var info_text = RichTextLabel.new()
 	info_text.custom_minimum_size = Vector2(400, 150)
 	info_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -368,10 +368,9 @@ func create_building_detail_content(building_name: String) -> VBoxContainer:
 	container.add_child(action_container)
 	
 	return container
-
 # Update the build new function to use real building system
 func _on_build_new(building_name: String):
-	print("Building new ", building_name)
+	print("BUILDING NEW", building_name)
 	
 	# Hide this menu
 	hide_menu()
@@ -649,6 +648,17 @@ func _on_building_panel_input(event: InputEvent, building_name: String):
 		_on_building_clicked(building_name)
 
 func _on_building_clicked(building_name: String):
+	# If clicking the same building that's already open, close it
+	if current_detail_building == building_name and building_detail_view.visible:
+		_on_building_detail_close()
+		return
+	
+	# Always close any existing detail view first
+	_on_building_detail_close()
+	
+	# Set the current building
+	current_detail_building = building_name
+	
 	# Clear existing content
 	var detail_container = building_detail_view.get_node("BuildingDetailContainer")
 	for child in detail_container.get_children():
@@ -664,8 +674,7 @@ func _on_building_clicked(building_name: String):
 	# Show detail view
 	building_detail_view.visible = true
 	building_tooltip.visible = false
-	print("Building detail view opened for: ", building_name)  # Debug line
-
+	print("Building detail view opened for: ", building_name)
 func _on_building_tooltip_timer_timeout():
 	if current_hovered_building != "":
 		_on_show_building_tooltip(current_hovered_building)
@@ -673,8 +682,14 @@ func _on_building_tooltip_timer_timeout():
 
 func _on_building_detail_close():
 	building_detail_view.visible = false
-	print("Building detail view closed", building_detail_view)  # Debug line to confirm function is called
-
+	current_detail_building = ""
+	
+	# Clear the content to prevent stacking
+	var detail_container = building_detail_view.get_node("BuildingDetailContainer")
+	for child in detail_container.get_children():
+		child.queue_free()
+	
+	print("Building detail view closed")
 # Action handlers (placeholders for actual game logic)
 func _on_building_upgrade(building_name: String):
 	print("Upgrading ", building_name)
@@ -712,3 +727,8 @@ func _get_accent_color_for_type(type: String) -> Color:
 func update_building_data(new_building_data: Dictionary):
 	building_data = new_building_data
 	create_building_interface()
+
+
+func hide_menu():
+	super.hide_menu()  # Call parent hide_menu (from BaseMenu)
+	_on_building_detail_close()

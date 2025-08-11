@@ -347,20 +347,21 @@ func show_tile_details():
 	
 	# Update details panel (you'll need to create UI elements)
 	# This is a simplified version - you'd want a proper UI
-	print("=== TILE DETAILS ===")
-	print("Biome: ", biome_data.name)
-	print("Position: ", grid_position)
-	print("Resources: ", resources)
-	#print("Buildings: ", buildings.size())
-	#print("Characters: ", characters.size())
-	print("Movement Cost: ", movement_cost)
+	#print("=== TILE DETAILS ===")
+	#print("Biome: ", biome_data.name)
+	#print("Position: ", grid_position)
+	#print("Resources: ", resources)
+	##print("Buildings: ", buildings.size())
+	##print("Characters: ", characters.size())
+	#print("Movement Cost: ", movement_cost)
 
 func show_context_menu():
 	"""Show context menu for tile actions"""
-	print("=== TILE ACTIONS ===")
-	print("1. Build Structure")
-	print("2. Harvest Resources")
-	print("3. Move Character Here")
+	#print("=== TILE ACTIONS ===")
+	#print("1. Build Structure")
+	#print("2. Harvest Resources")
+	#print("3. Move Character Here")
+	pass
 
 # Utility functions for changing tile properties
 func change_biome_type(new_biome: BiomeType):

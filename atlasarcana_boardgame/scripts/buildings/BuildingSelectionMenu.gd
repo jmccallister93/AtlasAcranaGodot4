@@ -284,7 +284,7 @@ func create_category_header(category: BuildingData.BuildingCategory) -> Button:
 func create_buildings_container_for_category(category: BuildingData.BuildingCategory, buildings: Array) -> GridContainer:
 	"""Create a container with buildings for a specific category"""
 	var container = GridContainer.new()
-	container.columns = 2  # 2 buildings per row within category
+	container.columns = 4  # 2 buildings per row within category
 	container.add_theme_constant_override("h_separation", 10)
 	container.add_theme_constant_override("v_separation", 8)
 	
@@ -420,9 +420,9 @@ func update_info_panel(building_type: BuildingData.BuildingType):
 	# Production
 	var production_text = "[b]Production:[/b]\n"
 	var total_production = BuildingData.get_total_production(building_type, target_tile.biome_type)
-	
+	var utility_description =  BuildingData.get_utility_description(building_type )
 	if total_production.is_empty():
-		production_text += "[color=gray]None[/color]"
+		production_text = "[b]Production:[/b]\n" + utility_description
 	else:
 		for resource in total_production:
 			var amount = total_production[resource]

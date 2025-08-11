@@ -9,10 +9,10 @@ signal insufficient_resources(required: Dictionary, available: Dictionary)
 # Player resources
 var resources: Dictionary = {
 	"essence": 100,
-	"gold": 200,      # Starting gold for building
-	"food": 10,
-	"wood": 15,
-	"stone": 5,
+	"gold": 100,     
+	"food": 100,
+	"wood": 100,
+	"stone": 100,
 	"metal": 0
 }
 
@@ -27,7 +27,7 @@ var resource_display_names: Dictionary = {
 }
 
 func _ready():
-	print("ResourceManager initialized with starting resources: ", resources)
+	pass
 
 func add_resource(resource_name: String, amount: int):
 	"""Add resources to the player's inventory"""
@@ -40,7 +40,7 @@ func add_resource(resource_name: String, amount: int):
 		resources[resource_name] = amount
 	
 	resource_changed.emit(resource_name, resources[resource_name])
-	print("Added %d %s (Total: %d)" % [amount, resource_name, resources[resource_name]])
+	pass
 
 func spend_resource(resource_name: String, amount: int) -> bool:
 	"""Spend a single resource - returns true if successful"""
@@ -49,7 +49,6 @@ func spend_resource(resource_name: String, amount: int) -> bool:
 	
 	resources[resource_name] -= amount
 	resource_changed.emit(resource_name, resources[resource_name])
-	print("Spent %d %s (Remaining: %d)" % [amount, resource_name, resources[resource_name]])
 	return true
 
 func spend_resources(cost: Dictionary) -> bool:
@@ -67,7 +66,7 @@ func spend_resources(cost: Dictionary) -> bool:
 			spent[resource_name] = amount
 		else:
 			# This shouldn't happen if can_afford worked correctly
-			print("Error: Failed to spend %s after affordability check" % resource_name)
+			#print("Error: Failed to spend %s after affordability check" % resource_name)
 			return false
 	
 	resources_spent.emit(spent)
@@ -105,6 +104,37 @@ func get_resource_display_name(resource_name: String) -> String:
 	"""Get the display name for a resource"""
 	return resource_display_names.get(resource_name, resource_name.capitalize())
 
+# Resource income calculations
+func calculate_total_income() -> Dictionary:
+	"""Calculate total resource income per turn from all sources"""
+	var total_income = {}
+	
+	# Get income from buildings
+	if GameManager and GameManager.build_manager:
+		var building_income = GameManager.build_manager.get_total_production_per_turn()
+		for resource in building_income:
+			total_income[resource] = total_income.get(resource, 0) + building_income[resource]
+	
+	#Base income
+	total_income["essence"] = total_income.get("essence", 0) + 10
+	total_income["gold"] = total_income.get("gold", 0) + 10
+	total_income["food"] = total_income.get("food", 0) + 10
+	total_income["wood"] = total_income.get("wood", 0) + 10   
+	total_income["stone"] = total_income.get("stone", 0) + 10  
+	 
+	return total_income
+
+func apply_turn_income():
+	"""Apply per-turn resource income"""
+	var income = calculate_total_income()
+	
+	if income.is_empty():
+		return
+	
+	for resource_name in income:
+		var amount = income[resource_name]
+		add_resource(resource_name, amount)
+
 # Debug and utility methods
 func debug_print_resources():
 	"""Print all current resources for debugging"""
@@ -118,59 +148,3 @@ func debug_add_resources(amount: int = 100):
 	for resource_name in resources:
 		add_resource(resource_name, amount)
 	print("Added %d to all resources" % amount)
-
-func reset_resources():
-	"""Reset resources to starting values"""
-	resources = {
-		"gold": 200,
-		"food": 10,
-		"wood": 10,
-		"stone": 10,
-		"metal": 10
-	}
-	
-	# Emit signals for all resources
-	for resource_name in resources:
-		resource_changed.emit(resource_name, resources[resource_name])
-	
-	print("Resources reset to starting values")
-
-# Resource income calculations
-func calculate_total_income() -> Dictionary:
-	"""Calculate total resource income per turn from all sources"""
-	var total_income = {}
-	
-	# Get income from buildings
-	if GameManager and GameManager.build_manager:
-		var building_income = GameManager.build_manager.get_total_production_per_turn()
-		for resource in building_income:
-			total_income[resource] = total_income.get(resource, 0) + building_income[resource]
-	
-	# Add other income sources here (base income, etc.)
-	# For example, base gold income:
-	total_income["gold"] = total_income.get("gold", 0) + 5  # Base 5 gold per turn
-	
-	return total_income
-
-func apply_turn_income():
-	"""Apply per-turn resource income"""
-	var income = calculate_total_income()
-	
-	if income.is_empty():
-		return
-	
-	print("=== TURN INCOME ===")
-	for resource_name in income:
-		var amount = income[resource_name]
-		add_resource(resource_name, amount)
-		print("+%d %s" % [amount, get_resource_display_name(resource_name)])
-	print("===================")
-
-# Resource validation
-func validate_resources():
-	"""Ensure all resources are non-negative"""
-	for resource_name in resources:
-		if resources[resource_name] < 0:
-			print("Warning: Negative resource detected: %s = %d" % [resource_name, resources[resource_name]])
-			resources[resource_name] = 0
-			resource_changed.emit(resource_name, 0)
