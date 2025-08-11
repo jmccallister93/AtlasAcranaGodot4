@@ -26,6 +26,7 @@ var attack_manager: AttackManager
 var resource_manager: ResourceManager
 var game_ui: GameUI
 
+
 func _ready():
 	start_new_game()
 
@@ -63,8 +64,7 @@ func start_new_game():
 	
 	connect_signals()
 	
-	#create_test_interactables()
-	#create_test_enemies()
+
 
 func create_test_interactables():
 	"""Create test interactable entities"""
@@ -536,3 +536,17 @@ func get_all_resources() -> Dictionary:
 func set_resource(resource_name: String, amount: int):
 	"""Set a resource to a specific amount"""
 	resource_manager.set_resource(resource_name, amount)
+	
+func show_building_detail(building: Building):
+	"""Show building detail view for a specific building"""
+	if game_ui:
+		game_ui.show_building_detail(building)
+	else:
+		print("GameUI not available for building detail")
+
+func show_building_type_detail(building_type_name: String):
+	"""Show building detail view for a building type"""
+	if game_ui:
+		game_ui.show_building_type_detail(building_type_name)
+	else:
+		print("GameUI not available for building type detail")

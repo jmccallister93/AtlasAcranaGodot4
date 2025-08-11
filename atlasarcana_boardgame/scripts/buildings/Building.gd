@@ -250,10 +250,25 @@ func _on_input_event(viewport: Node, event: InputEvent, shape_idx: int):
 	"""Handle building interaction"""
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			show_building_info()
+			# Open building detail view instead of just printing info
+			open_building_detail_view()
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
 			if is_utility_building():
 				open_utility_menu()
+
+func open_building_detail_view():
+	"""Open the building detail view for this specific building"""
+		# Use GameManager's centralized BuildingDetailView
+	if GameManager and GameManager.game_ui:
+		GameManager.game_ui.building_detail_view.show_for_building(self)
+	else:
+		print("GameManager or BuildingDetailView not available")
+		# Fallback: try to find it in the scene tree
+		var detail_view = get_tree().get_first_node_in_group("building_detail_views")
+		if detail_view:
+			detail_view.show_for_building(self)
+		else:
+			print("No BuildingDetailView found anywhere")
 
 func show_building_info():
 	"""Show building information"""
@@ -285,15 +300,31 @@ func _enter_tree():
 	# Connect input signal
 	area.input_event.connect(_on_input_event)
 
-# DEBUG METHODS
-func debug_building_state():
-	"""Debug method to print building state"""
-	print("=== BUILDING DEBUG: %s ===" % get_building_name())
-	print("Position: %s" % tile_position)
-	print("Biome: %s" % (tile.biome_type if tile else "none"))
-	print("Base Production: %s" % base_production)
-	print("Total Production: %s" % total_production)
-	print("Biome Bonus: %s" % get_biome_bonus())
-	print("Health: %d/%d" % [health, max_health])
-	print("Active: %s" % is_active)
-	print("===========================")
+# Add visual feedback functions to Building.gd:
+func _on_mouse_entered():
+	"""Handle mouse entering building area"""
+	# Add visual feedback - maybe brighten the building
+	if sprite:
+		sprite.modulate = Color(1.2, 1.2, 1.2, 1.0)  # Slightly brighter
+
+func _on_mouse_exited():
+	"""Handle mouse leaving building area"""
+	# Remove visual feedback
+	if sprite:
+		sprite.modulate = Color.WHITE
+
+func setup_interaction():
+	"""Enhanced setup for building interaction"""
+	# Add collision shape for mouse interaction
+	var area = Area2D.new()
+	var collision = CollisionShape2D.new()
+	var shape = RectangleShape2D.new()
+	shape.size = Vector2(32, 32)
+	collision.shape = shape
+	area.add_child(collision)
+	add_child(area)
+	
+	# Connect input signal
+	area.input_event.connect(_on_input_event)
+	area.mouse_entered.connect(_on_mouse_entered)
+	area.mouse_exited.connect(_on_mouse_exited)

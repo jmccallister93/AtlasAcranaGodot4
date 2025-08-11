@@ -76,10 +76,10 @@ var building_data: Dictionary = {}
 # UI References
 var building_tooltip: PanelContainer
 var building_tooltip_timer: Timer
-var building_detail_view: PanelContainer
 var current_hovered_building: String = ""
 var building_panels: Dictionary = {}
 var current_detail_building: String = ""
+
 
 func ready_post():
 	menu_title = "Building Management"
@@ -311,63 +311,7 @@ func create_building_panel(building_name: String, accent_color: Color) -> PanelC
 	
 	return panel
 
-func create_building_detail_content(building_name: String) -> VBoxContainer:
-	var container = VBoxContainer.new()
-	container.add_theme_constant_override("separation", 12)
-	
-	var building = building_data[building_name]
-	
-	# Header with close button
-	var header_container = HBoxContainer.new()
-	
-	var title = Label.new()
-	title.text = building_name + " Management"
-	title.add_theme_font_size_override("font_size", 20)
-	title.add_theme_color_override("font_color", Color("#F4A460"))
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header_container.add_child(title)
-	
-	var close_button = Button.new()
-	close_button.text = "×"
-	close_button.add_theme_font_size_override("font_size", 20)
-	close_button.custom_minimum_size = Vector2(30, 30)
-	# Make sure to connect to the instance method, not create a new connection each time
-	if not close_button.pressed.is_connected(_on_building_detail_close):
-		close_button.pressed.connect(_on_building_detail_close)
-	header_container.add_child(close_button)
-	
-	container.add_child(header_container)
-	
-	# Building information
-	var info_text = RichTextLabel.new()
-	info_text.custom_minimum_size = Vector2(400, 150)
-	info_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	info_text.bbcode_enabled = true
-	
-	var info_content = "[b]%s[/b]\n[color=lightgray]%s[/color]\n\n" % [building_name, building.description]
-	info_content += "[color=orange]Owned:[/color] %d buildings\n" % building.owned
-	
-	if building.owned > 0:
-		info_content += "[color=orange]Locations:[/color] %s\n" % _format_coordinates(building.coordinates)
-	
-	if building.type == "production" and building.production_rate > 0:
-		info_content += "[color=lightgreen]Total Production:[/color] %d %s per turn\n" % [building.production_rate, building.production_type]
-	
-	info_content += "[color=yellow]Upgrade Level:[/color] %s" % building.upgrade_levels[building.current_level]
-	
-	info_text.text = info_content
-	container.add_child(info_text)
-	
-	# Spacer to push action buttons to bottom
-	var spacer = Control.new()
-	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	container.add_child(spacer)
-	
-	# Action buttons at the bottom
-	var action_container = create_building_actions(building_name)
-	container.add_child(action_container)
-	
-	return container
+
 # Update the build new function to use real building system
 func _on_build_new(building_name: String):
 	print("BUILDING NEW", building_name)
@@ -426,9 +370,6 @@ func create_building_interface():
 	
 	# Create tooltip system
 	create_building_tooltip_system()
-	
-	# Create detail view system
-	create_building_detail_system()
 
 func create_buildings_container() -> VBoxContainer:
 	var container = VBoxContainer.new()
@@ -466,7 +407,6 @@ func create_building_header(text: String) -> Label:
 	
 	return header
 
-
 func create_building_section(container: VBoxContainer, section_name: String, buildings: Array, accent_color: Color):
 	# Section header
 	var section_label = Label.new()
@@ -488,6 +428,22 @@ func create_building_section(container: VBoxContainer, section_name: String, bui
 	
 	container.add_child(grid)
 
+func _on_building_clicked(building_name: String):
+	"""Handle building panel click - show detail view or building selection"""
+	print("Building clicked: ", building_name)
+	
+	# Hide the tooltip
+	building_tooltip.visible = false
+	
+	# Use GameManager's centralized BuildingDetailView
+	if GameManager and GameManager.game_ui:
+		GameManager.game_ui.building_detail_view.show_for_building_type(building_name)
+	else:
+		print("GameManager or BuildingDetailView not available")
+		
+func _on_building_detail_closed():
+	"""Handle building detail view being closed"""
+	print("Building detail view closed")
 
 func create_building_tooltip_system():
 	# Create timer
@@ -529,71 +485,11 @@ func create_building_tooltip_system():
 	
 	add_child(building_tooltip)
 
-func create_building_detail_system():
-	building_detail_view = PanelContainer.new()
-	building_detail_view.visible = false
-	building_detail_view.z_index = 50
-	building_detail_view.custom_minimum_size = Vector2(450, 350)
-	
-	# Center within menu
-	building_detail_view.anchor_left = 0.5
-	building_detail_view.anchor_top = 0.5
-	building_detail_view.anchor_right = 0.5
-	building_detail_view.anchor_bottom = 0.5
-	building_detail_view.offset_left = -225
-	building_detail_view.offset_top = -175
-	building_detail_view.offset_right = 225
-	building_detail_view.offset_bottom = 175
-	
-	# Construction-themed detail style
-	var detail_style = StyleBoxFlat.new()
-	detail_style.bg_color = Color("#1C1C1C")  # Very dark
-	detail_style.border_width_left = 4
-	detail_style.border_width_right = 4
-	detail_style.border_width_top = 4
-	detail_style.border_width_bottom = 4
-	detail_style.border_color = Color("#8B4513")  # Brown border
-	detail_style.corner_radius_top_left = 12
-	detail_style.corner_radius_top_right = 12
-	detail_style.corner_radius_bottom_left = 12
-	detail_style.corner_radius_bottom_right = 12
-	building_detail_view.add_theme_stylebox_override("panel", detail_style)
-	
-	var detail_vbox = VBoxContainer.new()
-	detail_vbox.name = "BuildingDetailContainer"
-	building_detail_view.add_child(detail_vbox)
-	
-	add_child(building_detail_view)
-
-
 func create_building_actions(building_name: String) -> VBoxContainer:
 	var container = VBoxContainer.new()
 	container.add_theme_constant_override("separation", 8)
 	
 	var building = building_data[building_name]
-	
-	# Upgrade section
-	if building.current_level < building.upgrade_levels.size() - 1:
-		var upgrade_button = Button.new()
-		var next_level = building.upgrade_levels[building.current_level + 1]
-		upgrade_button.text = "Upgrade to " + next_level
-		upgrade_button.add_theme_color_override("font_color", Color("#90EE90"))
-		upgrade_button.pressed.connect(_on_building_upgrade.bind(building_name))
-		container.add_child(upgrade_button)
-	
-	# Crafting section
-	if building.can_craft and building.owned > 0:
-		var craft_label = Label.new()
-		craft_label.text = "Available Crafting Options:"
-		craft_label.add_theme_color_override("font_color", Color("#FFD700"))
-		container.add_child(craft_label)
-		
-		for craft_item in building.craft_options:
-			var craft_button = Button.new()
-			craft_button.text = "Craft " + craft_item
-			craft_button.add_theme_color_override("font_color", Color("#DDA0DD"))
-			craft_button.pressed.connect(_on_craft_item.bind(building_name, craft_item))
-			container.add_child(craft_button)
 	
 	# Build new button (if not at max capacity)
 	var build_button = Button.new()
@@ -647,60 +543,10 @@ func _on_building_panel_input(event: InputEvent, building_name: String):
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		_on_building_clicked(building_name)
 
-func _on_building_clicked(building_name: String):
-	# If clicking the same building that's already open, close it
-	if current_detail_building == building_name and building_detail_view.visible:
-		_on_building_detail_close()
-		return
-	
-	# Always close any existing detail view first
-	_on_building_detail_close()
-	
-	# Set the current building
-	current_detail_building = building_name
-	
-	# Clear existing content
-	var detail_container = building_detail_view.get_node("BuildingDetailContainer")
-	for child in detail_container.get_children():
-		child.queue_free()
-	
-	# Wait for children to be freed
-	await get_tree().process_frame
-	
-	# Add new content
-	var content = create_building_detail_content(building_name)
-	detail_container.add_child(content)
-	
-	# Show detail view
-	building_detail_view.visible = true
-	building_tooltip.visible = false
-	print("Building detail view opened for: ", building_name)
+
 func _on_building_tooltip_timer_timeout():
 	if current_hovered_building != "":
 		_on_show_building_tooltip(current_hovered_building)
-
-
-func _on_building_detail_close():
-	building_detail_view.visible = false
-	current_detail_building = ""
-	
-	# Clear the content to prevent stacking
-	var detail_container = building_detail_view.get_node("BuildingDetailContainer")
-	for child in detail_container.get_children():
-		child.queue_free()
-	
-	print("Building detail view closed")
-# Action handlers (placeholders for actual game logic)
-func _on_building_upgrade(building_name: String):
-	print("Upgrading ", building_name)
-	# Placeholder - implement actual upgrade logic
-	building_data[building_name].current_level += 1
-	# Refresh detail view
-	_on_building_clicked(building_name)
-
-func _on_craft_item(building_name: String, item_name: String):
-	print("Crafting ", item_name, " at ", building_name)
-	# Placeholder - implement actual crafting logic
 
 
 # Utility functions
@@ -731,4 +577,3 @@ func update_building_data(new_building_data: Dictionary):
 
 func hide_menu():
 	super.hide_menu()  # Call parent hide_menu (from BaseMenu)
-	_on_building_detail_close()

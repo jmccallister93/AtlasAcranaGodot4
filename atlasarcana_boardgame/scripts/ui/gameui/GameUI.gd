@@ -9,6 +9,7 @@ var action_mode_manager: ActionModeManager
 var notification_manager: NotificationManager
 var menu_manager: MenuManager
 var confirmation_dialog_manager: ConfirmationDialogManager
+var building_detail_view: BuildingDetailView
 
 # Legacy menu references (for compatibility)
 var inventory_menu: InventoryMenu
@@ -57,7 +58,7 @@ func create_ui_components():
 	# Create legacy menus for compatibility
 	create_legacy_menus()
 	
-	print("✅ All UI components created successfully")
+	create_building_detail_view()
 
 func create_legacy_menus():
 	"""Create legacy menu system for backward compatibility"""
@@ -83,6 +84,42 @@ func create_legacy_menus():
 		building_menu = building_menu_scene.instantiate()
 		menu_manager.add_child(building_menu)
 		building_menu.hide()
+
+func create_building_detail_view():
+	"""Create the building detail view as part of the UI system"""
+	building_detail_view = BuildingDetailView.new()
+	building_detail_view.name = "BuildingDetailView"
+	
+	# Add to the menu manager so it's positioned with other menus
+	menu_manager.add_child(building_detail_view)
+	
+	# Connect its signals
+	building_detail_view.detail_view_closed.connect(_on_building_detail_closed)
+	
+	# Add to group for other components to find it
+	building_detail_view.add_to_group("building_detail_views")
+
+func show_building_detail(building: Building):
+	"""Show building detail view for a specific building"""
+	if building_detail_view:
+		# Close other menus first
+		close_all_menus()
+		building_detail_view.show_for_building(building)
+	else:
+		print("BuildingDetailView not available")
+
+func show_building_type_detail(building_type_name: String):
+	"""Show building detail view for a building type"""
+	if building_detail_view:
+		# Close other menus first  
+		close_all_menus()
+		building_detail_view.show_for_building_type(building_type_name)
+	else:
+		print("BuildingDetailView not available")
+
+func _on_building_detail_closed():
+	"""Handle building detail view being closed"""
+	print("Building detail view closed")
 
 func setup_layout():
 	"""Setup the overall layout"""
@@ -186,6 +223,9 @@ func close_all_menus():
 	if building_menu and building_menu.visible:
 		building_menu.hide_menu()
 		building_closed.emit()
+		
+	if building_detail_view and building_detail_view.is_showing():
+		building_detail_view.hide_with_animation()
 
 # ═══════════════════════════════════════════════════════════
 # CONFIRMATION DIALOG SYSTEM

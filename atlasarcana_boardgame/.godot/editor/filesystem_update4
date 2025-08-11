@@ -46,3 +46,5 @@ res://scripts/buildings/BuildManager.gd
 res://scripts/buildings/Building.gd
 res://scripts/buildings/BuildingSelectionMenu.gd
 res://scripts/buildings/BuildingData.gd
+res://scripts/buildings/BuildingDetailView.gd
+res://scripts/ui/menus/BaseMenu.gd

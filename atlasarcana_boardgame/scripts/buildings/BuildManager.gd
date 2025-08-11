@@ -51,6 +51,7 @@ func initialize(char: Character, map: MapManager):
 	
 	# Create building selection menu
 	create_building_selection_menu()
+	
 
 func _on_character_moved(new_position: Vector2i):
 	"""Handle character movement - update highlighted tiles if in build mode"""
