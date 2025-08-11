@@ -10,9 +10,9 @@ var available_buildings: Array[Building] = []
 var building_type_name: String = ""
 var build_manager: BuildManager
 
-# UI Components (in addition to BaseMenu components)
-var building_selection_container: VBoxContainer
-var building_info_container: VBoxContainer
+# UI Components (created fresh each time)
+var building_selection_container: VBoxContainer  # Temporary reference
+var building_info_container: VBoxContainer  # Temporary reference
 
 # States
 enum ViewState {
@@ -27,7 +27,6 @@ func ready_post():
 	title_label.text = menu_title
 	
 	connect_to_build_manager()
-	setup_building_containers()
 	
 	# Connect BaseMenu's inventory_closed signal to our detail_view_closed signal
 	inventory_closed.connect(func(): detail_view_closed.emit())
@@ -37,17 +36,6 @@ func connect_to_build_manager():
 	if GameManager and GameManager.build_manager:
 		build_manager = GameManager.build_manager
 		print("✅ BuildingDetailView connected to BuildManager")
-
-func setup_building_containers():
-	"""Setup containers for different view states"""
-	# Create containers for different states
-	building_selection_container = VBoxContainer.new()
-	building_selection_container.name = "BuildingSelection"
-	building_selection_container.add_theme_constant_override("separation", 10)
-	
-	building_info_container = VBoxContainer.new()
-	building_info_container.name = "BuildingInfo"
-	building_info_container.add_theme_constant_override("separation", 12)
 
 func show_for_building(building: Building):
 	"""Show detail view for a specific building"""
@@ -95,12 +83,13 @@ func create_building_selection_ui():
 	# Update title
 	title_label.text = "Select " + building_type_name
 	
+	# Create fresh selection container each time
+	building_selection_container = VBoxContainer.new()
+	building_selection_container.name = "BuildingSelection"
+	building_selection_container.add_theme_constant_override("separation", 10)
+	
 	# Add selection container to the BaseMenu's item_container
 	item_container.add_child(building_selection_container)
-	
-	# Clear previous content
-	for child in building_selection_container.get_children():
-		child.queue_free()
 	
 	# Instructions
 	var instruction_label = Label.new()
@@ -182,12 +171,13 @@ func create_building_details_ui():
 	if current_building:
 		title_label.text = current_building.get_building_name() + " Details"
 	
+	# Create fresh info container each time
+	building_info_container = VBoxContainer.new()
+	building_info_container.name = "BuildingInfo"
+	building_info_container.add_theme_constant_override("separation", 12)
+	
 	# Add info container to the BaseMenu's item_container
 	item_container.add_child(building_info_container)
-	
-	# Clear previous content
-	for child in building_info_container.get_children():
-		child.queue_free()
 	
 	if not current_building or not is_instance_valid(current_building):
 		var error_label = Label.new()
