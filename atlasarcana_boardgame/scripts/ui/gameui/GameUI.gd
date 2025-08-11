@@ -123,7 +123,7 @@ func create_demo_item_for_slot(slot_type: EquipmentSlot.SlotType):
 func create_demo_item_for_slot_type(slot_type: EquipmentSlot.SlotType) -> EquipmentItem:
 	"""Create a demo item for a specific slot type"""
 	var demo_item = EquipmentItem.new()
-	demo_item.compatible_slots = [slot_type]
+	demo_item.compatible_slots.append(slot_type)
 	
 	match slot_type:
 		EquipmentSlot.SlotType.MAIN_HAND:

@@ -549,7 +549,7 @@ func create_and_equip_test_item(slot_type: EquipmentSlot.SlotType):
 	test_item.item_id = "test_" + str(slot_type)
 	test_item.item_name = "Test " + equipment_manager.get_slot_display_name(slot_type)
 	test_item.description = "A test item for demonstration"
-	test_item.compatible_slots = [slot_type]
+	test_item.compatible_slots.append(slot_type)
 	
 	# Add some random stat modifiers
 	match slot_type:

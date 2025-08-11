@@ -60,3 +60,4 @@ res://scripts/character/SkillManager.gd
 res://scripts/character/EnhancedCharacterMenu.gd
 res://scripts/character/Character.gd
 res://scripts/entities/ItemDatabase.gd
+res://scripts/character/ItemDatabase.gd
