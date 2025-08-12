@@ -1,4 +1,4 @@
-# Character.gd - Updated to use enhanced stats system
+# Character.gd - Updated to use  stats system
 extends CharacterBody2D
 class_name Character
 
@@ -6,7 +6,7 @@ signal action_points_spent(action_points: int)
 signal action_points_refreshed(action_points: int)
 signal stats_changed()
 
-@export var stats: EnhancedCharacterStats
+@export var stats: CharacterStats
 var equipment_manager: EquipmentManager
 var skill_manager: SkillManager
 
@@ -215,3 +215,16 @@ func _on_equipment_changed(slot_type: EquipmentSlot.SlotType, old_item: Equipmen
 func _on_skill_learned(skill: SkillNode):
 	"""Handle skill learned"""
 	print("Learned skill: ", skill.skill_name)
+
+func get_inventory_manager() -> InventoryManager:
+	"""Get the character's inventory manager from GameManager"""
+	if GameManager and GameManager.inventory_manager:
+		return GameManager.inventory_manager
+	return null
+
+func add_item_to_inventory(item: BaseItem, amount: int = 1) -> bool:
+	"""Helper method to add items to character inventory"""
+	var inv_manager = get_inventory_manager()
+	if inv_manager:
+		return inv_manager.add_item(item, amount)
+	return false

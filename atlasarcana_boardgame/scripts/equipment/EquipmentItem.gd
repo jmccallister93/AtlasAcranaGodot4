@@ -1,30 +1,16 @@
 # EquipmentItem.gd
-extends Resource
+extends BaseItem
 class_name EquipmentItem
 
-@export var item_id: String
-@export var item_name: String
-@export var description: String
-@export var icon_path: String
-@export var rarity: ItemRarity = ItemRarity.COMMON
-@export var level_requirement: int = 1
-
-# What slots this item can fit into
-@export var compatible_slots: Array[EquipmentSlot.SlotType] = []
-
-# Stat modifiers this item provides
+@export var compatible_slots: Array = []
 @export var stat_modifiers: Dictionary = {}
+@export var special_effects: Array = []
 
-# Special effects or abilities
-@export var special_effects: Array[String] = []
 
-enum ItemRarity {
-	COMMON,
-	UNCOMMON,
-	RARE,
-	EPIC,
-	LEGENDARY
-}
+func _init():
+
+	item_type = BaseItem.ItemType.EQUIPMENT
+	stack_size = 1  # Equipment doesn't stack
 
 func can_fit_in_slot(slot_type: EquipmentSlot.SlotType) -> bool:
 	return slot_type in compatible_slots
@@ -35,17 +21,25 @@ func get_stat_modifier(stat_name: String) -> int:
 func get_all_stat_modifiers() -> Dictionary:
 	return stat_modifiers.duplicate()
 
-func get_rarity_color() -> Color:
-	match rarity:
-		ItemRarity.COMMON:
-			return Color.WHITE
-		ItemRarity.UNCOMMON:
-			return Color.GREEN
-		ItemRarity.RARE:
-			return Color.BLUE
-		ItemRarity.EPIC:
-			return Color.PURPLE
-		ItemRarity.LEGENDARY:
-			return Color.ORANGE
-		_:
-			return Color.WHITE
+func get_available_actions() -> Array:
+	var actions = super.get_available_actions()
+	actions.insert(0, "equip")  # Add equip action
+	return actions
+
+func get_tooltip_text() -> String:
+	var tooltip = super.get_tooltip_text()
+	
+	# Add equipment-specific info
+	if stat_modifiers.size() > 0:
+		tooltip += "\n[color=lightgreen][b]Stats:[/b][/color]\n"
+		for stat_name in stat_modifiers:
+			var modifier = stat_modifiers[stat_name]
+			tooltip += "• " + stat_name.replace("_", " ") + ": +"
+			tooltip += str(modifier) + "\n"
+	
+	if special_effects.size() > 0:
+		tooltip += "\n[color=cyan][b]Special Effects:[/b][/color]\n"
+		for effect in special_effects:
+			tooltip += "• " + effect + "\n"
+	
+	return tooltip

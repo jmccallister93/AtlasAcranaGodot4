@@ -9,7 +9,7 @@ signal skill_points_changed(current_points: int)
 @export var available_skill_points: int = 0
 var skill_trees: Dictionary = {}  # tree_name -> SkillTree
 var learned_skills: Array = []  # Array of skill IDs
-var character_stats: EnhancedCharacterStats
+var character_stats: CharacterStats
 
 func _init():
 	initialize_skill_trees()
@@ -139,7 +139,7 @@ func create_exploration_tree():
 	
 	skill_trees["Exploration"] = exploration_tree
 
-func set_character_stats(stats: EnhancedCharacterStats):
+func set_character_stats(stats: CharacterStats):
 	"""Set the character stats reference"""
 	character_stats = stats
 

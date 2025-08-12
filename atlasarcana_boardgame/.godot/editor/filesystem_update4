@@ -61,3 +61,13 @@ res://scripts/character/EnhancedCharacterMenu.gd
 res://scripts/character/Character.gd
 res://scripts/entities/ItemDatabase.gd
 res://scripts/character/ItemDatabase.gd
+res://scripts/character/CharacterMenu.gd
+res://scripts/character/CharacterStats.gd
+res://scripts/items/BaseItem.gd
+res://scripts/items/ConsumableItem.gd
+res://scripts/items/InventorySlot.gd
+res://scripts/inventory/InventoryManager.gd
+res://scripts/items/ItemFactory.gd
+res://scripts/inventory/InventoryMenu.gd
+res://scripts/items/ItemDetailView.gd
+res://scripts/items/ItemSubmenu.gd

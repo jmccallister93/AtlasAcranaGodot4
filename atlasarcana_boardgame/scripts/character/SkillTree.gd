@@ -31,7 +31,7 @@ func get_learned_skills() -> Array:
 			learned.append(skill)
 	return learned
 
-func get_available_skills(character_stats: EnhancedCharacterStats, learned_skills: Array) -> Array:
+func get_available_skills(character_stats: CharacterStats, learned_skills: Array) -> Array:
 	"""Get skills that can be learned based on requirements"""
 	var available: Array = []
 	
@@ -41,7 +41,7 @@ func get_available_skills(character_stats: EnhancedCharacterStats, learned_skill
 	
 	return available
 
-func can_learn_skill(skill: SkillNode, character_stats: EnhancedCharacterStats, learned_skills: Array) -> bool:
+func can_learn_skill(skill: SkillNode, character_stats: CharacterStats, learned_skills: Array) -> bool:
 	"""Check if a skill can be learned"""
 	# Already maxed
 	if skill.is_maxed():
@@ -65,7 +65,7 @@ func can_learn_skill(skill: SkillNode, character_stats: EnhancedCharacterStats, 
 	
 	return true
 
-func get_stat_value_from_character(character_stats: EnhancedCharacterStats, stat_name: String) -> int:
+func get_stat_value_from_character(character_stats: CharacterStats, stat_name: String) -> int:
 	"""Helper to get stat value from character stats"""
 	# Try each category
 	for category in character_stats.get_stat_categories():

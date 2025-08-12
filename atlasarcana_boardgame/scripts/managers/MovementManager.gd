@@ -19,7 +19,7 @@ var character: Character
 var map_manager: MapManager
 var tile_size: int = 32
 var current_state: MovementState = MovementState.INACTIVE
-var highlighted_tiles: Array[BiomeTile] = []
+var highlighted_tiles: Array = []
 var pending_target_position: Vector2i
 
 func initialize(char: Character, map: MapManager):
@@ -49,6 +49,12 @@ func end_movement_mode():
 	movement_mode_ended.emit()
 	print("Movement mode ended")
 
+func get_character_movement_range() -> int:
+	"""Get the character's movement range from enhanced stats"""
+	if character and character.stats:
+		return character.stats.get_stat_value("Exploration", "Movement")
+	return 3  # Default fallback
+
 func highlight_movement_tiles():
 	"""Highlight tiles within movement range"""
 	clear_highlighted_tiles()
@@ -57,8 +63,9 @@ func highlight_movement_tiles():
 	if not center_tile:
 		return
 		
-	# Get tiles within movement range
-	var tiles_in_range = map_manager.get_tiles_in_radius(center_tile, character.stats.max_movement_points)
+	# Get tiles within movement range using enhanced stats
+	var movement_range = get_character_movement_range()
+	var tiles_in_range = map_manager.get_tiles_in_radius(center_tile, movement_range)
 	
 	for tile in tiles_in_range:
 		# Don't highlight the current position
@@ -102,10 +109,12 @@ func attempt_move_to(target_pos: Vector2i):
 	
 	var current_pos = character.grid_position
 	
-	# Check if target is within movement range
+	# Check if target is within movement range using enhanced stats
 	var distance = abs(target_pos.x - current_pos.x) + abs(target_pos.y - current_pos.y)
-	if distance > character.stats.max_movement_points:
-		print("Target too far: ", distance, " max: ", character.stats.max_movement_points)
+	var max_movement = get_character_movement_range()
+	
+	if distance > max_movement:
+		print("Target too far: ", distance, " max: ", max_movement)
 		movement_failed.emit("Target is too far")
 		return
 	
@@ -172,3 +181,40 @@ func move_character_to(grid_pos: Vector2i):
 	var world_pos = grid_to_world(grid_pos)
 	character.global_position = world_pos
 	print("Character world position set to: ", character.global_position)
+
+# Additional helper functions for enhanced stats integration
+func get_character_action_points() -> int:
+	"""Get current action points from character"""
+	if character:
+		return character.current_action_points
+	return 0
+
+func get_max_action_points() -> int:
+	"""Get max action points from enhanced stats"""
+	if character and character.stats:
+		return character.stats.get_stat_value("Exploration", "Action_Points")
+	return 5  # Default fallback
+
+func can_character_move() -> bool:
+	"""Check if character can move (has action points and movement range)"""
+	return get_character_action_points() > 0 and get_character_movement_range() > 0
+
+func get_movement_cost_to_tile(target_pos: Vector2i) -> int:
+	"""Calculate movement cost to a specific tile (for future terrain-based costs)"""
+	var current_pos = character.grid_position
+	var distance = abs(target_pos.x - current_pos.x) + abs(target_pos.y - current_pos.y)
+	
+	# For now, movement cost is just the distance
+	# In the future, you could add terrain modifiers here
+	var target_tile = map_manager.get_tile_at(target_pos)
+	#if target_tile:
+		## Example: Different terrain types could have different costs
+		#match target_tile.biome:
+			#BiomeTile.Biome.MOUNTAIN:
+				#return distance * 2  # Mountains cost double
+			#BiomeTile.Biome.WATER:
+				#return distance * 3  # Water costs triple (or could be impassable)
+			#_:
+				#return distance  # Normal cost
+	
+	return distance

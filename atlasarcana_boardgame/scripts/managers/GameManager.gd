@@ -24,6 +24,7 @@ var build_manager: BuildManager
 var interact_manager: InteractManager
 var attack_manager: AttackManager
 var resource_manager: ResourceManager
+var inventory_manager: InventoryManager
 var game_ui: GameUI
 
 
@@ -39,13 +40,14 @@ func start_new_game():
 	interact_manager = InteractManager.new()
 	attack_manager = AttackManager.new()
 	resource_manager = ResourceManager.new()
+	inventory_manager = InventoryManager.new()
 	
-	# Create character with enhanced stats
+	# Create character with  stats
 	character = Character.new()
-	var enhanced_stats = EnhancedCharacterStats.new()
-	enhanced_stats.character_name = "Hero"
-	enhanced_stats.character_level = 1
-	character.stats = enhanced_stats
+	var _stats = CharacterStats.new()
+	_stats.character_name = "Hero"
+	_stats.character_level = 1
+	character.stats = _stats
 	character.initialize_from_stats()
 	
 	# Add all to scene tree
@@ -57,6 +59,7 @@ func start_new_game():
 	add_child(interact_manager)
 	add_child(attack_manager)
 	add_child(resource_manager)
+	add_child(inventory_manager)
 	
 	# Initialize managers
 	movement_manager.initialize(character, map_manager)
@@ -66,6 +69,24 @@ func start_new_game():
 	
 	connect_signals()
 	
+	if character:
+		inventory_manager.set_character(character)
+	# Give starting items
+	give_starting_inventory()
+	
+func give_starting_inventory():
+	"""Give the player some starting items"""
+	# Add some basic equipment
+	var test_items = ItemFactory.create_test_equipment()
+	for item in test_items:
+		inventory_manager.add_item(item, 1)
+	
+	# Add some consumables
+	var consumables = ItemFactory.create_test_consumables()
+	for item in consumables:
+		var amount = 3 if item.can_stack() else 1
+		inventory_manager.add_item(item, amount)
+		
 
 
 func create_test_interactables():
@@ -552,3 +573,21 @@ func show_building_type_detail(building_type_name: String):
 		game_ui.show_building_type_detail(building_type_name)
 	else:
 		print("GameUI not available for building type detail")
+		
+func add_item_to_inventory(item: BaseItem, amount: int = 1) -> bool:
+	"""Public method to add items to inventory"""
+	if inventory_manager:
+		return inventory_manager.add_item(item, amount)
+	return false
+
+func remove_item_from_inventory(item_id: String, amount: int = 1) -> int:
+	"""Public method to remove items from inventory"""
+	if inventory_manager:
+		return inventory_manager.remove_item(item_id, amount)
+	return 0
+
+func has_item_in_inventory(item_id: String, amount: int = 1) -> bool:
+	"""Check if player has an item in inventory"""
+	if inventory_manager:
+		return inventory_manager.has_item(item_id, amount)
+	return false

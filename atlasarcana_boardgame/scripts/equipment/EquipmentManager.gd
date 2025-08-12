@@ -6,7 +6,7 @@ signal equipment_changed(slot_type: EquipmentSlot.SlotType, old_item: EquipmentI
 signal stats_recalculated(new_stats: Dictionary)
 
 var equipment_slots: Dictionary = {}
-var character_stats: EnhancedCharacterStats
+var character_stats: CharacterStats
 
 func _init():
 	initialize_equipment_slots()
@@ -46,7 +46,7 @@ func get_slot_display_name(slot_type: EquipmentSlot.SlotType) -> String:
 		_:
 			return "Unknown"
 
-func set_character_stats(stats: EnhancedCharacterStats):
+func set_character_stats(stats: CharacterStats):
 	"""Set the character stats reference for automatic updates"""
 	character_stats = stats
 

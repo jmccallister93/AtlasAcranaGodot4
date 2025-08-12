@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://ciuhsqossn42t"]
 
-[ext_resource type="Script" uid="uid://cfe8ru7nwxtst" path="res://scripts/managers/MapManager.gd" id="1_jcjd5"]
+[ext_resource type="Script" uid="uid://cfe8ru7nwxtst" path="res://scripts/map/MapManager.gd" id="1_jcjd5"]
 
 [node name="MapManager" type="Node2D"]
 script = ExtResource("1_jcjd5")
