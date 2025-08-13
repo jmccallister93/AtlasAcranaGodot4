@@ -21,14 +21,14 @@ func _ready():
 # Fit to screen size and set up positions for animation
 func resize_to_screen():
 	var screen_size = get_viewport().get_visible_rect().size
-	var target_size = screen_size * 0.6
+	var target_size = screen_size * 0.75
 	size = target_size
 	pivot_offset = size / 2
 	
 	# Calculate target position (slightly above bottom center)
 	target_position = Vector2(
 		(screen_size.x - size.x) / 2,  # Center horizontally
-		screen_size.y - size.y - 50    # 50 pixels from bottom
+		screen_size.y - size.y - 80    
 	)
 	
 	# Calculate hidden position (completely off-screen at bottom)
