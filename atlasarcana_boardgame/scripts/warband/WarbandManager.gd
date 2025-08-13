@@ -1,5 +1,5 @@
 # WarbandManager.gd - Basic Warband Management System
-extends RefCounted
+extends Node
 class_name WarbandManager
 
 # Warband data

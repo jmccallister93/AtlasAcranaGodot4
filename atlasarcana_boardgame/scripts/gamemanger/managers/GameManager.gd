@@ -62,6 +62,7 @@ func start_new_game():
 	add_child(attack_manager)
 	add_child(resource_manager)
 	add_child(inventory_manager)
+	add_child(warband_manager)
 	
 	# Initialize managers
 	movement_manager.initialize(character, map_manager)
@@ -75,55 +76,13 @@ func start_new_game():
 		inventory_manager.set_character(character)
 	
 
-func create_test_interactables():
-	"""Create test interactable entities"""
-	# Create a treasure chest at position (3,3)
-	var treasure_chest = interact_manager.create_treasure_chest(Vector2i(3, 3))
-	interact_manager.add_entity(treasure_chest, Vector2i(3, 3))
-	
-	# Create a magic crystal at position (5, 5)
-	var magic_crystal = interact_manager.create_magic_crystal(Vector2i(5, 5))
-	interact_manager.add_entity(magic_crystal, Vector2i(5, 5))
-	
-	# Create an herb patch at position (7, 2)
-	var herb_patch = interact_manager.create_herb_patch(Vector2i(7, 2))
-	interact_manager.add_entity(herb_patch, Vector2i(7, 2))
-	
-	# Create a simple test interactable at position (2, 6)
-	var test_item = interact_manager.create_test_interactable(Vector2i(2, 6), "mysterious_box", Color.CYAN)
-	interact_manager.add_entity(test_item, Vector2i(2, 6))
-	
-	print("Created test interactables at positions: (3,3), (5,5), (7,2), (2,6)")
-
-func create_test_enemies():
-	"""Create test enemies for combat"""
-	# Create a goblin warrior at position (4, 6)
-	var goblin = attack_manager.create_goblin_warrior(Vector2i(4, 6))
-	attack_manager.add_enemy(goblin, Vector2i(4, 6))
-	
-	# Create an orc brute at position (8, 4)
-	var orc = attack_manager.create_orc_brute(Vector2i(8, 4))
-	attack_manager.add_enemy(orc, Vector2i(8, 4))
-	
-	# Create a skeleton archer at position (6, 8)
-	var skeleton = attack_manager.create_skeleton_archer(Vector2i(6, 8))
-	attack_manager.add_enemy(skeleton, Vector2i(6, 8))
-	
-	# Create a random enemy at position (10, 2)
-	var random_enemy = attack_manager.create_random_enemy(Vector2i(10, 2))
-	attack_manager.add_enemy(random_enemy, Vector2i(10, 2))
-	
-	print("Created test enemies at positions: (4,6), (8,4), (6,8), (10,2)")
-
 func register_game_ui(ui: GameUI):
 	"""Called by GameUI to register itself with GameManager"""
 	game_ui = ui
-	print("✅ GameUI registered with GameManager")
 
 func unregister_game_ui():
 	"""Called when GameUI is being removed"""
 	game_ui = null
-	print("GameUI unregistered from GameManager")
 
 # ═══════════════════════════════════════════════════════════
 # ACTION MODE MANAGEMENT SYSTEM
@@ -206,7 +165,6 @@ func start_build_mode():
 
 func start_attack_mode():
 	"""Handle attack button press from UI"""
-	print("Attack action requested from UI")
 	
 	# Check action points first
 	if not can_start_action_mode():
@@ -227,7 +185,6 @@ func start_attack_mode():
 
 func start_interact_mode():
 	"""Handle interact button press from UI"""
-	print("Interact action requested from UI")
 	
 	# Check action points first
 	if not can_start_action_mode():
@@ -248,18 +205,16 @@ func start_interact_mode():
 		
 func end_movement_mode():
 	"""Handle movement mode end"""
-	print("Move action END requested from UI")
 	if current_action_mode == ActionMode.MOVEMENT:
 		movement_manager.end_movement_mode()
 		current_action_mode = ActionMode.NONE
-		print("current_action_mode", current_action_mode)
+
 		# Update UI
 		if game_ui:
 			game_ui.update_action_button_states(current_action_mode)
 
 func end_build_mode():
 	"""Handle build mode end"""
-	print("Build action END requested from UI")
 	if current_action_mode == ActionMode.BUILD:
 		build_manager.end_build_mode()  # Update this line
 		current_action_mode = ActionMode.NONE
@@ -270,7 +225,6 @@ func end_build_mode():
 
 func end_interact_mode():
 	"""Handle interact mode end"""
-	print("Interact action END requested from UI")
 	if current_action_mode == ActionMode.INTERACT:
 		interact_manager.end_interact_mode()
 		current_action_mode = ActionMode.NONE
@@ -324,7 +278,10 @@ func connect_signals():
 	resource_manager.resource_changed.connect(_on_resource_changed)
 	resource_manager.resources_spent.connect(_on_resources_spent)
 	resource_manager.insufficient_resources.connect(_on_insufficient_resources)
-
+	#Warband manager signals
+	warband_manager.member_added.connect(_on_warband_member_added)
+	warband_manager.member_removed.connect(_on_warband_member_removed)
+	warband_manager.member_status_changed.connect(_on_warband_member_status_changed)
 
 func _on_turn_manager_initial_turn(turn_number: int):
 	initial_turn.emit(turn_number)
@@ -491,7 +448,12 @@ func _on_enemy_died(enemy: Enemy):
 	print("Enemy died: ", enemy.enemy_name)
 	# Additional handling for enemy death (quest updates, etc.)
 
-
+func _on_warband_member_added():
+	pass
+func _on_warband_member_removed():
+	pass
+func _on_warband_member_status_changed():
+	pass
 # Add end_attack_mode() method:
 func end_attack_mode():
 	"""Handle attack mode end"""

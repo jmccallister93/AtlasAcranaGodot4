@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://u7idoq33n6v"]
 
-[ext_resource type="Script" uid="uid://dma4ow3ekugr8" path="res://scripts/managers/TurnManager.gd" id="1_tvih2"]
+[ext_resource type="Script" uid="uid://dma4ow3ekugr8" path="res://scripts/gamemanger/managers/TurnManager.gd" id="1_tvih2"]
 
 [node name="TurnManager" type="Node"]
 script = ExtResource("1_tvih2")

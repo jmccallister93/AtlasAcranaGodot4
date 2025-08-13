@@ -24,77 +24,25 @@ signal warband_member_clicked(member_index: int)
 func ready_post():
 	menu_title = "Warband"
 	title_label.text = menu_title
-	initialize_references()
+	# Don't initialize references here - wait for GameUI to set manager
 	create_warband_interface()
 	connect_signals()
 
 func initialize_references():
 	"""Initialize references to game systems"""
-	# Get warband manager from GameManager
-	if GameManager and GameManager.has_method("get_warband_manager"):
-		warband_manager = GameManager.get_warband_manager()
-	elif GameManager and GameManager.warband_manager:
-		warband_manager = GameManager.warband_manager
-	else:
-		# Create a mock warband manager for now if none exists
-		warband_manager = create_mock_warband_manager()
+	# Manager reference will be set by GameUI via set_warband_manager()
+	# Don't create or get managers here - use centralized approach
+	if not warband_manager:
+		print("⚠️ WarbandMenu: No warband manager set! Call set_warband_manager() first.")
 
-func create_mock_warband_manager():
-	"""Create a mock warband manager with sample data for testing"""
-	var mock_manager = RefCounted.new()
-	
-	# Add some sample members
-	var sample_members = [
-		{
-			"name": "Sir Gareth",
-			"level": 5,
-			"class": "Knight",
-			"portrait_path": "res://assets/portraits/knight.png",
-			"hp": 85,
-			"max_hp": 100,
-			"status": "Ready"
-		},
-		{
-			"name": "Elena Swift",
-			"level": 3,
-			"class": "Archer",
-			"portrait_path": "res://assets/portraits/archer.png",
-			"hp": 60,
-			"max_hp": 75,
-			"status": "Ready"
-		},
-		{
-			"name": "Magnus Iron",
-			"level": 4,
-			"class": "Warrior",
-			"portrait_path": "res://assets/portraits/warrior.png",
-			"hp": 45,
-			"max_hp": 90,
-			"status": "Injured"
-		},
-		{
-			"name": "Lydia Wise",
-			"level": 6,
-			"class": "Mage",
-			"portrait_path": "res://assets/portraits/mage.png",
-			"hp": 55,
-			"max_hp": 65,
-			"status": "Ready"
-		}
-	]
-	
-	mock_manager.set_script(null)
-	mock_manager.members = sample_members
-	
-	# Add methods to the mock manager
-	mock_manager.set("get_member_count", func(): return sample_members.size())
-	mock_manager.set("get_member", func(index): return sample_members[index] if index < sample_members.size() else null)
-	mock_manager.set("get_all_members", func(): return sample_members)
-	mock_manager.set("get_warband_name", func(): return "The Iron Company")
-	mock_manager.set("get_warband_level", func(): return 3)
-	mock_manager.set("get_total_members", func(): return sample_members.size())
-	
-	return mock_manager
+func set_warband_manager(manager: WarbandManager):
+	"""Set the warband manager reference from GameUI (centralized approach)"""
+	warband_manager = manager
+	print("✅ WarbandMenu: Warband manager reference set")
+
+# Removed create_mock_warband_manager() and MockWarbandManager class
+# Since we're using centralized manager approach, WarbandMenu should always
+# receive a real WarbandManager from GameUI via set_warband_manager()
 
 func create_warband_interface():
 	"""Create the warband interface"""
@@ -147,7 +95,7 @@ func create_warband_info_panel(parent: VBoxContainer):
 	
 	var warband_name_label = Label.new()
 	if warband_manager:
-		warband_name_label.text = warband_manager.call("get_warband_name")
+		warband_name_label.text = warband_manager.get_warband_name()
 	else:
 		warband_name_label.text = "No Warband"
 	warband_name_label.add_theme_font_size_override("font_size", 18)
@@ -156,7 +104,7 @@ func create_warband_info_panel(parent: VBoxContainer):
 	
 	var level_label = Label.new()
 	if warband_manager:
-		level_label.text = "Warband Level: " + str(warband_manager.call("get_warband_level"))
+		level_label.text = "Warband Level: " + str(warband_manager.get_warband_level())
 	else:
 		level_label.text = "Warband Level: 1"
 	level_label.add_theme_font_size_override("font_size", 14)
@@ -170,7 +118,7 @@ func create_warband_info_panel(parent: VBoxContainer):
 	
 	var count_label = Label.new()
 	if warband_manager:
-		count_label.text = "Members: " + str(warband_manager.call("get_total_members"))
+		count_label.text = "Members: " + str(warband_manager.get_total_members())
 	else:
 		count_label.text = "Members: 0"
 	count_label.add_theme_font_size_override("font_size", 14)
@@ -179,7 +127,7 @@ func create_warband_info_panel(parent: VBoxContainer):
 	
 	var ready_count = 0
 	if warband_manager:
-		var all_members = warband_manager.call("get_all_members")
+		var all_members = warband_manager.get_all_members()
 		for member in all_members:
 			if member.get("status", "Ready") == "Ready":
 				ready_count += 1
@@ -253,7 +201,36 @@ func refresh_warband_display():
 	if not is_inside_tree():
 		return
 	
+	# If no real manager is set, create a simple fallback
+	if not warband_manager:
+		print("⚠️ WarbandMenu: No warband manager set, using fallback data")
+		display_fallback_warband_data()
+		return
+	
 	refresh_members_list()
+
+func display_fallback_warband_data():
+	"""Display fallback data when no manager is available"""
+	# Clear existing member panels
+	for panel in member_panels:
+		if panel:
+			panel.queue_free()
+	member_panels.clear()
+	
+	# Clear container
+	if members_container:
+		for child in members_container.get_children():
+			child.queue_free()
+	
+	# Create a simple message
+	var fallback_label = Label.new()
+	fallback_label.text = "Warband Manager not initialized.\nPlease ensure GameUI sets the warband manager reference."
+	fallback_label.add_theme_font_size_override("font_size", 14)
+	fallback_label.add_theme_color_override("font_color", Color.YELLOW)
+	fallback_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	fallback_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	fallback_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	members_container.add_child(fallback_label)
 
 func refresh_members_list():
 	"""Refresh the members list"""
@@ -273,7 +250,7 @@ func refresh_members_list():
 		return
 	
 	# Get all members
-	var all_members = warband_manager.call("get_all_members")
+	var all_members = warband_manager.get_all_members()
 	
 	if all_members.is_empty():
 		create_no_members_message()
@@ -507,7 +484,7 @@ func _on_member_clicked(index: int):
 	
 	# For now, just show a message
 	if GameManager and GameManager.game_ui:
-		var member = warband_manager.call("get_member", index) if warband_manager else null
+		var member = warband_manager.get_member(index) if warband_manager else null
 		if member:
 			var member_name = member.get("name", "Unknown")
 			GameManager.game_ui.show_info("Clicked on " + member_name + ". (Detail view coming soon!)")
@@ -527,7 +504,7 @@ func _on_member_panel_mouse_exited(panel: PanelContainer):
 	# Get member index and re-style
 	var index = panel.get_meta("member_index")
 	if warband_manager:
-		var member = warband_manager.call("get_member", index)
+		var member = warband_manager.get_member(index)
 		if member:
 			style_member_panel(panel, member)
 
@@ -546,7 +523,7 @@ func debug_print_warband_state():
 	print("=== WarbandMenu Debug State ===")
 	print("Warband Manager: ", warband_manager != null)
 	if warband_manager:
-		print("Warband Name: ", warband_manager.call("get_warband_name"))
-		print("Member Count: ", warband_manager.call("get_total_members"))
+		print("Warband Name: ", warband_manager.get_warband_name())
+		print("Member Count: ", warband_manager.get_total_members())
 	print("Member Panels: ", member_panels.size())
 	print("===============================")
