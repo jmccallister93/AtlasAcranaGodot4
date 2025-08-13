@@ -1,4 +1,4 @@
-# ActionModeManager.gd
+# ActionModeManager.gd (Fixed)
 extends Node
 class_name ActionModeManager
 
@@ -25,9 +25,9 @@ func initialize(bottom_bar_ref: BottomBarUI, notification_ref: NotificationManag
 	bottom_bar = bottom_bar_ref
 	notification_manager = notification_ref
 	
-	# Connect to bottom bar signals
-	bottom_bar.action_button_pressed.connect(_on_action_button_pressed)
+	print("✅ ActionModeManager initialized with BottomBarUI and NotificationManager")
 	
+	# The action_button_pressed signal connection is now handled in GameUI
 	# Connect to GameManager if it has mode-related signals
 	if GameManager.has_signal("mode_changed"):
 		GameManager.mode_changed.connect(_on_gamemanager_mode_changed)
@@ -54,9 +54,9 @@ func _on_action_button_pressed(action_type: String):
 			handle_attack_action()
 		"interact":
 			handle_interact_action()
+		_:
+			print("Unknown action type: ", action_type)
 
-
-			
 func handle_move_action():
 	"""Handle move button press with toggle functionality"""
 	var current_mode = GameManager.get_current_action_mode()
@@ -127,7 +127,7 @@ func can_perform_action() -> bool:
 func update_button_states(active_mode):
 	"""Update button visual states based on active mode"""
 	if bottom_bar:
-		bottom_bar._on_mode_changed(active_mode)
+		bottom_bar.update_button_states(active_mode)
 	
 	# Emit signal for other components that might need to know
 	mode_changed.emit(active_mode)
@@ -175,7 +175,7 @@ func update_button_availability():
 # Connect this to action points changes
 func _on_action_points_changed(new_amount: int):
 	"""Handle action points changing"""
-	update_button_availability()  # Add this line
+	update_button_availability()
 	
 	if new_amount <= 0:
 		if notification_manager:
@@ -189,10 +189,9 @@ func _on_turn_advanced():
 
 # Debug methods
 func debug_print_state():
-	pass
-	#"""Print current state for debugging"""
-	#print("=== ActionModeManager State ===")
-	#print("Current mode: ", GameManager.get_current_action_mode())
-	#print("Action points: ", GameManager.get_current_action_points())
-	#print("Can perform action: ", can_perform_action())
-	#print("==============================")
+	"""Print current state for debugging"""
+	print("=== ActionModeManager State ===")
+	print("Current mode: ", GameManager.get_current_action_mode())
+	print("Action points: ", GameManager.get_current_action_points())
+	print("Can perform action: ", can_perform_action())
+	print("==============================")

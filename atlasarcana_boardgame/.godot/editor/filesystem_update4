@@ -71,3 +71,7 @@ res://scripts/items/ItemFactory.gd
 res://scripts/inventory/InventoryMenu.gd
 res://scripts/items/ItemDetailView.gd
 res://scripts/items/ItemSubmenu.gd
+res://scripts/inventory/InventorySlot.gd
+res://scripts/map/MapManager.gd
+res://scripts/equipment/EquipmentMenu.gd
+res://scripts/equipment/EquipmentDetailView.gd

@@ -33,11 +33,15 @@ func add_item(new_item: BaseItem, amount: int = 1) -> int:
 	
 	return amount  # Couldn't add any
 
-func remove_item(amount: int = 1) -> int:
-	"""Remove items from slot, returns amount actually removed"""
+func remove_item(amount: int) -> int:
+	"""Remove items from slot, returns actual amount removed"""
+	if is_empty():
+		return 0
+	
 	var amount_to_remove = min(amount, quantity)
 	quantity -= amount_to_remove
 	
+	# Clear the slot if empty
 	if quantity <= 0:
 		item = null
 		quantity = 0

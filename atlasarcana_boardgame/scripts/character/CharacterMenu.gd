@@ -1,22 +1,10 @@
-# CharacterMenu.gd
+# CharacterMenu.gd (Modified for Skills Only)
 extends BaseMenu
 class_name CharacterMenu
 
-# Equipment Panel Components
-var equipment_panel: PanelContainer
-var equipment_slots_container: GridContainer
-var equipment_slot_buttons: Dictionary = {}
-
-# Stats Panel Components
-var stats_panel: PanelContainer
-var stats_categories_container: VBoxContainer
-
-# Main layout
-var main_container: HBoxContainer
-
-# Tab system for skills
-var tab_container: TabContainer
-var skills_tab: Control
+# Skills Panel Components
+var skills_panel: PanelContainer
+var skills_categories_container: VBoxContainer
 
 # Tooltip system
 var tooltip: PanelContainer
@@ -25,19 +13,17 @@ var current_hovered_item: Control
 
 # References
 var character_stats: CharacterStats
-var equipment_manager: EquipmentManager
 var skill_manager: SkillManager
 
-# Signals
-signal equipment_slot_clicked(slot_type: EquipmentSlot.SlotType)
-signal item_equipped(item: EquipmentItem, slot: EquipmentSlot.SlotType)
-signal item_unequipped(item: EquipmentItem, slot: EquipmentSlot.SlotType)
+# Signals for skills
+signal skill_learned(skill: SkillNode)
+signal skill_unlearned(skill: SkillNode)
 
 func ready_post():
-	menu_title = "Character"
+	menu_title = "Character Skills"
 	title_label.text = menu_title
 	initialize_references()
-	create__interface()
+	create_skills_interface()
 	connect_signals()
 
 func initialize_references():
@@ -55,23 +41,6 @@ func initialize_references():
 			character_stats.character_name = character.stats.character_name if character.stats else "Hero"
 			character.stats = character_stats
 		
-		# IMPORTANT FIX: Use the character's existing equipment manager instead of creating new one
-		if character.has_method("get_equipment_manager") and character.get_equipment_manager():
-			equipment_manager = character.get_equipment_manager()
-			print("✅ Using existing equipment manager from character")
-		elif character.equipment_manager:
-			equipment_manager = character.equipment_manager
-			print("✅ Using character.equipment_manager")
-		else:
-			# Only create new if character doesn't have one
-			equipment_manager = EquipmentManager.new()
-			character.equipment_manager = equipment_manager
-			print("⚠️ Created new equipment manager for character")
-		
-		# Set up the relationships
-		equipment_manager.set_character_stats(character_stats)
-		character_stats.set_equipment_manager(equipment_manager)
-		
 		# Create skill manager (same approach)
 		if character.has_method("get_skill_manager") and character.get_skill_manager():
 			skill_manager = character.get_skill_manager()
@@ -88,8 +57,8 @@ func initialize_references():
 		if not skill_manager.has_method("get_skill_points") or skill_manager.get_skill_points() == 0:
 			skill_manager.add_skill_points(10)
 
-func create__interface():
-	"""Create the new  character interface"""
+func create_skills_interface():
+	"""Create the skills-only interface"""
 	# Clear existing content
 	for child in item_container.get_children():
 		child.queue_free()
@@ -101,27 +70,21 @@ func create__interface():
 	refresh_all_displays()
 
 func create_main_layout():
-	"""Create the main side-by-side layout"""
-	main_container = HBoxContainer.new()
-	main_container.add_theme_constant_override("separation", 20)
-	
-	create_equipment_panel()
-	create_stats_panel()
-	
-	main_container.add_child(equipment_panel)
-	main_container.add_child(stats_panel)
-	
-	item_container.add_child(main_container)
+	"""Create the main layout for skills"""
+	create_skills_panel()
+	item_container.add_child(skills_panel)
 
-func create_equipment_panel():
-	"""Create the equipment panel"""
-	equipment_panel = PanelContainer.new()
-	equipment_panel.custom_minimum_size = Vector2(300, 500)
+func create_skills_panel():
+	"""Create the skills panel"""
+	skills_panel = PanelContainer.new()
+	skills_panel.custom_minimum_size = Vector2(600, 500)
+	skills_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	skills_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	
 	# Style the panel
 	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.1, 0.1, 0.2, 0.9)
-	style.border_color = Color(0.4, 0.4, 0.6)
+	style.bg_color = Color(0.1, 0.15, 0.2, 0.9)
+	style.border_color = Color(0.4, 0.5, 0.7)
 	style.border_width_left = 2
 	style.border_width_right = 2
 	style.border_width_top = 2
@@ -130,328 +93,140 @@ func create_equipment_panel():
 	style.corner_radius_top_right = 8
 	style.corner_radius_bottom_left = 8
 	style.corner_radius_bottom_right = 8
-	equipment_panel.add_theme_stylebox_override("panel", style)
+	skills_panel.add_theme_stylebox_override("panel", style)
 	
-	var equipment_vbox = VBoxContainer.new()
-	equipment_vbox.add_theme_constant_override("separation", 10)
+	# Create scrollable container for skills
+	var skills_scroll = ScrollContainer.new()
+	skills_categories_container = VBoxContainer.new()
+	skills_categories_container.add_theme_constant_override("separation", 20)
 	
-	# Header
-	var equipment_header = create_section_header("Equipment")
-	equipment_vbox.add_child(equipment_header)
+	# Create skills content
+	create_skills_content()
 	
-	# Equipment slots
-	create_equipment_slots(equipment_vbox)
-	
-	equipment_panel.add_child(equipment_vbox)
+	skills_scroll.add_child(skills_categories_container)
+	skills_panel.add_child(skills_scroll)
 
-func create_equipment_slots(parent: VBoxContainer):
-	"""Create equipment slots in a logical layout"""
-	# Create equipment layout container
-	var equipment_layout = VBoxContainer.new()
-	equipment_layout.add_theme_constant_override("separation", 15)
-	
-	# Top row: Helmet
-	var top_row = HBoxContainer.new()
-	top_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	top_row.add_child(create_equipment_slot(EquipmentSlot.SlotType.HELMET))
-	equipment_layout.add_child(top_row)
-	
-	# Middle row: Main Hand, Chest, Off Hand
-	var middle_row = HBoxContainer.new()
-	middle_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	middle_row.add_theme_constant_override("separation", 10)
-	middle_row.add_child(create_equipment_slot(EquipmentSlot.SlotType.MAIN_HAND))
-	middle_row.add_child(create_equipment_slot(EquipmentSlot.SlotType.CHEST))
-	middle_row.add_child(create_equipment_slot(EquipmentSlot.SlotType.OFF_HAND))
-	equipment_layout.add_child(middle_row)
-	
-	# Lower body row: Hands, Legs, Feet
-	var lower_row = HBoxContainer.new()
-	lower_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	lower_row.add_theme_constant_override("separation", 10)
-	lower_row.add_child(create_equipment_slot(EquipmentSlot.SlotType.HANDS))
-	lower_row.add_child(create_equipment_slot(EquipmentSlot.SlotType.LEGS))
-	lower_row.add_child(create_equipment_slot(EquipmentSlot.SlotType.FEET))
-	equipment_layout.add_child(lower_row)
-	
-	# Accessories section
-	var accessories_header = Label.new()
-	accessories_header.text = "Accessories"
-	accessories_header.add_theme_font_size_override("font_size", 14)
-	accessories_header.add_theme_color_override("font_color", Color.YELLOW)
-	accessories_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	equipment_layout.add_child(accessories_header)
-	
-	# Accessories grid
-	var accessories_grid = GridContainer.new()
-	accessories_grid.columns = 3
-	accessories_grid.add_theme_constant_override("h_separation", 10)
-	accessories_grid.add_theme_constant_override("v_separation", 10)
-	
-	accessories_grid.add_child(create_equipment_slot(EquipmentSlot.SlotType.RING_1))
-	accessories_grid.add_child(create_equipment_slot(EquipmentSlot.SlotType.NECKLACE))
-	accessories_grid.add_child(create_equipment_slot(EquipmentSlot.SlotType.RING_2))
-	# Add belt in the center bottom
-	accessories_grid.add_child(Control.new())  # Spacer
-	accessories_grid.add_child(create_equipment_slot(EquipmentSlot.SlotType.BELT))
-	accessories_grid.add_child(Control.new())  # Spacer
-	
-	equipment_layout.add_child(accessories_grid)
-	
-	parent.add_child(equipment_layout)
-
-func create_equipment_slot(slot_type: EquipmentSlot.SlotType) -> Button:
-	"""Create a single equipment slot button"""
-	var slot_button = Button.new()
-	slot_button.custom_minimum_size = Vector2(60, 60)
-	slot_button.text = ""
-	
-	# Style the slot
-	var normal_style = StyleBoxFlat.new()
-	normal_style.bg_color = Color(0.2, 0.2, 0.3, 0.8)
-	normal_style.border_color = Color(0.5, 0.5, 0.7)
-	normal_style.border_width_left = 2
-	normal_style.border_width_right = 2
-	normal_style.border_width_top = 2
-	normal_style.border_width_bottom = 2
-	normal_style.corner_radius_top_left = 8
-	normal_style.corner_radius_top_right = 8
-	normal_style.corner_radius_bottom_left = 8
-	normal_style.corner_radius_bottom_right = 8
-	
-	var hover_style = normal_style.duplicate()
-	hover_style.border_color = Color.YELLOW
-	hover_style.bg_color = Color(0.3, 0.3, 0.4, 0.8)
-	
-	slot_button.add_theme_stylebox_override("normal", normal_style)
-	slot_button.add_theme_stylebox_override("hover", hover_style)
-	slot_button.add_theme_stylebox_override("pressed", hover_style)
-	
-	# Connect signals
-	slot_button.pressed.connect(_on_equipment_slot_clicked.bind(slot_type))
-	slot_button.mouse_entered.connect(_on_equipment_slot_mouse_entered.bind(slot_type, slot_button))
-	slot_button.mouse_exited.connect(_on_equipment_slot_mouse_exited.bind(slot_type))
-	
-	# Store reference
-	equipment_slot_buttons[slot_type] = slot_button
-	
-	# Set initial display
-	update_equipment_slot_display(slot_type)
-	
-	return slot_button
-
-func create_stats_panel():
-	"""Create the stats panel with categories"""
-	stats_panel = PanelContainer.new()
-	stats_panel.custom_minimum_size = Vector2(400, 500)
-	stats_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	
-	# Style the panel
-	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.1, 0.2, 0.1, 0.9)
-	style.border_color = Color(0.4, 0.6, 0.4)
-	style.border_width_left = 2
-	style.border_width_right = 2
-	style.border_width_top = 2
-	style.border_width_bottom = 2
-	style.corner_radius_top_left = 8
-	style.corner_radius_top_right = 8
-	style.corner_radius_bottom_left = 8
-	style.corner_radius_bottom_right = 8
-	stats_panel.add_theme_stylebox_override("panel", style)
-	
-	# Create tab container for stats and skills
-	tab_container = TabContainer.new()
-	tab_container.tab_alignment = TabBar.ALIGNMENT_CENTER
-	
-	# Stats tab
-	var stats_tab = ScrollContainer.new()
-	stats_tab.name = "Stats"
-	stats_categories_container = VBoxContainer.new()
-	stats_categories_container.add_theme_constant_override("separation", 20)
-	
-	create_stats_categories()
-	
-	stats_tab.add_child(stats_categories_container)
-	tab_container.add_child(stats_tab)
-	
-	# Skills tab
-	skills_tab = create_skills_tab()
-	tab_container.add_child(skills_tab)
-	
-	stats_panel.add_child(tab_container)
-
-func create_stats_categories():
-	"""Create all stat categories"""
-	if not character_stats:
-		return
-	
-	var categories = character_stats.get_stat_categories()
-	
-	for category in categories:
-		var category_container = create_stat_category_display(category)
-		stats_categories_container.add_child(category_container)
-
-func create_stat_category_display(category: StatCategory) -> VBoxContainer:
-	"""Create display for a single stat category"""
-	var container = VBoxContainer.new()
-	container.add_theme_constant_override("separation", 8)
-	
-	# Category header
-	var header = create_section_header(category.category_name)
-	header.add_theme_color_override("font_color", category.category_color)
-	container.add_child(header)
-	
-	# Description
-	var desc = Label.new()
-	desc.text = category.description
-	desc.add_theme_font_size_override("font_size", 12)
-	desc.add_theme_color_override("font_color", Color.LIGHT_GRAY)
-	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	container.add_child(desc)
-	
-	# Stats grid
-	var stats_grid = GridContainer.new()
-	stats_grid.columns = 2
-	stats_grid.add_theme_constant_override("h_separation", 15)
-	stats_grid.add_theme_constant_override("v_separation", 5)
-	
-	for stat_name in category.stats:
-		var stat = category.stats[stat_name]
-		var stat_display = create_stat_display(stat, category.category_color)
-		stats_grid.add_child(stat_display)
-	
-	container.add_child(stats_grid)
-	
-	return container
-
-func create_stat_display(stat: StatData, category_color: Color) -> PanelContainer:
-	"""Create display for a single stat"""
-	var panel = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(180, 60)
-	
-	# Style
-	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.15, 0.15, 0.25, 0.7)
-	style.border_color = category_color * 0.7
-	style.border_width_left = 1
-	style.border_width_right = 1
-	style.border_width_top = 1
-	style.border_width_bottom = 1
-	style.corner_radius_top_left = 4
-	style.corner_radius_top_right = 4
-	style.corner_radius_bottom_left = 4
-	style.corner_radius_bottom_right = 4
-	panel.add_theme_stylebox_override("panel", style)
-	
-	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 2)
-	
-	# Stat name
-	var name_label = Label.new()
-	name_label.text = stat.stat_name.replace("_", " ")
-	name_label.add_theme_font_size_override("font_size", 14)
-	name_label.add_theme_color_override("font_color", Color.WHITE)
-	vbox.add_child(name_label)
-	
-	# Stat value with breakdown
-	var value_container = create_stat_value_breakdown(stat)
-	vbox.add_child(value_container)
-	
-	panel.add_child(vbox)
-	
-	# Tooltip
-	panel.mouse_entered.connect(_on_stat_mouse_entered.bind(stat, panel))
-	panel.mouse_exited.connect(_on_stat_mouse_exited.bind(stat))
-	
-	return panel
-
-func create_stat_value_breakdown(stat: StatData) -> VBoxContainer:
-	"""Create detailed value breakdown for a stat"""
-	var container = VBoxContainer.new()
-	
-	# Total value (prominent)
-	var total_label = Label.new()
-	total_label.text = str(stat.get_total_value())
-	total_label.add_theme_font_size_override("font_size", 18)
-	total_label.add_theme_color_override("font_color", Color.LIGHT_GREEN)
-	container.add_child(total_label)
-	
-	# Breakdown (if there are modifiers)
-	if stat.equipment_modifier != 0 or stat.skill_modifier != 0:
-		var breakdown = Label.new()
-		var breakdown_text = str(stat.base_value)
-		
-		if stat.equipment_modifier != 0:
-			breakdown_text += " + " + str(stat.equipment_modifier) + " (eq)"
-		if stat.skill_modifier != 0:
-			breakdown_text += " + " + str(stat.skill_modifier) + " (skill)"
-		if stat.temporary_modifier != 0:
-			breakdown_text += " + " + str(stat.temporary_modifier) + " (temp)"
-		
-		breakdown.text = breakdown_text
-		breakdown.add_theme_font_size_override("font_size", 10)
-		breakdown.add_theme_color_override("font_color", Color.GRAY)
-		container.add_child(breakdown)
-	
-	return container
-
-func create_skills_tab() -> Control:
-	"""Create the skills tab"""
-	var skills_container = ScrollContainer.new()
-	skills_container.name = "Skills"
-	
-	var skills_vbox = VBoxContainer.new()
-	skills_vbox.add_theme_constant_override("separation", 15)
+func create_skills_content():
+	"""Create all skills content"""
+	# Character info header
+	create_character_info_header()
 	
 	# Skill points display
+	create_skill_points_display()
+	
+	# Skill trees
+	if skill_manager:
+		for tree in skill_manager.get_all_skill_trees():
+			var tree_display = create_skill_tree_display(tree)
+			skills_categories_container.add_child(tree_display)
+
+func create_character_info_header():
+	"""Create character information header"""
+	var header_container = VBoxContainer.new()
+	header_container.add_theme_constant_override("separation", 10)
+	
+	# Character name and level
+	var character_header = Label.new()
+	if character_stats:
+		character_header.text = character_stats.character_name + " - Level " + str(character_stats.character_level)
+	else:
+		character_header.text = "Character Skills"
+	character_header.add_theme_font_size_override("font_size", 20)
+	character_header.add_theme_color_override("font_color", Color.GOLD)
+	character_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	header_container.add_child(character_header)
+	
+	# Experience information
+	if character_stats:
+		var exp_label = Label.new()
+		exp_label.text = "Experience: " + str(character_stats.experience)
+		exp_label.add_theme_font_size_override("font_size", 14)
+		exp_label.add_theme_color_override("font_color", Color.LIGHT_BLUE)
+		exp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		header_container.add_child(exp_label)
+	
+	# Separator
+	var separator = HSeparator.new()
+	separator.add_theme_constant_override("separation", 5)
+	header_container.add_child(separator)
+	
+	skills_categories_container.add_child(header_container)
+
+func create_skill_points_display():
+	"""Create skill points display"""
 	var sp_container = HBoxContainer.new()
+	sp_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	sp_container.add_theme_constant_override("separation", 10)
+	
 	var sp_label = Label.new()
-	sp_label.text = "Skill Points: "
+	sp_label.text = "Available Skill Points: "
 	sp_label.add_theme_font_size_override("font_size", 16)
 	sp_label.add_theme_color_override("font_color", Color.WHITE)
 	sp_container.add_child(sp_label)
 	
 	var sp_value = Label.new()
 	sp_value.name = "SkillPointsValue"
-	sp_value.text = "0"
-	sp_value.add_theme_font_size_override("font_size", 16)
+	#sp_value.text = str(skill_manager.get_skill_points() if skill_manager else "0")
+	sp_value.add_theme_font_size_override("font_size", 18)
 	sp_value.add_theme_color_override("font_color", Color.YELLOW)
 	sp_container.add_child(sp_value)
 	
-	skills_vbox.add_child(sp_container)
+	# Add skill points button for testing
+	var add_sp_button = Button.new()
+	add_sp_button.text = "+5 SP"
+	add_sp_button.custom_minimum_size = Vector2(60, 30)
+	add_sp_button.pressed.connect(_on_add_skill_points_pressed)
+	sp_container.add_child(add_sp_button)
 	
-	# Skill trees
-	if skill_manager:
-		for tree in skill_manager.get_all_skill_trees():
-			var tree_display = create_skill_tree_display(tree)
-			skills_vbox.add_child(tree_display)
-	
-	skills_container.add_child(skills_vbox)
-	return skills_container
+	skills_categories_container.add_child(sp_container)
 
 func create_skill_tree_display(tree: SkillTree) -> VBoxContainer:
 	"""Create display for a skill tree"""
 	var container = VBoxContainer.new()
-	container.add_theme_constant_override("separation", 10)
+	container.add_theme_constant_override("separation", 15)
 	
-	# Tree header
-	var header = create_section_header(tree.tree_name)
+	# Tree header with background
+	var header_panel = PanelContainer.new()
+	var header_style = StyleBoxFlat.new()
+	header_style.bg_color = tree.tree_color * 0.3
+	header_style.border_color = tree.tree_color
+	header_style.border_width_left = 2
+	header_style.border_width_right = 2
+	header_style.border_width_top = 2
+	header_style.border_width_bottom = 2
+	header_style.corner_radius_top_left = 6
+	header_style.corner_radius_top_right = 6
+	header_style.corner_radius_bottom_left = 6
+	header_style.corner_radius_bottom_right = 6
+	header_panel.add_theme_stylebox_override("panel", header_style)
+	
+	var header_vbox = VBoxContainer.new()
+	header_vbox.add_theme_constant_override("separation", 5)
+	
+	var header = Label.new()
+	header.text = tree.tree_name
+	header.add_theme_font_size_override("font_size", 18)
 	header.add_theme_color_override("font_color", tree.tree_color)
-	container.add_child(header)
+	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	header_vbox.add_child(header)
 	
 	# Tree description
 	var desc = Label.new()
 	desc.text = tree.tree_description
 	desc.add_theme_font_size_override("font_size", 12)
 	desc.add_theme_color_override("font_color", Color.LIGHT_GRAY)
-	container.add_child(desc)
+	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	header_vbox.add_child(desc)
+	
+	header_panel.add_child(header_vbox)
+	container.add_child(header_panel)
 	
 	# Skills grid
 	var skills_grid = GridContainer.new()
-	skills_grid.columns = 3
-	skills_grid.add_theme_constant_override("h_separation", 10)
-	skills_grid.add_theme_constant_override("v_separation", 10)
+	skills_grid.columns = 4  # More columns for better layout
+	skills_grid.add_theme_constant_override("h_separation", 15)
+	skills_grid.add_theme_constant_override("v_separation", 15)
 	
 	for skill in tree.get_all_skills():
 		var skill_button = create_skill_button(skill)
@@ -464,31 +239,63 @@ func create_skill_tree_display(tree: SkillTree) -> VBoxContainer:
 func create_skill_button(skill: SkillNode) -> Button:
 	"""Create a button for a skill"""
 	var button = Button.new()
-	button.custom_minimum_size = Vector2(100, 80)
-	button.text = skill.skill_name + "\n" + str(skill.current_level) + "/" + str(skill.max_level)
+	button.custom_minimum_size = Vector2(120, 100)
+	
+	# Create skill button text with better formatting
+	var button_text = skill.skill_name + "\n"
+	button_text += "Level: " + str(skill.current_level) + "/" + str(skill.max_level) + "\n"
+	
+	# Add cost information
+	#if skill.current_level < skill.max_level:
+		#var cost = skill.get_skill_point_cost(skill.current_level + 1)
+		#button_text += "Cost: " + str(cost) + " SP"
+	#else:
+		#button_text += "MAXED"
+	
+	button.text = button_text
 	
 	# Style based on skill state
 	var style = StyleBoxFlat.new()
-	if skill.is_learned():
-		style.bg_color = Color(0.2, 0.6, 0.2, 0.8)  # Green for learned
+	var text_color = Color.WHITE
+	
+	if skill.current_level >= skill.max_level:
+		# Maxed skill
+		style.bg_color = Color(0.2, 0.6, 0.2, 0.9)  # Green for maxed
 		style.border_color = Color.GREEN
+		text_color = Color.WHITE
+	elif skill.is_learned():
+		# Learned but not maxed
+		style.bg_color = Color(0.4, 0.4, 0.8, 0.9)  # Blue for learned
+		style.border_color = Color.CYAN
+		text_color = Color.WHITE
 	elif skill_manager and skill_manager.get_skill_tree(skill.tree_category).can_learn_skill(skill, character_stats, skill_manager.learned_skills):
-		style.bg_color = Color(0.6, 0.6, 0.2, 0.8)  # Yellow for available
+		# Available to learn
+		style.bg_color = Color(0.8, 0.6, 0.2, 0.9)  # Gold for available
 		style.border_color = Color.YELLOW
+		text_color = Color.BLACK
 	else:
+		# Locked
 		style.bg_color = Color(0.3, 0.3, 0.3, 0.8)  # Gray for locked
 		style.border_color = Color.GRAY
+		text_color = Color.LIGHT_GRAY
 	
-	style.border_width_left = 2
-	style.border_width_right = 2
-	style.border_width_top = 2
-	style.border_width_bottom = 2
-	style.corner_radius_top_left = 4
-	style.corner_radius_top_right = 4
-	style.corner_radius_bottom_left = 4
-	style.corner_radius_bottom_right = 4
+	style.border_width_left = 3
+	style.border_width_right = 3
+	style.border_width_top = 3
+	style.border_width_bottom = 3
+	style.corner_radius_top_left = 8
+	style.corner_radius_top_right = 8
+	style.corner_radius_bottom_left = 8
+	style.corner_radius_bottom_right = 8
 	
 	button.add_theme_stylebox_override("normal", style)
+	
+	# Hover effect
+	var hover_style = style.duplicate()
+	hover_style.bg_color = hover_style.bg_color.lightened(0.2)
+	button.add_theme_stylebox_override("hover", hover_style)
+	
+	button.add_theme_color_override("font_color", text_color)
 	button.add_theme_font_size_override("font_size", 10)
 	
 	# Connect signals
@@ -497,15 +304,6 @@ func create_skill_button(skill: SkillNode) -> Button:
 	button.mouse_exited.connect(_on_skill_mouse_exited.bind(skill))
 	
 	return button
-
-func create_section_header(text: String) -> Label:
-	"""Create a section header label"""
-	var header = Label.new()
-	header.text = text
-	header.add_theme_font_size_override("font_size", 18)
-	header.add_theme_color_override("font_color", Color.GOLD)
-	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	return header
 
 func create_tooltip_system():
 	"""Create the tooltip system"""
@@ -535,7 +333,7 @@ func create_tooltip_system():
 	var tooltip_label = RichTextLabel.new()
 	tooltip_label.name = "TooltipLabel"
 	tooltip_label.bbcode_enabled = true
-	tooltip_label.custom_minimum_size = Vector2(200, 50)
+	tooltip_label.custom_minimum_size = Vector2(250, 100)
 	tooltip_label.fit_content = true
 	tooltip.add_child(tooltip_label)
 	
@@ -543,170 +341,77 @@ func create_tooltip_system():
 
 func connect_signals():
 	"""Connect all signals"""
-	if equipment_manager:
-		# Disconnect any existing connections first
-		if equipment_manager.equipment_changed.is_connected(_on_equipment_changed):
-			equipment_manager.equipment_changed.disconnect(_on_equipment_changed)
-		
-		# Connect to equipment changes
-		equipment_manager.equipment_changed.connect(_on_equipment_changed)
-		print("✅ Connected to equipment_manager.equipment_changed signal")
-	else:
-		print("❌ No equipment_manager to connect signals to")
-	
 	if skill_manager:
-		if skill_manager.skill_learned.is_connected(_on_skill_learned):
-			skill_manager.skill_learned.disconnect(_on_skill_learned)
-		if skill_manager.skill_unlearned.is_connected(_on_skill_unlearned):
-			skill_manager.skill_unlearned.disconnect(_on_skill_unlearned)
+		if skill_manager.skill_learned.is_connected(_on_skill_learned_internal):
+			skill_manager.skill_learned.disconnect(_on_skill_learned_internal)
+		if skill_manager.skill_unlearned.is_connected(_on_skill_unlearned_internal):
+			skill_manager.skill_unlearned.disconnect(_on_skill_unlearned_internal)
 		if skill_manager.skill_points_changed.is_connected(_on_skill_points_changed):
 			skill_manager.skill_points_changed.disconnect(_on_skill_points_changed)
 			
-		skill_manager.skill_learned.connect(_on_skill_learned)
-		skill_manager.skill_unlearned.connect(_on_skill_unlearned)
+		skill_manager.skill_learned.connect(_on_skill_learned_internal)
+		skill_manager.skill_unlearned.connect(_on_skill_unlearned_internal)
 		skill_manager.skill_points_changed.connect(_on_skill_points_changed)
-	
-	if character_stats:
-		if character_stats.stats_recalculated.is_connected(_on_stats_recalculated):
-			character_stats.stats_recalculated.disconnect(_on_stats_recalculated)
-		character_stats.stats_recalculated.connect(_on_stats_recalculated)
 
 # Event handlers
-func _on_equipment_slot_clicked(slot_type: EquipmentSlot.SlotType):
-	"""Handle equipment slot click"""
-	equipment_slot_clicked.emit(slot_type)
-	print("Equipment slot clicked: ", EquipmentSlot.SlotType.keys()[slot_type])
-	
-	# Check if there's already an item equipped
-	var equipped_item = equipment_manager.get_equipped_item(slot_type)
-	
-	if equipped_item:
-		# Show item detail view for the equipped item
-		if GameManager and GameManager.game_ui:
-			GameManager.game_ui.show_item_detail(equipped_item)
-	else:
-		# Handle empty slot click - offer helpful options
-		handle_empty_slot_click(slot_type)
-
-func handle_empty_slot_click(slot_type: EquipmentSlot.SlotType):
-	"""Handle clicking on an empty equipment slot"""
-	var slot_name = equipment_manager.get_slot_display_name(slot_type)
-	
-	# Option 1: Show a helpful message
-	if GameManager and GameManager.game_ui:
-		GameManager.game_ui.show_info("No item equipped in " + slot_name + " slot. Check your inventory for compatible equipment.")
-	
-	# Option 2: Auto-open inventory menu (uncomment if you want this behavior)
-	# if GameManager and GameManager.game_ui and GameManager.game_ui.inventory_menu:
-	#	 GameManager.game_ui.inventory_menu.show_menu()
-	#	 GameManager.game_ui.show_info("Opening inventory - look for " + slot_name + " equipment")
-	
-	# Option 3: Show available compatible items from inventory (more advanced)
-	show_compatible_items_for_slot(slot_type)
-
-func show_compatible_items_for_slot(slot_type: EquipmentSlot.SlotType):
-	"""Show available items that can be equipped in this slot"""
-	if not GameManager or not GameManager.inventory_manager:
-		return
-	
-	var inventory = GameManager.inventory_manager
-	var compatible_items = []
-	
-	# Check all inventory slots for compatible equipment
-	for i in range(inventory.max_slots):
-		var slot = inventory.get_slot(i)
-		if not slot.is_empty() and slot.item.item_type == BaseItem.ItemType.EQUIPMENT:
-			var equipment_item = slot.item as EquipmentItem
-			if equipment_item and slot_type in equipment_item.compatible_slots:
-				compatible_items.append({
-					"item": equipment_item,
-					"slot_index": i,
-					"quantity": slot.quantity
-				})
-	
-	# Show results
-	if compatible_items.size() > 0:
-		var slot_name = equipment_manager.get_slot_display_name(slot_type)
-		var message = "Found " + str(compatible_items.size()) + " compatible item(s) for " + slot_name + ":"
-		
-		for item_data in compatible_items:
-			message += "\n• " + item_data.item.item_name
-		
-		message += "\n\nOpen your inventory to equip these items."
-		
-		if GameManager and GameManager.game_ui:
-			GameManager.game_ui.show_info(message)
-		
-		print("Compatible items for ", EquipmentSlot.SlotType.keys()[slot_type], ":")
-		for item_data in compatible_items:
-			print("  - ", item_data.item.item_name, " (slot ", item_data.slot_index, ")")
-	else:
-		var slot_name = equipment_manager.get_slot_display_name(slot_type)
-		if GameManager and GameManager.game_ui:
-			GameManager.game_ui.show_warning("No compatible equipment found for " + slot_name + " slot in your inventory.")
-
-func _on_equipment_changed(slot_type: EquipmentSlot.SlotType, old_item: EquipmentItem, new_item: EquipmentItem):
-	"""Handle equipment changes"""
-	update_equipment_slot_display(slot_type)
-	refresh_stats_display()
-	
-	# Emit signals for other systems
-	if old_item and new_item:
-		item_equipped.emit(new_item, slot_type)
-	elif new_item:
-		item_equipped.emit(new_item, slot_type)
-	elif old_item:
-		item_unequipped.emit(old_item, slot_type)
-
 func _on_skill_button_clicked(skill: SkillNode):
 	"""Handle skill button click"""
-	if skill_manager:
-		if skill.is_learned():
-			# Try to unlearn (for respec)
-			skill_manager.unlearn_skill(skill.skill_id)
+	if not skill_manager:
+		return
+		
+	if skill.current_level >= skill.max_level:
+		# Already maxed
+		if GameManager and GameManager.game_ui:
+			GameManager.game_ui.show_info("Skill is already at maximum level!")
+		return
+		
+	if skill.is_learned():
+		# Try to level up
+		if skill_manager.can_level_up_skill(skill.skill_id):
+			skill_manager.level_up_skill(skill.skill_id)
 		else:
-			# Try to learn
+			if GameManager and GameManager.game_ui:
+				GameManager.game_ui.show_warning("Not enough skill points to level up this skill!")
+	else:
+		# Try to learn
+		if skill_manager.can_learn_skill(skill.skill_id):
 			skill_manager.learn_skill(skill.skill_id)
+		else:
+			if GameManager and GameManager.game_ui:
+				var tree = skill_manager.get_skill_tree(skill.tree_category)
+				if not tree.can_learn_skill(skill, character_stats, skill_manager.learned_skills):
+					GameManager.game_ui.show_warning("Requirements not met for this skill!")
+				else:
+					GameManager.game_ui.show_warning("Not enough skill points!")
 
-func _on_skill_learned(skill: SkillNode):
-	"""Handle skill learned"""
-	refresh_skills_display()
+func _on_add_skill_points_pressed():
+	"""Add skill points for testing"""
+	if skill_manager:
+		skill_manager.add_skill_points(5)
+		if GameManager and GameManager.game_ui:
+			GameManager.game_ui.show_success("Added 5 skill points!")
 
-func _on_skill_unlearned(skill: SkillNode):
-	"""Handle skill unlearned"""
+func _on_skill_learned_internal(skill: SkillNode):
+	"""Handle skill learned internally"""
 	refresh_skills_display()
+	skill_learned.emit(skill)
+	
+	if GameManager and GameManager.game_ui:
+		GameManager.game_ui.show_success("Learned: " + skill.skill_name)
+
+func _on_skill_unlearned_internal(skill: SkillNode):
+	"""Handle skill unlearned internally"""
+	refresh_skills_display()
+	skill_unlearned.emit(skill)
+	
+	if GameManager and GameManager.game_ui:
+		GameManager.game_ui.show_info("Unlearned: " + skill.skill_name)
 
 func _on_skill_points_changed(current_points: int):
 	"""Handle skill points changed"""
-	var sp_label = skills_tab.get_node("VBoxContainer/HBoxContainer/SkillPointsValue")
+	var sp_label = skills_categories_container.get_node_or_null("HBoxContainer/SkillPointsValue")
 	if sp_label:
 		sp_label.text = str(current_points)
-
-func _on_stats_recalculated():
-	"""Handle stats recalculation"""
-	refresh_stats_display()
-
-func _on_equipment_slot_mouse_entered(slot_type: EquipmentSlot.SlotType, button: Button):
-	"""Handle mouse enter on equipment slot"""
-	current_hovered_item = button
-	tooltip_timer.start()
-
-func _on_equipment_slot_mouse_exited(slot_type: EquipmentSlot.SlotType):
-	"""Handle mouse exit on equipment slot"""
-	current_hovered_item = null
-	tooltip_timer.stop()
-	tooltip.visible = false
-
-func _on_stat_mouse_entered(stat: StatData, panel: PanelContainer):
-	"""Handle mouse enter on stat"""
-	current_hovered_item = panel
-	tooltip_timer.start()
-
-func _on_stat_mouse_exited(stat: StatData):
-	"""Handle mouse exit on stat"""
-	current_hovered_item = null
-	tooltip_timer.stop()
-	tooltip.visible = false
 
 func _on_skill_mouse_entered(skill: SkillNode, button: Button):
 	"""Handle mouse enter on skill"""
@@ -722,17 +427,17 @@ func _on_skill_mouse_exited(skill: SkillNode):
 func _on_tooltip_timer_timeout():
 	"""Handle tooltip timer timeout"""
 	if current_hovered_item:
-		show_tooltip_for_item(current_hovered_item)
+		show_skill_tooltip(current_hovered_item)
 
-func show_tooltip_for_item(item: Control):
-	"""Show tooltip for a specific item"""
-	var tooltip_label = tooltip.get_node("TooltipLabel")
-	var tooltip_text = "No information available"
+func show_skill_tooltip(button: Button):
+	"""Show tooltip for a skill button"""
+	# Find the skill associated with this button
+	var skill = find_skill_for_button(button)
+	if not skill:
+		return
 	
-	# Determine what kind of item this is and create appropriate tooltip
-	if item in equipment_slot_buttons.values():
-		tooltip_text = create_equipment_slot_tooltip(item)
-	# Add other tooltip types as needed
+	var tooltip_label = tooltip.get_node("TooltipLabel")
+	var tooltip_text = create_skill_tooltip_text(skill)
 	
 	tooltip_label.text = tooltip_text
 	
@@ -742,130 +447,79 @@ func show_tooltip_for_item(item: Control):
 	
 	# Keep tooltip in bounds
 	var menu_rect = get_rect()
-	tooltip.position.x = clamp(tooltip.position.x, 10, menu_rect.size.x - 250)
-	tooltip.position.y = clamp(tooltip.position.y, 10, menu_rect.size.y - 100)
+	tooltip.position.x = clamp(tooltip.position.x, 10, menu_rect.size.x - 300)
+	tooltip.position.y = clamp(tooltip.position.y, 10, menu_rect.size.y - 150)
 	
 	tooltip.visible = true
 
-func create_equipment_slot_tooltip(slot_button: Button) -> String:
-	"""Create tooltip text for equipment slot"""
-	var slot_type = null
-	for type in equipment_slot_buttons:
-		if equipment_slot_buttons[type] == slot_button:
-			slot_type = type
-			break
+func find_skill_for_button(button: Button) -> SkillNode:
+	"""Find the skill associated with a button"""
+	if not skill_manager:
+		return null
 	
-	if slot_type == null:
-		return "Unknown slot"
+	# This is a bit of a hack - we could store skill references in button metadata
+	# For now, we'll find by name in the button text
+	var button_text = button.text
+	var skill_name = button_text.split("\n")[0]
 	
-	var slot_name = equipment_manager.get_slot_display_name(slot_type)
-	var equipped_item = equipment_manager.get_equipped_item(slot_type)
+	for tree in skill_manager.get_all_skill_trees():
+		for skill in tree.get_all_skills():
+			if skill.skill_name == skill_name:
+				return skill
 	
-	if equipped_item:
-		var text = "[b]" + equipped_item.item_name + "[/b]\n"
-		text += equipped_item.description + "\n\n"
-		text += "[color=yellow]Stats:[/color]\n"
-		for stat in equipped_item.stat_modifiers:
-			text += "• " + stat.replace("_", " ") + ": +" + str(equipped_item.stat_modifiers[stat]) + "\n"
-		text += "\n[color=gray]Click to unequip[/color]"
-		return text
-	else:
-		return "[b]" + slot_name + "[/b]\n\nEmpty slot\n\n[color=gray]Click to equip item[/color]"
+	return null
+
+func create_skill_tooltip_text(skill: SkillNode) -> String:
+	"""Create tooltip text for a skill"""
+	pass
+	return ""
+	#var text = "[b]" + skill.skill_name + "[/b]\n\n"
+	#text += skill.skill_description + "\n\n"
+	#
+	#text += "[color=yellow]Current Level:[/color] " + str(skill.current_level) + "/" + str(skill.max_level) + "\n"
+	#
+	#if skill.current_level < skill.max_level:
+		#var cost = skill.get_skill_point_cost(skill.current_level + 1)
+		#text += "[color=cyan]Next Level Cost:[/color] " + str(cost) + " SP\n"
+	#
+	## Show requirements if not met
+	#if not skill.is_learned() and skill_manager:
+		#var tree = skill_manager.get_skill_tree(skill.tree_category)
+		#if not tree.can_learn_skill(skill, character_stats, skill_manager.learned_skills):
+			#text += "\n[color=red]Requirements not met[/color]\n"
+			#
+			## Show specific requirements
+			#for req_stat in skill.stat_requirements:
+				#var required_value = skill.stat_requirements[req_stat]
+				#var current_value = character_stats.get_stat_value("combat", req_stat) if character_stats else 0
+				#var color = "green" if current_value >= required_value else "red"
+				#text += "[color=" + color + "]• " + req_stat.replace("_", " ") + ": " + str(current_value) + "/" + str(required_value) + "[/color]\n"
+	#
+	## Show current effects
+	#if skill.is_learned():
+		#text += "\n[color=lightgreen]Current Effects:[/color]\n"
+		#for effect in skill.skill_effects:
+			#text += "• " + effect + "\n"
+	#
+	#return text
 
 # Display update methods
-func update_equipment_slot_display(slot_type: EquipmentSlot.SlotType):
-	"""Update the display of a specific equipment slot"""
-	if not equipment_slot_buttons.has(slot_type):
-		print("No button found for slot type: ", EquipmentSlot.SlotType.keys()[slot_type])
-		return
-	
-	var button = equipment_slot_buttons[slot_type]
-	var equipped_item = equipment_manager.get_equipped_item(slot_type) if equipment_manager else null
-	
-	if equipped_item:
-		# Show first letter of item name + star
-		var display_text = equipped_item.item_name.substr(0, 1).to_upper() + "★"
-		button.text = display_text
-		button.add_theme_color_override("font_color", equipped_item.get_rarity_color())
-		
-		# Update button style to show equipped state
-		var equipped_style = StyleBoxFlat.new()
-		equipped_style.bg_color = equipped_item.get_rarity_color() * 0.3
-		equipped_style.border_color = equipped_item.get_rarity_color()
-		equipped_style.border_width_left = 3
-		equipped_style.border_width_right = 3
-		equipped_style.border_width_top = 3
-		equipped_style.border_width_bottom = 3
-		equipped_style.corner_radius_top_left = 8
-		equipped_style.corner_radius_top_right = 8
-		equipped_style.corner_radius_bottom_left = 8
-		equipped_style.corner_radius_bottom_right = 8
-		button.add_theme_stylebox_override("normal", equipped_style)
-		
-		print("Updated equipment slot ", EquipmentSlot.SlotType.keys()[slot_type], " with item: ", equipped_item.item_name)
-	else:
-		button.text = ""
-		button.add_theme_color_override("font_color", Color.WHITE)
-		
-		# Reset to default style
-		var empty_style = StyleBoxFlat.new()
-		empty_style.bg_color = Color(0.2, 0.2, 0.3, 0.8)
-		empty_style.border_color = Color(0.5, 0.5, 0.7)
-		empty_style.border_width_left = 2
-		empty_style.border_width_right = 2
-		empty_style.border_width_top = 2
-		empty_style.border_width_bottom = 2
-		empty_style.corner_radius_top_left = 8
-		empty_style.corner_radius_top_right = 8
-		empty_style.corner_radius_bottom_left = 8
-		empty_style.corner_radius_bottom_right = 8
-		button.add_theme_stylebox_override("normal", empty_style)
-		
-		print("Updated equipment slot ", EquipmentSlot.SlotType.keys()[slot_type], " to empty")
-
-func refresh_stats_display():
-	"""Refresh the entire stats display"""
-	if not stats_categories_container:
-		return
-	
-	# Clear and recreate stats display
-	for child in stats_categories_container.get_children():
-		child.queue_free()
-	
-	# Wait a frame for cleanup
-	await get_tree().process_frame
-	
-	create_stats_categories()
-
-func refresh_skills_display():
-	"""Refresh the skills display"""
-	if not skills_tab:
-		return
-	
-	# Remove old skills display and recreate
-	var old_skills = skills_tab.get_child(0)
-	if old_skills:
-		old_skills.queue_free()
-	
-	await get_tree().process_frame
-	
-	var new_skills = create_skills_tab().get_child(0)
-	skills_tab.add_child(new_skills)
-
 func refresh_all_displays():
-	"""Public method to refresh all displays - can be called externally"""
+	"""Public method to refresh all displays"""
 	if not is_inside_tree():
 		return
 	
-	refresh_stats_display()
 	refresh_skills_display()
-	refresh_equipment_display()
+
+func refresh_skills_display():
+	"""Refresh the skills display"""
+	if not skills_categories_container:
+		return
 	
-	# Update all equipment slots
-	for slot_type in equipment_slot_buttons:
-		update_equipment_slot_display(slot_type)
-		
-func refresh_equipment_display():
-	"""Refresh all equipment slot displays"""
-	for slot_type in equipment_slot_buttons:
-		update_equipment_slot_display(slot_type)
+	# Clear and recreate skills display
+	for child in skills_categories_container.get_children():
+		child.queue_free()
+	
+	await get_tree().process_frame
+	
+	create_skills_content()

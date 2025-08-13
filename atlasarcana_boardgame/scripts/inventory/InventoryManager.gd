@@ -64,10 +64,15 @@ func remove_item(item_id: String, amount: int = 1) -> int:
 	"""Remove item from inventory, returns amount actually removed"""
 	var removed_amount = 0
 	var remaining_to_remove = amount
+	var sample_item = null  # Store item reference before removing
 	
 	for i in range(inventory_slots.size()):
 		var slot = inventory_slots[i]
 		if not slot.is_empty() and slot.item.item_id == item_id:
+			# Store the item reference before removing (in case this empties the slot)
+			if not sample_item:
+				sample_item = slot.item
+			
 			var removed_from_slot = slot.remove_item(remaining_to_remove)
 			removed_amount += removed_from_slot
 			remaining_to_remove -= removed_from_slot
@@ -76,14 +81,12 @@ func remove_item(item_id: String, amount: int = 1) -> int:
 			if remaining_to_remove <= 0:
 				break
 	
-	if removed_amount > 0:
-		# Get the item for the signal (from first non-empty slot)
-		var sample_item = get_item_by_id(item_id)
-		if sample_item:
-			item_removed.emit(sample_item, removed_amount)
+	# Emit signal with the stored item reference
+	if removed_amount > 0 and sample_item:
+		item_removed.emit(sample_item, removed_amount)
 	
 	return removed_amount
-
+	
 func get_item_by_id(item_id: String) -> BaseItem:
 	"""Get the first item with the given ID"""
 	for slot in inventory_slots:
@@ -179,24 +182,40 @@ func equip_item_at_slot(slot_index: int) -> bool:
 func drop_item_at_slot(slot_index: int, amount: int = 1) -> bool:
 	"""Drop an item from inventory"""
 	if slot_index < 0 or slot_index >= inventory_slots.size():
+		print("Invalid slot index: ", slot_index)
 		return false
 	
 	var slot = inventory_slots[slot_index]
 	if slot.is_empty():
+		print("Cannot drop from empty slot")
 		return false
 	
 	if not slot.item.is_droppable:
+		print("Item is not droppable: ", slot.item.item_name)
 		return false
 	
-	var removed_amount = slot.remove_item(amount)
-	if removed_amount > 0:
-		inventory_changed.emit(slot_index)
-		item_removed.emit(slot.item, removed_amount)
-		#print("Dropped ", removed_amount, "x ", slot.item.item_name)
-		return true
+	# IMPORTANT: Get the item reference BEFORE removing it
+	var item_to_drop = slot.item
+	var available_amount = slot.quantity
+	var amount_to_drop = min(amount, available_amount)
 	
-	return false
-
+	print("Attempting to drop ", amount_to_drop, "x ", item_to_drop.item_name)
+	
+	# Remove the item from the slot
+	var removed_amount = slot.remove_item(amount_to_drop)
+	
+	if removed_amount > 0:
+		print("Successfully dropped ", removed_amount, "x ", item_to_drop.item_name)
+		
+		# Emit signals with the correct item reference
+		inventory_changed.emit(slot_index)
+		item_removed.emit(item_to_drop, removed_amount)
+		
+		return true
+	else:
+		print("Failed to remove item from slot")
+		return false
+		
 func get_slot(index: int) -> InventorySlot:
 	"""Get inventory slot by index"""
 	if index >= 0 and index < inventory_slots.size():

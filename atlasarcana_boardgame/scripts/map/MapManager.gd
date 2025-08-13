@@ -36,9 +36,9 @@ func handle_movement_click(screen_pos: Vector2):
 	# Convert to grid coordinates
 	var grid_pos = Vector2i(int(local_pos.x / tile_size), int(local_pos.y / tile_size))
 	
-	print("Screen pos: ", screen_pos)
-	print("Local pos: ", local_pos) 
-	print("Grid pos: ", grid_pos)
+	#print("Screen pos: ", screen_pos)
+	#print("Local pos: ", local_pos) 
+	#print("Grid pos: ", grid_pos)
 	
 	# Check if it's a valid grid position
 	if is_valid_position(grid_pos):

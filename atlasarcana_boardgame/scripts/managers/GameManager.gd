@@ -71,23 +71,7 @@ func start_new_game():
 	
 	if character:
 		inventory_manager.set_character(character)
-	# Give starting items
-	give_starting_inventory()
 	
-func give_starting_inventory():
-	"""Give the player some starting items"""
-	# Add some basic equipment
-	var test_items = ItemFactory.create_test_equipment()
-	for item in test_items:
-		inventory_manager.add_item(item, 1)
-	
-	# Add some consumables
-	var consumables = ItemFactory.create_test_consumables()
-	for item in consumables:
-		var amount = 3 if item.can_stack() else 1
-		inventory_manager.add_item(item, amount)
-		
-
 
 func create_test_interactables():
 	"""Create test interactable entities"""

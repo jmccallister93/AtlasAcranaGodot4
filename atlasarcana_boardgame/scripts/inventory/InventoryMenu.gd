@@ -1,4 +1,4 @@
-# EnhancedInventoryMenu.gd
+# EnhancedInventoryMenu.gd (Modified for Non-Equipment Items Only)
 extends BaseMenu
 class_name InventoryMenu
 
@@ -15,9 +15,10 @@ var inventory_manager: InventoryManager
 var selected_slot_index: int = -1
 var selected_item_panel: Panel = null
 var hovered_item: Control = null
-var current_filter: BaseItem.ItemType = BaseItem.ItemType.MISC  # Show all by default
+var current_filter: BaseItem.ItemType = BaseItem.ItemType.MISC  # Show all non-equipment by default
 var current_submenu: ItemSubmenu = null
 var slot_counter_label: Label
+var test_items_populated: bool = false
 
 # Visual components for each slot
 var slot_panels: Array = []
@@ -32,14 +33,10 @@ func ready_post():
 	# Create UI elements
 	create_filter_buttons()
 	create_slot_counter()  
-	#create_action_buttons()
 	create_tooltip()
 	
 	# Adjust item_container positioning AFTER creating header elements
 	setup_item_container_layout()
-	
-	# Populate with test items for demo
-	populate_with_test_items()
 	
 	# Refresh display
 	refresh_inventory_display()
@@ -63,8 +60,10 @@ func setup_item_container_layout():
 
 func setup_inventory_manager():
 	"""Initialize the inventory manager"""
-	inventory_manager = InventoryManager.new()
-	add_child(inventory_manager)
+	if GameManager and GameManager.inventory_manager:
+		inventory_manager = GameManager.inventory_manager
+	else:
+		return
 	
 	# Connect signals
 	inventory_manager.inventory_changed.connect(_on_inventory_changed)
@@ -72,13 +71,9 @@ func setup_inventory_manager():
 	inventory_manager.item_removed.connect(_on_item_removed)
 	inventory_manager.item_used.connect(_on_item_used)
 	inventory_manager.inventory_full.connect(_on_inventory_full)
-	
-	# Set character reference if available
-	if GameManager and GameManager.character:
-		inventory_manager.set_character(GameManager.character)
 
 func create_filter_buttons():
-	"""Create filter buttons for different item types"""
+	"""Create filter buttons for different NON-EQUIPMENT item types"""
 	filter_buttons = HBoxContainer.new()
 	filter_buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	filter_buttons.add_theme_constant_override("separation", 10)
@@ -90,10 +85,9 @@ func create_filter_buttons():
 	filter_buttons.offset_left = 20
 	filter_buttons.offset_right = -20
 	
-	# Create filter buttons
+	# Create filter buttons (REMOVED EQUIPMENT)
 	var filter_types = [
 		{"type": BaseItem.ItemType.MISC, "name": "All", "color": Color.WHITE},
-		{"type": BaseItem.ItemType.EQUIPMENT, "name": "Equipment", "color": Color.ORANGE},
 		{"type": BaseItem.ItemType.CONSUMABLE, "name": "Consumables", "color": Color.GREEN},
 		{"type": BaseItem.ItemType.CRAFTING, "name": "Materials", "color": Color.BROWN},
 		{"type": BaseItem.ItemType.QUEST, "name": "Quest", "color": Color.GOLD}
@@ -144,9 +138,9 @@ func create_filter_button(text: String, filter_type: BaseItem.ItemType, color: C
 	return button
 
 func create_slot_counter():
-	"""Create slot usage counter display"""
+	"""Create slot usage counter display (counting only non-equipment items)"""
 	slot_counter_label = Label.new()
-	slot_counter_label.text = "0/40 slots used"
+	slot_counter_label.text = "0/40 inventory slots used"
 	slot_counter_label.add_theme_color_override("font_color", Color.LIGHT_GRAY)
 	slot_counter_label.add_theme_font_size_override("font_size", 14)
 	slot_counter_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -161,67 +155,31 @@ func create_slot_counter():
 	add_child(slot_counter_label)
 
 func update_slot_counter():
-	"""Update the slot counter display"""
+	"""Update the slot counter display (counting only non-equipment items)"""
 	var occupied_slots = 0
 	for slot in inventory_manager.inventory_slots:
-		if not slot.is_empty():
+		if not slot.is_empty() and slot.item.item_type != BaseItem.ItemType.EQUIPMENT:
 			occupied_slots += 1
 	
-	slot_counter_label.text = str(occupied_slots) + "/" + str(inventory_manager.max_slots) + " slots used"
+	var total_non_equipment_slots = get_total_non_equipment_slots()
+	slot_counter_label.text = str(occupied_slots) + "/" + str(total_non_equipment_slots) + " inventory slots used"
 	
 	# Change color based on fullness
-	var fullness_ratio = float(occupied_slots) / float(inventory_manager.max_slots)
+	var fullness_ratio = float(occupied_slots) / float(total_non_equipment_slots) if total_non_equipment_slots > 0 else 0.0
 	if fullness_ratio > 0.9:
 		slot_counter_label.add_theme_color_override("font_color", Color.RED)
 	elif fullness_ratio > 0.7:
 		slot_counter_label.add_theme_color_override("font_color", Color.YELLOW)
 	else:
 		slot_counter_label.add_theme_color_override("font_color", Color.LIGHT_GRAY)
-	"""Create action buttons for inventory operations"""
-	# Add Item button (for testing)
-	add_button = Button.new()
-	add_button.text = "Add Test Item"
-	add_button.pressed.connect(_on_add_button_pressed)
-	style_action_button(add_button, Color.PURPLE)
-	
-	add_button.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
-	add_button.offset_left = 10
-	add_button.offset_bottom = -10
-	add_child(add_button)
-	
-	# Remove Item button
-	remove_button = Button.new()
-	remove_button.text = "Remove Selected"
-	remove_button.pressed.connect(_on_remove_button_pressed)
-	style_action_button(remove_button, Color.RED)
-	
-	remove_button.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
-	remove_button.offset_right = -10
-	remove_button.offset_bottom = -10
-	add_child(remove_button)
 
-func style_action_button(button: Button, color: Color):
-	"""Apply consistent styling to action buttons"""
-	button.add_theme_font_size_override("font_size", 14)
-	button.add_theme_color_override("font_color", Color.WHITE)
-	button.custom_minimum_size = Vector2(120, 35)
-	
-	var button_style = StyleBoxFlat.new()
-	button_style.bg_color = color * 0.7
-	button_style.border_width_left = 2
-	button_style.border_width_right = 2
-	button_style.border_width_top = 2
-	button_style.border_width_bottom = 2
-	button_style.border_color = color
-	button_style.corner_radius_top_left = 6
-	button_style.corner_radius_top_right = 6
-	button_style.corner_radius_bottom_left = 6
-	button_style.corner_radius_bottom_right = 6
-	button.add_theme_stylebox_override("normal", button_style)
-	
-	var button_hover_style = button_style.duplicate()
-	button_hover_style.bg_color = color
-	button.add_theme_stylebox_override("hover", button_hover_style)
+func get_total_non_equipment_slots() -> int:
+	"""Get total number of slots that could contain non-equipment items"""
+	var total = 0
+	for slot in inventory_manager.inventory_slots:
+		if slot.is_empty() or slot.item.item_type != BaseItem.ItemType.EQUIPMENT:
+			total += 1
+	return max(total, 20)  # Ensure reasonable minimum
 
 func create_tooltip():
 	"""Create the tooltip system"""
@@ -261,18 +219,8 @@ func create_tooltip():
 	
 	add_child(tooltip_panel)
 
-func populate_with_test_items():
-	"""Add some test items for demonstration"""
-	var test_items = ItemFactory.get_all_test_items()
-	
-	for item in test_items:
-		var amount = 1
-		if item.can_stack():
-			amount = randi() % 5 + 1  # 1-5 items
-		inventory_manager.add_item(item, amount)
-
 func refresh_inventory_display():
-	"""Refresh the inventory display - only show occupied slots + a few empty ones"""
+	"""Refresh the inventory display - only show NON-EQUIPMENT items"""
 	# Clear existing panels
 	for panel in slot_panels:
 		if panel:
@@ -283,7 +231,7 @@ func refresh_inventory_display():
 	for child in item_container.get_children():
 		child.queue_free()
 	
-	# Get occupied slots that match current filter
+	# Get NON-EQUIPMENT slots that match current filter
 	var slots_to_show = []
 	
 	for i in range(inventory_manager.max_slots):
@@ -310,11 +258,14 @@ func refresh_inventory_display():
 	
 	# Update slot counter
 	update_slot_counter()
-	#refresh_inventory_display()
 
 func should_show_slot(slot: InventorySlot) -> bool:
-	"""Check if a slot should be shown based on current filter"""
-	# Always show non-empty slots that match the filter
+	"""Check if a slot should be shown based on current filter (EXCLUDE EQUIPMENT)"""
+	# Never show equipment items in inventory menu
+	if not slot.is_empty() and slot.item.item_type == BaseItem.ItemType.EQUIPMENT:
+		return false
+	
+	# Always show non-empty, non-equipment slots that match the filter
 	if not slot.is_empty():
 		if current_filter == BaseItem.ItemType.MISC:  # "All" filter
 			return true
@@ -436,7 +387,6 @@ func create_item_icon(item: BaseItem) -> PanelContainer:
 	
 	var icon_style = StyleBoxFlat.new()
 	icon_style.bg_color = Color(0.2, 0.2, 0.2, 0.8)
-	#icon_style.border_color = item.get_rarity_color()
 	icon_style.border_width_left = 1
 	icon_style.border_width_right = 1
 	icon_style.border_width_top = 1
@@ -468,27 +418,6 @@ func _on_filter_button_pressed(filter_type: BaseItem.ItemType):
 	current_filter = filter_type
 	refresh_inventory_display()
 
-func _on_add_button_pressed():
-	"""Add a random test item"""
-	var test_items = ItemFactory.get_all_test_items()
-	if test_items.size() > 0:
-		var random_item = test_items[randi() % test_items.size()]
-		var amount = 1
-		if random_item.can_stack():
-			amount = randi() % 3 + 1
-		
-		if inventory_manager.add_item(random_item, amount):
-			print("Added ", amount, "x ", random_item.item_name)
-		else:
-			print("Failed to add item - inventory full")
-
-func _on_remove_button_pressed():
-	"""Remove selected item"""
-	if selected_slot_index >= 0:
-		var slot = inventory_manager.get_slot(selected_slot_index)
-		if not slot.is_empty():
-			inventory_manager.drop_item_at_slot(selected_slot_index, 1)
-
 func _on_slot_panel_input(event: InputEvent, panel: Panel, slot_index: int):
 	"""Handle input on slot panels"""
 	if event is InputEventMouseButton and event.pressed:
@@ -496,13 +425,6 @@ func _on_slot_panel_input(event: InputEvent, panel: Panel, slot_index: int):
 			var slot = inventory_manager.get_slot(slot_index)
 			if not slot.is_empty():
 				show_item_details_view(slot_index)
-			#select_slot(slot_index)
-			
-			# Double-click to show details (instead of use/equip)
-			#if event.double_click:
-				#var slot = inventory_manager.get_slot(slot_index)
-				#if not slot.is_empty():
-					#show_item_details_view(slot_index)
 		
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
 			# Right-click to show context menu
@@ -520,38 +442,11 @@ func show_item_details_view(slot_index: int):
 	if slot.is_empty():
 		return
 	
-	# Get the GameUI reference and show item detail
+	# Get the GameUI reference and show item detail with source tracking
 	if GameManager and GameManager.game_ui:
-		GameManager.game_ui.show_item_detail(slot.item, slot_index)
+		GameManager.game_ui.show_item_detail(slot.item, slot_index, "inventory")
 	else:
 		print("GameUI not available for item detail view")
-
-func select_slot(slot_index: int):
-	"""Select a specific inventory slot"""
-	selected_slot_index = slot_index
-	
-	# Update visual selection
-	for i in range(slot_panels.size()):
-		var panel = slot_panels[i]
-		if panel:
-			var slot = inventory_manager.get_slot(i)
-			style_slot_panel(panel, slot, i == selected_slot_index)
-
-func use_or_equip_item(slot_index: int):
-	"""Show item details instead of immediate use/equip"""
-	show_item_details_view(slot_index)
-	#"""Use or equip an item based on its type"""
-	#var slot = inventory_manager.get_slot(slot_index)
-	#if slot.is_empty():
-		#return
-	#
-	#match slot.item.item_type:
-		#BaseItem.ItemType.CONSUMABLE:
-			#inventory_manager.use_item_at_slot(slot_index)
-		#BaseItem.ItemType.EQUIPMENT:
-			#inventory_manager.equip_item_at_slot(slot_index)
-		#_:
-			#print("Cannot use item: ", slot.item.item_name)
 
 func show_item_submenu(slot_index: int):
 	"""Show context menu for an item"""
@@ -563,7 +458,7 @@ func show_item_submenu(slot_index: int):
 	if current_submenu:
 		current_submenu.queue_free()
 	
-	# Create item data for submenu - ADD DETAILS ACTION
+	# Create item data for submenu
 	var item_data = {
 		"name": slot.item.item_name,
 		"description": slot.item.description,
@@ -573,7 +468,7 @@ func show_item_submenu(slot_index: int):
 		"has_details": true  # Flag to show details option
 	}
 	
-	# Create submenu (reuse existing ItemSubmenu class)
+	# Create submenu
 	current_submenu = ItemSubmenu.new()
 	current_submenu.item_action_selected.connect(_on_item_action_selected)
 	current_submenu.submenu_closed.connect(_on_submenu_closed)
@@ -584,7 +479,7 @@ func show_item_submenu(slot_index: int):
 	# Position submenu
 	var viewport_size = get_viewport().get_visible_rect().size
 	current_submenu.global_position = (viewport_size - current_submenu.size) / 2
-	
+
 func _on_slot_mouse_entered(panel: Panel, slot: InventorySlot):
 	"""Handle mouse entering a slot"""
 	if not slot.is_empty():
@@ -626,8 +521,6 @@ func _on_item_action_selected(action: String, item_data: Dictionary):
 	match action:
 		"use":
 			inventory_manager.use_item_at_slot(slot_index)
-		"equip":
-			inventory_manager.equip_item_at_slot(slot_index)
 		"drop":
 			inventory_manager.drop_item_at_slot(slot_index, 1)
 		"examine":
@@ -643,10 +536,6 @@ func show_item_details(slot_index: int):
 		print("Type: ", slot.item.get_type_name())
 		print("Rarity: ", BaseItem.ItemRarity.keys()[slot.item.rarity])
 		print("Description: ", slot.item.description)
-		if slot.item.item_type == BaseItem.ItemType.EQUIPMENT:
-			var eq_item = slot.item as EquipmentItem
-			if eq_item and eq_item.stat_modifiers.size() > 0:
-				print("Stats: ", eq_item.stat_modifiers)
 
 func _on_submenu_closed():
 	"""Handle submenu closing"""
@@ -655,16 +544,27 @@ func _on_submenu_closed():
 # Inventory Manager Signal Handlers
 func _on_inventory_changed(slot_index: int):
 	"""Handle inventory slot change"""
+	print("🔍 INVENTORY MENU DEBUG: inventory_changed signal received for slot: ", slot_index)
+	
+	# Check the actual slot state
+	var slot = inventory_manager.get_slot(slot_index)
+	print("🔍 INVENTORY MENU DEBUG: Slot ", slot_index, " is_empty: ", slot.is_empty())
+	if not slot.is_empty():
+		print("🔍 INVENTORY MENU DEBUG: Item type: ", slot.item.get_type_name())
+	
 	# Refresh the entire display when inventory changes
 	refresh_inventory_display()
+	print("🔍 INVENTORY MENU DEBUG: refresh_inventory_display() completed")
 
 func _on_item_added(item: BaseItem, amount: int):
 	"""Handle item added to inventory"""
-	print("Added to inventory: ", amount, "x ", item.item_name)
+	if item.item_type != BaseItem.ItemType.EQUIPMENT:
+		print("Added to inventory: ", amount, "x ", item.item_name)
 
 func _on_item_removed(item: BaseItem, amount: int):
 	"""Handle item removed from inventory"""
-	print("Removed from inventory: ", amount, "x ", item.item_name)
+	if item.item_type != BaseItem.ItemType.EQUIPMENT:
+		print("Removed from inventory: ", amount, "x ", item.item_name)
 
 func _on_item_used(item: BaseItem):
 	"""Handle item used"""
@@ -673,4 +573,3 @@ func _on_item_used(item: BaseItem):
 func _on_inventory_full():
 	"""Handle inventory full"""
 	print("Inventory is full!")
-	# You could show a notification here

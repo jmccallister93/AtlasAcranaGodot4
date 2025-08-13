@@ -1,4 +1,4 @@
-# BottomBarUI.gd
+# BottomBarUI.gd - Fixed Version with Equipment Button
 extends Control
 class_name BottomBarUI
 
@@ -12,6 +12,7 @@ var advance_turn_container: HBoxContainer
 var inventory_button: Button
 var character_button: Button
 var buildings_button: Button
+var equipment_button: Button  # NEW: Equipment button
 
 # Action buttons
 var move_button: Button
@@ -28,14 +29,21 @@ signal action_button_pressed(action_type: String)
 signal action_failed(message: String)
 
 func _ready():
-	create_ui_components()
-	connect_button_signals()
+	print("BottomBarUI _ready() called")
+	# Don't create UI components here - wait for setup_layout
 
 func create_ui_components():
 	"""Create all bottom bar UI components"""
+	print("Creating BottomBarUI components")
+	
+	# Clear any existing children
+	for child in get_children():
+		child.queue_free()
+	
 	# Background panel
 	background_panel = Panel.new()
 	background_panel.name = "BottomBarBackground"
+	background_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(background_panel)
 	
 	# Style the background
@@ -48,27 +56,35 @@ func create_ui_components():
 	create_menu_buttons()
 	create_action_buttons()
 	create_advance_turn_button()
+	
+	connect_button_signals()
+	
+	print("✅ BottomBarUI components created")
 
 func create_menu_buttons():
 	"""Create menu buttons section"""
 	menu_buttons_container = HBoxContainer.new()
 	menu_buttons_container.name = "MenuButtonsContainer"
+	menu_buttons_container.add_theme_constant_override("separation", 10)
 	background_panel.add_child(menu_buttons_container)
 	
 	# Create menu buttons
 	inventory_button = create_styled_button("Inventory", Color(0.6, 0.4, 0.2))
 	character_button = create_styled_button("Character", Color(0.2, 0.6, 0.8))
 	buildings_button = create_styled_button("Buildings", Color(0.5, 0.5, 0.5))
+	equipment_button = create_styled_button("Equipment", Color(0.8, 0.2, 0.6))  # NEW: Equipment button with purple color
 	
 	menu_buttons_container.add_child(inventory_button)
 	menu_buttons_container.add_child(character_button)
 	menu_buttons_container.add_child(buildings_button)
+	menu_buttons_container.add_child(equipment_button)  # NEW: Add equipment button
 
 func create_action_buttons():
 	"""Create action buttons section"""
 	action_buttons_container = HBoxContainer.new()
 	action_buttons_container.name = "ActionButtonsContainer"
 	action_buttons_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	action_buttons_container.add_theme_constant_override("separation", 10)
 	background_panel.add_child(action_buttons_container)
 	
 	# Create action buttons
@@ -130,10 +146,13 @@ func create_styled_button(text: String, accent_color: Color) -> Button:
 
 func connect_button_signals():
 	"""Connect all button signals"""
+	print("Connecting BottomBarUI button signals")
+	
 	# Menu buttons
 	inventory_button.pressed.connect(func(): menu_button_pressed.emit("inventory"))
 	character_button.pressed.connect(func(): menu_button_pressed.emit("character"))
 	buildings_button.pressed.connect(func(): menu_button_pressed.emit("buildings"))
+	equipment_button.pressed.connect(func(): menu_button_pressed.emit("equipment"))  # NEW: Equipment button signal
 	
 	# Action buttons
 	move_button.pressed.connect(func(): action_button_pressed.emit("move"))
@@ -143,42 +162,66 @@ func connect_button_signals():
 	
 	# Advance turn button
 	advance_turn_button.pressed.connect(GameManager.advance_turn)
+	
+	print("✅ BottomBarUI signals connected")
 
 func setup_layout(viewport_size: Vector2):
 	"""Setup the layout of the bottom bar"""
-	var bar_height = 60
+	print("BottomBarUI setup_layout called with size: ", viewport_size)
+	
+	var bar_height = 80
 	var margin = 10
 	
 	# Position and size the main control
 	position = Vector2(0, viewport_size.y - bar_height)
 	size = Vector2(viewport_size.x, bar_height)
-	mouse_filter = Control.MOUSE_FILTER_STOP
+	mouse_filter = Control.MOUSE_FILTER_PASS  # Allow mouse events
+	visible = true
 	
-	# Position and size the background
-	background_panel.position = Vector2.ZERO
-	background_panel.size = size
+	print("BottomBarUI positioned at: ", position, " with size: ", size)
 	
-	# Layout sections
-	layout_sections(viewport_size, bar_height, margin)
+	# Create UI components now
+	create_ui_components()
+	
+	# Wait a frame then layout sections
+	call_deferred("layout_sections", viewport_size, bar_height, margin)
 
 func layout_sections(viewport_size: Vector2, bar_height: int, margin: int):
 	"""Layout the three main sections"""
+	if not background_panel:
+		print("❌ Background panel not ready for layout")
+		return
+		
+	print("Laying out BottomBarUI sections")
+	
 	var usable_height = bar_height - (margin * 2)
 	var y_pos = margin
 	
-	# Menu buttons (left)
-	menu_buttons_container.position = Vector2(margin, y_pos)
-	menu_buttons_container.size = Vector2(300, usable_height)
+	# Ensure background panel covers the full area
+	background_panel.position = Vector2.ZERO
+	background_panel.size = size
+	
+	# Menu buttons (left) - UPDATED: Increased width to accommodate 4 buttons
+	if menu_buttons_container:
+		menu_buttons_container.position = Vector2(margin, y_pos)
+		menu_buttons_container.size = Vector2(400, usable_height)  # Increased from 300 to 400
+		print("Menu buttons positioned at: ", menu_buttons_container.position)
 	
 	# Action buttons (center)
-	var action_buttons_width = 400
-	action_buttons_container.position = Vector2((viewport_size.x - action_buttons_width) / 2, y_pos)
-	action_buttons_container.size = Vector2(action_buttons_width, usable_height)
+	if action_buttons_container:
+		var action_buttons_width = 400
+		action_buttons_container.position = Vector2((viewport_size.x - action_buttons_width) / 2, y_pos)
+		action_buttons_container.size = Vector2(action_buttons_width, usable_height)
+		print("Action buttons positioned at: ", action_buttons_container.position)
 	
 	# Advance turn (right)
-	var advance_turn_width = 120
-	advance_turn_container.position = Vector2(viewport_size.x - advance_turn_width - margin, y_pos)
-	advance_turn_container.size = Vector2(advance_turn_width, usable_height)
+	if advance_turn_container:
+		var advance_turn_width = 120
+		advance_turn_container.position = Vector2(viewport_size.x - advance_turn_width - margin, y_pos)
+		advance_turn_container.size = Vector2(advance_turn_width, usable_height)
+		print("Advance turn positioned at: ", advance_turn_container.position)
+	
+	print("✅ BottomBarUI layout complete")
 
 # Public interface methods for mode management
 func _on_mode_changed(active_mode):
@@ -195,18 +238,28 @@ func _on_mode_changed(active_mode):
 		GameManager.ActionMode.INTERACT:
 			highlight_action_button(interact_button, "Interact (Active)")
 
+func update_button_states(active_mode):
+	"""Public method called by GameUI to update button states"""
+	_on_mode_changed(active_mode)
+
 func reset_action_button_styles():
 	"""Reset all action buttons to normal appearance"""
+	if not move_button or not build_button or not attack_button or not interact_button:
+		return
+		
 	var buttons = [move_button, build_button, attack_button, interact_button]
 	var texts = ["Move", "Build", "Attack", "Interact"]
 	var colors = [Color(0.2, 0.8, 0.2), Color(0.8, 0.6, 0.2), Color(0.8, 0.2, 0.2), Color(0.6, 0.2, 0.8)]
 	
 	for i in range(buttons.size()):
 		buttons[i].text = texts[i]
-		buttons[i] = style_button_normal(buttons[i], colors[i])
+		style_button_normal(buttons[i], colors[i])
 
 func highlight_action_button(button: Button, active_text: String):
 	"""Highlight a button to show it's active"""
+	if not button:
+		return
+		
 	button.text = active_text
 	
 	# Create active style
@@ -231,8 +284,11 @@ func highlight_action_button(button: Button, active_text: String):
 	button.add_theme_stylebox_override("pressed", active_style)
 	button.add_theme_color_override("font_color", Color.WHITE)
 
-func style_button_normal(button: Button, accent_color: Color) -> Button:
+func style_button_normal(button: Button, accent_color: Color):
 	"""Apply normal styling to a button"""
+	if not button:
+		return
+		
 	var normal_style = StyleBoxFlat.new()
 	normal_style.bg_color = Color(0.2, 0.2, 0.2)
 	normal_style.border_color = accent_color
@@ -255,8 +311,6 @@ func style_button_normal(button: Button, accent_color: Color) -> Button:
 	button.add_theme_stylebox_override("hover", hover_style)
 	button.add_theme_stylebox_override("pressed", pressed_style)
 	button.add_theme_color_override("font_color", Color.WHITE)
-	
-	return button
 
 func get_action_buttons() -> Array:
 	"""Get all action buttons for external access"""
@@ -269,6 +323,9 @@ func update_action_buttons_availability(current_action_points: int):
 	var action_buttons = [move_button, build_button, attack_button, interact_button]
 	
 	for button in action_buttons:
+		if not button:
+			continue
+			
 		if has_action_points:
 			# Enable button
 			button.disabled = false
@@ -279,3 +336,27 @@ func update_action_buttons_availability(current_action_points: int):
 			button.disabled = true
 			button.modulate = Color(0.5, 0.5, 0.5, 0.8)  # Grayed out
 			button.tooltip_text = "No action points remaining"
+
+# Debug method
+func debug_print_state():
+	"""Debug method to print current state"""
+	print("=== BottomBarUI Debug State ===")
+	print("Visible: ", visible)
+	print("Size: ", size)
+	print("Position: ", position)
+	print("Parent: ", get_parent())
+	print("Children count: ", get_children().size())
+	if background_panel:
+		print("Background panel size: ", background_panel.size)
+		print("Background panel position: ", background_panel.position)
+		print("Background panel children: ", background_panel.get_children().size())
+	print("Move button exists: ", move_button != null)
+	print("Inventory button exists: ", inventory_button != null)
+	print("Equipment button exists: ", equipment_button != null)  # NEW: Debug equipment button
+	if menu_buttons_container:
+		print("Menu container position: ", menu_buttons_container.position)
+		print("Menu container size: ", menu_buttons_container.size)
+	if action_buttons_container:
+		print("Action container position: ", action_buttons_container.position)
+		print("Action container size: ", action_buttons_container.size)
+	print("==============================")
