@@ -75,3 +75,5 @@ res://scripts/inventory/InventorySlot.gd
 res://scripts/map/MapManager.gd
 res://scripts/equipment/EquipmentMenu.gd
 res://scripts/equipment/EquipmentDetailView.gd
+res://scripts/warband/WarbandMenu.gd
+res://scripts/warband/WarbandManager.gd

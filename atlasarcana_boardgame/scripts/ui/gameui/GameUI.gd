@@ -18,6 +18,7 @@ var inventory_menu: InventoryMenu
 var character_menu: CharacterMenu
 var building_menu: BuildingMenu
 var equipment_menu: EquipmentMenu
+var warband_menu: WarbandMenu 
 
 # Signals for menu interactions (for compatibility)
 signal inventory_opened
@@ -28,6 +29,8 @@ signal building_opened
 signal building_closed
 signal equipment_opened
 signal equipment_closed
+signal warband_opened
+signal warband_closed
 
 func _ready():
 	GameManager.register_game_ui(self)
@@ -95,6 +98,11 @@ func create_menus():
 	menu_manager.add_child(equipment_menu)
 	equipment_menu.hide()
 	
+		# Create NEW warband menu
+	warband_menu = WarbandMenu.new()
+	menu_manager.add_child(warband_menu)
+	warband_menu.hide()
+	
 	# Connect menu signals
 	if character_menu:
 		character_menu.skill_learned.connect(_on_skill_learned)
@@ -104,6 +112,10 @@ func create_menus():
 		equipment_menu.equipment_slot_clicked.connect(_on_equipment_slot_clicked)
 		equipment_menu.item_equipped.connect(_on_item_equipped)
 		equipment_menu.item_unequipped.connect(_on_item_unequipped)
+		
+	if warband_menu:
+		warband_menu.warband_member_selected.connect(_on_warband_member_selected)
+		warband_menu.warband_member_clicked.connect(_on_warband_member_clicked)
 
 func _on_equipment_slot_clicked(slot_type: EquipmentSlot.SlotType):
 	"""Handle equipment slot clicks"""
@@ -316,6 +328,8 @@ func _on_menu_button_pressed(menu_type: String):
 			_on_buildings_button_pressed()
 		"equipment":  # NEW MENU
 			_on_equipment_button_pressed()
+		"warband":
+			_on_warband_button_pressed()
 
 func _on_inventory_button_pressed():
 	"""Handle inventory button press"""
@@ -380,7 +394,26 @@ func _on_equipment_button_pressed():
 			
 			equipment_menu.show_menu()
 			equipment_opened.emit()
-
+			
+func _on_warband_button_pressed():
+	"""Handle warband menu button press"""
+	if warband_menu:
+		if warband_menu.visible:
+			warband_menu.hide_menu()
+			warband_closed.emit()
+		else:
+			close_all_menus()
+			
+			if warband_menu.has_method("connect_signals"):
+				warband_menu.connect_signals()
+			
+			# Refresh warband data before showing
+			if warband_menu.has_method("refresh_all_displays"):
+				warband_menu.refresh_all_displays()
+			
+			warband_menu.show_menu()
+			warband_opened.emit()
+			
 func close_all_menus():
 	"""Close all open menus"""
 	if inventory_menu and inventory_menu.visible:
@@ -398,6 +431,10 @@ func close_all_menus():
 	if equipment_menu and equipment_menu.visible:
 		equipment_menu.hide_menu()
 		equipment_closed.emit()
+		
+	if warband_menu and warband_menu.visible:   
+		warband_menu.hide_menu()
+		warband_closed.emit()
 		
 	if building_detail_view and building_detail_view.is_showing():
 		building_detail_view.hide_with_animation()
@@ -495,6 +532,14 @@ func show_info(message: String):
 	"""Show info notification"""
 	notification_manager.show_info(message)
 
+func _on_warband_member_selected(member_index: int):
+	"""Handle warband member selection"""
+	print("Warband member selected: ", member_index)
+
+func _on_warband_member_clicked(member_index: int):
+	"""Handle warband member being clicked"""
+	print("Warband member clicked in GameUI: ", member_index)
+
 # ═══════════════════════════════════════════════════════════
 # RESOURCE AND CHARACTER UPDATES
 # ═══════════════════════════════════════════════════════════
@@ -528,6 +573,34 @@ func _on_building_data_changed():
 	print("GameUI: Building data changed, refreshing building menu")
 	if building_menu:
 		building_menu.refresh_display()
+		
+func show_warband_member_detail(member_index: int):
+	"""Show warband member detail view for a specific member"""
+	# TODO: Implement when WarbandMemberDetailView is created
+	print("Warband member detail view not yet implemented for member: ", member_index)
+	show_info("Member detail view coming soon!")
+
+func _on_warband_member_detail_closed():
+	"""Handle warband member detail view being closed"""
+	print("Warband member detail view closed")
+
+func _on_warband_member_action_completed(action: String, member_index: int):
+	"""Handle warband member actions completed from detail view"""
+	print("Warband member action completed: ", action, " on member: ", member_index)
+	
+	# Refresh warband menu if it's open
+	if warband_menu and warband_menu.visible:
+		warband_menu.refresh_all_displays()
+		
+	match action:
+		"heal":
+			show_success("Member healed")
+		"dismiss":
+			show_warning("Member dismissed from warband")
+		"promote":
+			show_success("Member promoted!")
+		"equip_item":
+			show_info("Item equipped to member")
 
 # ═══════════════════════════════════════════════════════════
 # DEBUG AND UTILITY METHODS
@@ -571,6 +644,8 @@ func get_component(component_name: String):
 			return building_menu
 		"equipmentmenu":
 			return equipment_menu
+		"warbandmenu":
+			return warband_menu
 		_:
 			print("Unknown component: ", component_name)
 			return null

@@ -13,6 +13,7 @@ var inventory_button: Button
 var character_button: Button
 var buildings_button: Button
 var equipment_button: Button  # NEW: Equipment button
+var warband_button: Button    # NEW: Warband button
 
 # Action buttons
 var move_button: Button
@@ -73,30 +74,43 @@ func create_menu_buttons():
 	character_button = create_styled_button("Character", Color(0.2, 0.6, 0.8))
 	buildings_button = create_styled_button("Buildings", Color(0.5, 0.5, 0.5))
 	equipment_button = create_styled_button("Equipment", Color(0.8, 0.2, 0.6))  # NEW: Equipment button with purple color
+	warband_button = create_styled_button("Warband", Color(0.2, 0.8, 0.4))      # NEW: Warband button with green color
 	
-	menu_buttons_container.add_child(inventory_button)
-	menu_buttons_container.add_child(character_button)
-	menu_buttons_container.add_child(buildings_button)
-	menu_buttons_container.add_child(equipment_button)  # NEW: Add equipment button
-
-func create_action_buttons():
-	"""Create action buttons section"""
-	action_buttons_container = HBoxContainer.new()
-	action_buttons_container.name = "ActionButtonsContainer"
-	action_buttons_container.alignment = BoxContainer.ALIGNMENT_CENTER
-	action_buttons_container.add_theme_constant_override("separation", 10)
-	background_panel.add_child(action_buttons_container)
-	
-	# Create action buttons
 	move_button = create_styled_button("Move", Color(0.2, 0.8, 0.2))
 	build_button = create_styled_button("Build", Color(0.8, 0.6, 0.2))
 	attack_button = create_styled_button("Attack", Color(0.8, 0.2, 0.2))
 	interact_button = create_styled_button("Interact", Color(0.6, 0.2, 0.8))
 	
-	action_buttons_container.add_child(move_button)
-	action_buttons_container.add_child(build_button)
-	action_buttons_container.add_child(attack_button)
-	action_buttons_container.add_child(interact_button)
+	menu_buttons_container.add_child(inventory_button)
+	menu_buttons_container.add_child(character_button)
+	menu_buttons_container.add_child(buildings_button)
+	menu_buttons_container.add_child(equipment_button)  # NEW: Add equipment button
+	menu_buttons_container.add_child(warband_button)    # NEW: Add warband button
+	
+	menu_buttons_container.add_child(move_button)
+	menu_buttons_container.add_child(build_button)
+	menu_buttons_container.add_child(attack_button)
+	menu_buttons_container.add_child(interact_button)
+
+func create_action_buttons():
+	#"""Create action buttons section"""
+	#action_buttons_container = HBoxContainer.new()
+	#action_buttons_container.name = "ActionButtonsContainer"
+	#action_buttons_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	#action_buttons_container.add_theme_constant_override("separation", 10)
+	#background_panel.add_child(action_buttons_container)
+	#
+	## Create action buttons
+	#move_button = create_styled_button("Move", Color(0.2, 0.8, 0.2))
+	#build_button = create_styled_button("Build", Color(0.8, 0.6, 0.2))
+	#attack_button = create_styled_button("Attack", Color(0.8, 0.2, 0.2))
+	#interact_button = create_styled_button("Interact", Color(0.6, 0.2, 0.8))
+	#
+	#action_buttons_container.add_child(move_button)
+	#action_buttons_container.add_child(build_button)
+	#action_buttons_container.add_child(attack_button)
+	#action_buttons_container.add_child(interact_button)
+	pass
 
 func create_advance_turn_button():
 	"""Create advance turn button"""
@@ -153,6 +167,7 @@ func connect_button_signals():
 	character_button.pressed.connect(func(): menu_button_pressed.emit("character"))
 	buildings_button.pressed.connect(func(): menu_button_pressed.emit("buildings"))
 	equipment_button.pressed.connect(func(): menu_button_pressed.emit("equipment"))  # NEW: Equipment button signal
+	warband_button.pressed.connect(func(): menu_button_pressed.emit("warband"))      # NEW: Warband button signal
 	
 	# Action buttons
 	move_button.pressed.connect(func(): action_button_pressed.emit("move"))
@@ -201,10 +216,10 @@ func layout_sections(viewport_size: Vector2, bar_height: int, margin: int):
 	background_panel.position = Vector2.ZERO
 	background_panel.size = size
 	
-	# Menu buttons (left) - UPDATED: Increased width to accommodate 4 buttons
+	# Menu buttons (left) - UPDATED: Increased width to accommodate 5 buttons
 	if menu_buttons_container:
 		menu_buttons_container.position = Vector2(margin, y_pos)
-		menu_buttons_container.size = Vector2(400, usable_height)  # Increased from 300 to 400
+		menu_buttons_container.size = Vector2(500, usable_height)  # Increased from 400 to 500
 		print("Menu buttons positioned at: ", menu_buttons_container.position)
 	
 	# Action buttons (center)
@@ -353,6 +368,7 @@ func debug_print_state():
 	print("Move button exists: ", move_button != null)
 	print("Inventory button exists: ", inventory_button != null)
 	print("Equipment button exists: ", equipment_button != null)  # NEW: Debug equipment button
+	print("Warband button exists: ", warband_button != null)      # NEW: Debug warband button
 	if menu_buttons_container:
 		print("Menu container position: ", menu_buttons_container.position)
 		print("Menu container size: ", menu_buttons_container.size)

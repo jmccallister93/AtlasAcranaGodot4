@@ -25,6 +25,7 @@ var interact_manager: InteractManager
 var attack_manager: AttackManager
 var resource_manager: ResourceManager
 var inventory_manager: InventoryManager
+var warband_manager: WarbandManager
 var game_ui: GameUI
 
 
@@ -41,6 +42,7 @@ func start_new_game():
 	attack_manager = AttackManager.new()
 	resource_manager = ResourceManager.new()
 	inventory_manager = InventoryManager.new()
+	warband_manager = WarbandManager.new()
 	
 	# Create character with  stats
 	character = Character.new()
@@ -285,6 +287,8 @@ func is_mode_active(mode: ActionMode) -> bool:
 	"""Check if a specific mode is currently active"""
 	return current_action_mode == mode
 
+func get_warband_manager() -> WarbandManager:
+	return warband_manager
 # ═══════════════════════════════════════════════════════════
 # REST OF YOUR EXISTING CODE (unchanged)
 # ═══════════════════════════════════════════════════════════
