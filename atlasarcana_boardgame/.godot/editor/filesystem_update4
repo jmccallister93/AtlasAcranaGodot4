@@ -89,3 +89,4 @@ res://scripts/character/equipment/EquipmentMenu.gd
 res://scripts/character/equipment/EquipmentDetailView.gd
 res://scripts/gamemanger/managers/ActionManager.gd
 res://scripts/gamemanger/managers/ResourceManager.gd
+res://scripts/gamemanger/managers/MenuManager.gd

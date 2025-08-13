@@ -53,8 +53,6 @@ func create_ui_components():
 	notification_manager = NotificationManager.new()
 	confirmation_dialog_manager = ConfirmationDialogManager.new()
 	
-	print("✅ Created UI component instances")
-	
 	# Add to scene tree in correct order (z-index matters)
 	add_child(top_bar)
 	add_child(bottom_bar)
@@ -62,9 +60,6 @@ func create_ui_components():
 	add_child(notification_manager)  # High z-index for visibility
 	add_child(confirmation_dialog_manager)  # Highest z-index
 	
-	print("✅ Added UI components to scene tree")
-	print("BottomBar parent: ", bottom_bar.get_parent())
-	print("BottomBar visible: ", bottom_bar.visible)
 	
 	# Initialize action mode manager with references
 	action_mode_manager.initialize(bottom_bar, notification_manager)

@@ -72,49 +72,49 @@ func handle_move_action():
 
 func handle_build_action():
 	"""Handle build button press with toggle functionality"""
-	var current_mode = GameManager.get_current_action_mode()
+	var current_mode = GameManager.action_controller.get_current_action_mode()
 	
 	if current_mode == GameManager.action_controller.ActionMode.BUILD:
 		# Already in build mode, toggle it off
-		GameManager.end_build_mode()
+		GameManager.action_controller.end_build_mode()
 		print("Build mode ended (toggled off)")
 	else:
 		# Start build mode
-		GameManager.start_build_mode()
+		GameManager.action_controller.start_build_mode()
 		print("Build mode started")
 
 func handle_attack_action():
 	"""Handle attack button press with toggle functionality"""
-	var current_mode = GameManager.get_current_action_mode()
+	var current_mode = GameManager.action_controller.get_current_action_mode()
 	
-	if current_mode == GameManager.ActionMode.ATTACK:
+	if current_mode == GameManager.action_controller.ActionMode.ATTACK:
 		# Already in attack mode, toggle it off
-		GameManager.end_all_action_modes()
+		GameManager.action_controller.end_all_action_modes()
 		print("Attack mode ended (toggled off)")
 	else:
 		# Start attack mode
-		GameManager.start_attack_mode()
+		GameManager.action_controller.start_attack_mode()
 		print("Attack mode started")
 
 func handle_interact_action():
 	"""Handle interact button press with toggle functionality"""
-	var current_mode = GameManager.get_current_action_mode()
+	var current_mode = GameManager.action_controller.get_current_action_mode()
 	
-	if current_mode == GameManager.ActionMode.INTERACT:
+	if current_mode == GameManager.action_controller.ActionMode.INTERACT:
 		# Already in interact mode, toggle it off
-		GameManager.end_all_action_modes()
+		GameManager.action_controller.end_all_action_modes()
 		print("Interact mode ended (toggled off)")
 	else:
 		# Start interact mode
-		GameManager.start_interact_mode()
+		GameManager.action_controller.start_interact_mode()
 		print("Interact mode started")
 
 func handle_escape_key():
 	"""Handle ESC key press to cancel current mode"""
-	var current_mode = GameManager.get_current_action_mode()
+	var current_mode = GameManager.action_controller.get_current_action_mode()
 	
-	if current_mode != GameManager.ActionMode.NONE:
-		GameManager.end_all_action_modes()
+	if current_mode != GameManager.action_controller.ActionMode.NONE:
+		GameManager.action_controller.end_all_action_modes()
 		print("All action modes cancelled via ESC key")
 		
 		if notification_manager:
@@ -139,15 +139,15 @@ func _on_gamemanager_mode_changed(new_mode):
 # Public interface methods
 func force_end_all_modes():
 	"""Force end all action modes (for external use)"""
-	GameManager.end_all_action_modes()
+	GameManager.action_controller.end_all_action_modes()
 
 func get_current_mode():
 	"""Get the current action mode"""
-	return GameManager.get_current_action_mode()
+	return GameManager.action_controller.get_current_action_mode()
 
 func is_mode_active() -> bool:
 	"""Check if any action mode is currently active"""
-	return GameManager.get_current_action_mode() != GameManager.ActionMode.NONE
+	return GameManager.action_controller.get_current_action_mode() != GameManager.ActionMode.NONE
 
 # Validation methods
 func can_start_movement() -> bool:
@@ -186,12 +186,3 @@ func _on_turn_advanced():
 	# All modes should be ended when turn advances
 	# This is typically handled by GameManager, but we can add additional logic here if needed
 	print("Turn advanced - action modes will be reset")
-
-# Debug methods
-func debug_print_state():
-	"""Print current state for debugging"""
-	print("=== ActionModeManager State ===")
-	print("Current mode: ", GameManager.get_current_action_mode())
-	print("Action points: ", GameManager.get_current_action_points())
-	print("Can perform action: ", can_perform_action())
-	print("==============================")
