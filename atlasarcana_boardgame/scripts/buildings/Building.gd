@@ -39,7 +39,7 @@ func _ready():
 	
 	# Connect to turn advancement for resource production
 	if GameManager:
-		GameManager.turn_advanced.connect(_on_turn_advanced)
+		GameManager.event_bus.turn_advanced.connect(_on_turn_advanced)
 
 func initialize(type: BuildingData.BuildingType, target_tile_ref: BiomeTile):
 	"""Initialize the building with type and tile data"""
@@ -108,14 +108,14 @@ func _on_turn_advanced(turn_number: int):
 		print("%s produced %d %s" % [building_type_string, amount, resource])
 	
 	# Show production notification
-	if GameManager.game_ui:
+	if GameManager.ui_bridge.game_ui:
 		var production_text = ""
 		for resource in total_production:
 			if production_text != "":
 				production_text += ", "
 			production_text += "%d %s" % [total_production[resource], resource]
 		
-		GameManager.game_ui.show_info("%s produced: %s" % [building_type_string, production_text])
+		GameManager.ui_bridge.game_ui.show_info("%s produced: %s" % [building_type_string, production_text])
 
 # REQUIRED METHODS FOR BUILDINGMENU INTEGRATION
 func get_building_name() -> String:

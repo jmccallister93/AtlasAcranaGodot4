@@ -27,9 +27,7 @@ func ready_post():
 
 func connect_to_inventory_manager():
 	"""Connect to InventoryManager for item operations"""
-	if GameManager and GameManager.inventory_manager:
-		inventory_manager = GameManager.inventory_manager
-		print("✅ ItemDetailView connected to InventoryManager")
+	inventory_manager = GameManager.manager_registry.inventory_manager
 
 func show_for_item(item: BaseItem, slot_index: int = -1, source: String = "inventory"):
 	"""Show detail view for a specific item"""

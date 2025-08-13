@@ -244,13 +244,13 @@ func _on_mode_changed(active_mode):
 	reset_action_button_styles()
 	
 	match active_mode:
-		GameManager.ActionMode.MOVEMENT:
+		GameManager.action_controller.ActionMode.MOVEMENT:
 			highlight_action_button(move_button, "Move (Active)")
-		GameManager.ActionMode.BUILD:
+		GameManager.action_controller.ActionMode.BUILD:
 			highlight_action_button(build_button, "Build (Active)")
-		GameManager.ActionMode.ATTACK:
+		GameManager.action_controller.ActionMode.ATTACK:
 			highlight_action_button(attack_button, "Attack (Active)")
-		GameManager.ActionMode.INTERACT:
+		GameManager.action_controller.ActionMode.INTERACT:
 			highlight_action_button(interact_button, "Interact (Active)")
 
 func update_button_states(active_mode):

@@ -93,14 +93,13 @@ func ready_post():
 
 func connect_to_build_manager():
 	"""Connect to BuildManager to get real building data"""
-	if GameManager and GameManager.build_manager:
-		build_manager = GameManager.build_manager
+	build_manager = GameManager.manager_registry.build_manager
+	
+	# Connect to building events for real-time updates
+	build_manager.building_completed.connect(_on_building_placed)
+	# Remove this line: build_manager.building_placed.connect(_on_building_placed_direct)
 		
-		# Connect to building events for real-time updates
-		build_manager.building_completed.connect(_on_building_placed)
-		# Remove this line: build_manager.building_placed.connect(_on_building_placed_direct)
-		
-		print("✅ BuildingMenu connected to BuildManager")
+
 
 func _on_building_placed(new_building: Building, tile: BiomeTile):
 	"""Handle new building placement"""

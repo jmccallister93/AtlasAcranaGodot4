@@ -295,23 +295,22 @@ func connect_signals():
 	print("Connecting signals...")
 	
 	# Connect GameManager signals to top bar
-	GameManager.initial_turn.connect(top_bar._on_turn_changed)
-	GameManager.turn_advanced.connect(top_bar._on_turn_changed)
-	GameManager.action_points_spent.connect(top_bar._on_action_points_changed)
+	GameManager.event_bus.initial_turn.connect(top_bar._on_turn_changed)
+	GameManager.event_bus.turn_advanced.connect(top_bar._on_turn_changed)
+	GameManager.event_bus.action_points_spent.connect(top_bar._on_action_points_changed)
 	
 	# Connect bottom bar signals
 	bottom_bar.menu_button_pressed.connect(_on_menu_button_pressed)
 	bottom_bar.action_button_pressed.connect(action_mode_manager._on_action_button_pressed)
 	
 	# Connect GameManager signals to ActionModeManager
-	GameManager.action_points_spent.connect(action_mode_manager._on_action_points_changed)
+	GameManager.event_bus.action_points_spent.connect(action_mode_manager._on_action_points_changed)
 	
 	# Connect confirmation dialog signals
 	confirmation_dialog_manager.confirmed.connect(_on_confirmation_dialog_confirmed)
 	confirmation_dialog_manager.cancelled.connect(_on_confirmation_dialog_cancelled)
 
 	call_deferred("connect_build_manager_signals_deferred")
-	print("✅ All signals connected")
 
 # ═══════════════════════════════════════════════════════════
 # MENU SYSTEM
@@ -481,10 +480,8 @@ func _on_confirmation_dialog_cancelled():
 
 func connect_build_manager_signals():
 	"""Connect BuildManager signals after it's initialized"""
-	if GameManager and GameManager.build_manager:
-		GameManager.build_manager.building_completed.connect(_on_building_placed)
-		GameManager.build_manager.building_data_changed.connect(_on_building_data_changed)
-		print("✅ Connected to BuildManager signals")
+	GameManager.manager_registry.build_manager.building_completed.connect(_on_building_placed)
+	GameManager.manager_registry.build_manager.building_data_changed.connect(_on_building_data_changed)
 		
 func connect_build_manager_signals_deferred():
 	await get_tree().process_frame

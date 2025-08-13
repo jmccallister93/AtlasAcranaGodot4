@@ -33,9 +33,8 @@ func ready_post():
 
 func connect_to_build_manager():
 	"""Connect to BuildManager for building data"""
-	if GameManager and GameManager.build_manager:
-		build_manager = GameManager.build_manager
-		print("✅ BuildingDetailView connected to BuildManager")
+	build_manager = GameManager.manager_registry.build_manager
+	
 
 func show_for_building(building: Building):
 	"""Show detail view for a specific building"""

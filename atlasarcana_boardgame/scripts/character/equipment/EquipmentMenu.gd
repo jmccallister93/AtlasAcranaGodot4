@@ -74,8 +74,7 @@ func initialize_references():
 		character_stats.set_equipment_manager(equipment_manager)
 	
 	# Get inventory manager
-	if GameManager and GameManager.inventory_manager:
-		inventory_manager = GameManager.inventory_manager
+	inventory_manager = GameManager.manager_registry.inventory_manager
 
 func create_equipment_interface():
 	"""Create the equipment interface"""

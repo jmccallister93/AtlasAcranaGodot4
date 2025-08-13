@@ -77,3 +77,15 @@ res://scripts/equipment/EquipmentMenu.gd
 res://scripts/equipment/EquipmentDetailView.gd
 res://scripts/warband/WarbandMenu.gd
 res://scripts/warband/WarbandManager.gd
+res://scripts/gamemanger/core/ManageRegistry.gd
+res://scripts/gamemanger/controllers/ActionModeController.gd
+res://scripts/gamemanger/coomunication/GameEventBus.gd
+res://scripts/gamemanger/comunication/UIBridge.gd
+res://scripts/gamemanger/controllers/ConfirmationController.gd
+res://scripts/gamemanger/core/GameState.gd
+res://scripts/gamemanger/core/GameManager.gd
+res://scripts/buildings/BuildingMenu.gd
+res://scripts/character/equipment/EquipmentMenu.gd
+res://scripts/character/equipment/EquipmentDetailView.gd
+res://scripts/gamemanger/managers/ActionManager.gd
+res://scripts/gamemanger/managers/ResourceManager.gd

@@ -45,9 +45,9 @@ func initialize(char: Character, map: MapManager):
 	map_manager = map
 	
 	# Connect to movement manager for position updates
-	if GameManager and GameManager.movement_manager:
-		GameManager.movement_manager.movement_completed.connect(_on_character_moved)
-		print("✅ BuildManager connected to movement_manager signals")
+	#if GameManager and GameManager.movement_manager:
+	GameManager.manager_registry.movement_manager.movement_completed.connect(_on_character_moved)
+	
 	
 	# Create building selection menu
 	create_building_selection_menu()

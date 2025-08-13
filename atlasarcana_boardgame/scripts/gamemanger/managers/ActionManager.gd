@@ -61,20 +61,20 @@ func handle_move_action():
 	"""Handle move button press with toggle functionality"""
 	var current_mode = GameManager.get_current_action_mode()
 	
-	if current_mode == GameManager.ActionMode.MOVEMENT:
+	if current_mode == GameManager.action_controller.ActionMode.MOVEMENT:
 		# Already in movement mode, toggle it off
-		GameManager.end_movement_mode()
+		GameManager.action_controller.end_movement_mode()
 		print("Movement mode ended (toggled off)")
 	else:
 		# Start movement mode
-		GameManager.start_movement_mode()
+		GameManager.action_controller.start_movement_mode()
 		print("Movement mode started")
 
 func handle_build_action():
 	"""Handle build button press with toggle functionality"""
 	var current_mode = GameManager.get_current_action_mode()
 	
-	if current_mode == GameManager.ActionMode.BUILD:
+	if current_mode == GameManager.action_controller.ActionMode.BUILD:
 		# Already in build mode, toggle it off
 		GameManager.end_build_mode()
 		print("Build mode ended (toggled off)")

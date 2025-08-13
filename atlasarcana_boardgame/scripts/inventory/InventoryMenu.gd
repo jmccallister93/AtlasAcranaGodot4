@@ -60,11 +60,9 @@ func setup_item_container_layout():
 
 func setup_inventory_manager():
 	"""Initialize the inventory manager"""
-	if GameManager and GameManager.inventory_manager:
-		inventory_manager = GameManager.inventory_manager
-	else:
-		return
 	
+	inventory_manager = GameManager.manager_registry.inventory_manager
+
 	# Connect signals
 	inventory_manager.inventory_changed.connect(_on_inventory_changed)
 	inventory_manager.item_added.connect(_on_item_added)

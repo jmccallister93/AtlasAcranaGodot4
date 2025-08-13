@@ -28,13 +28,11 @@ func ready_post():
 
 func connect_to_managers():
 	"""Connect to managers for equipment operations"""
-	if GameManager and GameManager.inventory_manager:
-		inventory_manager = GameManager.inventory_manager
-		print("✅ EquipmentDetailView connected to InventoryManager")
+	inventory_manager = GameManager.manager_registry.inventory_manager
+	
 	
 	if GameManager and GameManager.character and GameManager.character.equipment_manager:
 		equipment_manager = GameManager.character.equipment_manager
-		print("✅ EquipmentDetailView connected to EquipmentManager")
 
 func show_for_item(item: BaseItem, slot_index: int = -1, source: String = "equipment"):
 	"""Show detail view for a specific equipment item"""
