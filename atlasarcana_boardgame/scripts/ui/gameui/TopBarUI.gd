@@ -14,6 +14,26 @@ var character_stats_container: HBoxContainer
 var character_level_label: Label
 var character_hp_label: Label
 var action_points_label: Label
+var gradient_animation_timer: Timer
+var current_gradient: Gradient
+var color_palettes = []
+var current_palette_index = 0
+var current_element_index = 0
+var element_cycle_timer = 0.0
+var background_texture: ImageTexture
+var background_image: Image
+var animation_time = 0.0
+var element_cycle = [ElementType.FIRE, ElementType.WATER, ElementType.WIND, ElementType.EARTH, ElementType.DARK, ElementType.LIGHT]
+var element_duration = 4.0
+
+enum ElementType {
+	FIRE,
+	WATER, 
+	WIND,
+	EARTH,
+	DARK,
+	LIGHT
+}
 
 # Resource labels
 var resource_labels: Dictionary = {}
@@ -28,17 +48,121 @@ func create_ui_components():
 	background_panel = Panel.new()
 	background_panel.name = "TopBarBackground"
 	add_child(background_panel)
-	
-	# Style the background
-	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.1, 0.1, 0.1, 0.9)
-	style.border_color = Color(0.3, 0.3, 0.3)
-	style.border_width_bottom = 2
-	background_panel.add_theme_stylebox_override("panel", style)
+	create_animated_gradient_background() 
+	## Create procedural gradient background
+	#var style = StyleBoxTexture.new()
+	#style.texture = create_animated_gradient_background()
+#
+	#background_panel.add_theme_stylebox_override("panel", style)
 	
 	create_turn_section()
 	create_resources_section()
 	create_character_section()
+
+
+
+
+func create_animated_gradient_background():
+	"""Create an animated gradient that shifts colors over time"""
+	var style = StyleBoxTexture.new()
+	var gradient_texture = GradientTexture2D.new()
+	current_gradient = Gradient.new()
+	
+	# Set up color palettes to cycle through
+	setup_color_palettes()
+	
+	# Set up initial gradient with first palette
+	apply_color_palette(0)
+	
+	gradient_texture.gradient = current_gradient
+	gradient_texture.fill = GradientTexture2D.FILL_RADIAL
+	gradient_texture.fill_from = Vector2(0.3, 0.7)
+	gradient_texture.fill_to = Vector2(1.2, 0.2)
+	gradient_texture.width = 256
+	gradient_texture.height = 64
+	
+	style.texture = gradient_texture
+	background_panel.add_theme_stylebox_override("panel", style)
+	
+	# Start the animation
+	start_gradient_animation()
+
+func setup_color_palettes():
+	"""Define different color palettes to cycle through"""
+	color_palettes = [
+		# Palette 1: Cool blues and purples
+		[
+			Color(0.1, 0.05, 0.2, 0.9),   # Deep purple
+			Color(0.05, 0.1, 0.25, 0.9),  # Dark blue
+			Color(0.15, 0.05, 0.1, 0.9)   # Dark red accent
+		],
+		# Palette 2: Warm earth tones
+		[
+			Color(0.2, 0.1, 0.05, 0.9),   # Dark brown
+			Color(0.15, 0.1, 0.05, 0.9),  # Burnt orange
+			Color(0.1, 0.15, 0.05, 0.9)   # Forest green
+		],
+		## Palette 3: Mystical greens and teals
+		#[
+			#Color(0.05, 0.2, 0.15, 0.9),  # Dark teal
+			#Color(0.1, 0.15, 0.1, 0.9),   # Forest green
+			#Color(0.05, 0.1, 0.2, 0.9)    # Deep blue
+		#],
+		## Palette 4: Royal purples and golds
+		#[
+			#Color(0.15, 0.05, 0.2, 0.9),  # Royal purple
+			#Color(0.2, 0.15, 0.05, 0.9),  # Dark gold
+			#Color(0.1, 0.05, 0.15, 0.9)   # Deep violet
+		#]
+	]
+
+func apply_color_palette(palette_index: int):
+	"""Apply a specific color palette to the gradient"""
+	var palette = color_palettes[palette_index]
+	
+	# Clear existing gradient points
+	current_gradient.colors = PackedColorArray()
+	current_gradient.offsets = PackedFloat32Array()
+	
+	# Add new colors with even spacing
+	for i in range(palette.size()):
+		var offset = float(i) / float(palette.size() - 1) if palette.size() > 1 else 0.0
+		current_gradient.add_point(offset, palette[i])
+
+func start_gradient_animation():
+	"""Start the gradient color animation system"""
+	# Method 1: Timer-based palette switching
+	gradient_animation_timer = Timer.new()
+	gradient_animation_timer.wait_time = 3.0  # Change palette every 3 seconds
+	gradient_animation_timer.timeout.connect(_on_gradient_timer_timeout)
+	gradient_animation_timer.autostart = true
+	add_child(gradient_animation_timer)
+
+func _on_gradient_timer_timeout():
+	"""Switch to the next color palette with smooth transition"""
+	var next_palette_index = (current_palette_index + 1) % color_palettes.size()
+	transition_to_palette(next_palette_index)
+	current_palette_index = next_palette_index
+
+func transition_to_palette(target_palette_index: int):
+	"""Smoothly transition from current palette to target palette"""
+	var target_palette = color_palettes[target_palette_index]
+	var tween = create_tween()
+	tween.set_parallel(true)  # Allow multiple properties to animate simultaneously
+	
+	# Animate each gradient point
+	for i in range(min(current_gradient.get_point_count(), target_palette.size())):
+		var current_color = current_gradient.get_color(i)
+		var target_color = target_palette[i]
+		
+		# Create a custom tween for each color point
+		tween.tween_method(
+			func(color): current_gradient.set_color(i, color),
+			current_color,
+			target_color,
+			1.5  # Duration in seconds
+		)
+# Even simpler version - animated colors
 
 func create_turn_section():
 	"""Create turn information section"""
@@ -66,8 +190,8 @@ func create_resources_section():
 	background_panel.add_child(resources_section)
 	
 	# Create resource displays
-	var resources = ["Essence", "Gold", "Food", "Wood", "Stone"]
-	var colors = [Color.PURPLE, Color.YELLOW, Color.GREEN, Color(0.6, 0.4, 0.2), Color.GRAY]
+	var resources = ["Essence", "Food", "Wood", "Stone"]
+	var colors = [Color.PURPLE, Color.GREEN, Color(0.6, 0.4, 0.2), Color.GRAY]
 	
 	for i in range(resources.size()):
 		var resource_container = create_resource_display(resources[i], colors[i])
@@ -113,10 +237,10 @@ func update_resource(resource_name: String, amount: int):
 
 func create_resource_change_animation(label: Label):
 	"""Create a brief animation when resources change"""
-	var original_scale = label.scale
+	var base_scale = Vector2(1.0, 1.0) 
 	var tween = create_tween()
-	tween.tween_property(label, "scale", original_scale * 1.2, 0.1)
-	tween.tween_property(label, "scale", original_scale, 0.1)
+	tween.tween_property(label, "scale", base_scale * 1.2, 0.1)
+	tween.tween_property(label, "scale", base_scale, 0.1)
 
 func update_all_resources(resources: Dictionary):
 	"""Update all resource displays"""
@@ -226,10 +350,6 @@ func _on_action_points_changed(current_action_points: int):
 	#var key = resource_name.to_lower()
 	#if key in resource_labels:
 		#resource_labels[key].text = resource_name.capitalize() + ": " + str(amount)
-
-func update_character_name(name: String):
-	"""Update character name"""
-	character_name_label.text = name
 
 func update_character_level(level: int):
 	"""Update character level"""

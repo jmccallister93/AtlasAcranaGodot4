@@ -90,3 +90,7 @@ res://scripts/character/equipment/EquipmentDetailView.gd
 res://scripts/gamemanger/managers/ActionManager.gd
 res://scripts/gamemanger/managers/ResourceManager.gd
 res://scripts/gamemanger/managers/MenuManager.gd
+res://scripts/game_manger/managers/SceneManager.gd
+res://scripts/Main.gd
+res://scripts/game_manger/core/GameManager.gd
+res://scripts/game_manger/camera/ExpeditionCamera.gd

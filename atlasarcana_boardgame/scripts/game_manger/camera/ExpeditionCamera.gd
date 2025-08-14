@@ -1,5 +1,5 @@
 extends Camera2D
-class_name CameraController
+class_name ExpeditionCamera
 
 # Movement settings
 @export var move_speed: float = 400.0

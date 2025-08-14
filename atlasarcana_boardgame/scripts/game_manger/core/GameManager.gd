@@ -8,6 +8,8 @@ var action_controller: ActionModeController
 var ui_bridge: UIBridge
 var event_bus: GameEventBus
 
+var camera_controller: ExpeditionCamera
+
 # Quick access to common components
 var character: Character
 var turn_manager: TurnManager
@@ -22,13 +24,12 @@ func _ready():
 
 func start_new_game():
 	"""Initialize a new game with all components"""
-	print("GameManager: Starting new game...")
-	
 	# Create core game state
 	game_state = GameState.new()
 	
 	# Initialize component systems
 	_initialize_manager_registry()
+	_initialize_camera_controller() 
 	_initialize_action_controller()
 	_initialize_ui_bridge()
 	_initialize_event_bus()
@@ -37,13 +38,41 @@ func start_new_game():
 	character = manager_registry.get_character()
 	turn_manager = manager_registry.get_turn_manager()
 	
-	print("GameManager: New game started successfully")
 
 func _initialize_manager_registry():
 	"""Initialize the manager registry and all game managers"""
 	manager_registry = ManagerRegistry.new()
 	add_child(manager_registry)
 	manager_registry.initialize_all_managers()
+
+func _initialize_camera_controller():
+	"""Initialize the camera controller programmatically"""
+	camera_controller = ExpeditionCamera.new()
+	add_child(camera_controller)
+	
+	# Configure camera settings
+	camera_controller.move_speed = 400.0
+	camera_controller.zoom_speed = 0.1
+	camera_controller.min_zoom = 0.3
+	camera_controller.max_zoom = 3.0
+	camera_controller.enable_mouse_drag = true
+	camera_controller.smooth_movement = true
+	camera_controller.movement_smoothing = 8.0
+	
+	# Set camera bounds to match map size
+	var map_manager = manager_registry.get_map_manager()
+	if map_manager:
+		var map_bounds = map_manager.get_world_bounds()
+		camera_controller.set_bounds(map_bounds)
+		print("Camera bounds set to: ", map_bounds)
+	
+	# Start at center of map instead of origin
+	if map_manager:
+		var center = Vector2(map_manager.map_width * map_manager.tile_size / 2, 
+							map_manager.map_height * map_manager.tile_size / 2)
+		camera_controller.set_camera_position(center)
+	else:
+		camera_controller.set_camera_position(Vector2.ZERO)
 
 func _initialize_action_controller():
 	"""Initialize the action mode controller"""
@@ -307,7 +336,7 @@ func _sync_managers_with_game_state():
 	"""Synchronize manager states with loaded game state"""
 	# This would involve updating managers with loaded state data
 	# Implementation depends on how managers handle state restoration
-	print("GameManager: Syncing managers with loaded game state...")
+	pass
 
 # ═══════════════════════════════════════════════════════════
 # COMPONENT ACCESS (For debugging/advanced usage)

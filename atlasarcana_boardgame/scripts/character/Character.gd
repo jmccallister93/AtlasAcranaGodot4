@@ -73,7 +73,7 @@ func initialize_from_stats():
 	current_build_points = stats.get_stat_value("Exploration", "Build")
 	
 	# Set grid position
-	grid_position = Vector2i(0, 0)
+	grid_position = Vector2i(16, 16)
 	var tile_size = 64
 	global_position = Vector2(
 		grid_position.x * tile_size + tile_size / 2,
@@ -101,25 +101,6 @@ func spend_action_points(amount: int = 1):
 	if current_action_points >= amount:
 		current_action_points -= amount
 		action_points_spent.emit(current_action_points)
-
-func heal(amount: int):
-	"""Heal the character"""
-	var max_health = stats.get_stat_value("Combat", "Health")
-	current_health = min(current_health + amount, max_health)
-
-func take_damage(amount: int):
-	"""Take damage"""
-	var defense = stats.get_stat_value("Combat", "Defense")
-	var actual_damage = max(1, amount - defense)  # Minimum 1 damage
-	current_health = max(0, current_health - actual_damage)
-	
-	if current_health <= 0:
-		_on_character_died()
-
-func _on_character_died():
-	"""Handle character death"""
-	print("Character has died!")
-	# Add death handling logic here
 
 func get_attack_value() -> int:
 	"""Get current attack value"""
@@ -189,15 +170,27 @@ func get_action_points() -> int:
 
 func create_sprite():
 	"""Create character sprite"""
-	var color_rect = ColorRect.new()
-	color_rect.name = "CharacterSprite"
-	color_rect.color = Color.RED
-	color_rect.size = Vector2(32, 32)
-	color_rect.position = Vector2(-16, -16)  # Center the sprite
-	color_rect.z_index = 10
+	#var color_rect = ColorRect.new()
+	#color_rect.name = "CharacterSprite"
+	#color_rect.color = Color.RED
+	#color_rect.size = Vector2(32, 32)
+	#color_rect.position = Vector2(-16, -16)  # Center the sprite
+	#color_rect.z_index = 10
+	#
+	#add_child(color_rect)
 	
-	add_child(color_rect)
-	#sprite = color_rect
+	var sprite = Sprite2D.new()
+	sprite.name="CharacterSprite"
+	sprite.texture = preload("res://assets/character/character_sprite2.png")
+	#sprite.size = Vector2i(32, 32)
+	sprite.position = Vector2(-16, -16)  # Center the sprite
+	sprite.z_index = 10
+	add_child(sprite)
+	var collision_box = CollisionShape2D.new()
+	sprite.position = Vector2(-16, -16)  # Center the sprite
+	sprite.z_index = 10
+	add_child(collision_box)
+
 
 # Signal handlers
 func _on_stats_recalculated():
