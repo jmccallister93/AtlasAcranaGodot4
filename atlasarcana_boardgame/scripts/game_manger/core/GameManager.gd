@@ -8,7 +8,8 @@ var action_controller: ActionModeController
 var ui_bridge: UIBridge
 var event_bus: GameEventBus
 
-var camera_controller: ExpeditionCamera
+#var camera_controller: ExpeditionCamera
+var camera_controller: ExpeditionCamera3D
 
 # Quick access to common components
 var character: Character
@@ -16,11 +17,32 @@ var turn_manager: TurnManager
 
 func _ready():
 	"""Initialize the game"""
+	
 	start_new_game()
+	debug_cameras()
 
 # ═══════════════════════════════════════════════════════════
 # GAME LIFECYCLE
 # ═══════════════════════════════════════════════════════════
+
+func debug_cameras():
+	"""Debug camera setup"""
+	var cameras_2d = get_tree().get_nodes_in_group("Camera2D")
+	var cameras_3d = get_tree().get_nodes_in_group("Camera3D")
+	
+	print("=== Camera Debug ===")
+	print("Camera2D nodes found: ", cameras_2d.size())
+	for cam in cameras_2d:
+		if cam.is_current():
+			print("  ACTIVE Camera2D: ", cam.name)
+	
+	print("Camera3D nodes found: ", cameras_3d.size())
+	for cam in cameras_3d:
+		if cam.is_current():
+			print("  ACTIVE Camera3D: ", cam.name)
+	
+	print("Current viewport camera: ", get_viewport().get_camera_3d())
+	print("===================")
 
 func start_new_game():
 	"""Initialize a new game with all components"""
@@ -39,6 +61,7 @@ func start_new_game():
 	turn_manager = manager_registry.get_turn_manager()
 	
 
+
 func _initialize_manager_registry():
 	"""Initialize the manager registry and all game managers"""
 	manager_registry = ManagerRegistry.new()
@@ -47,32 +70,25 @@ func _initialize_manager_registry():
 
 func _initialize_camera_controller():
 	"""Initialize the camera controller programmatically"""
-	camera_controller = ExpeditionCamera.new()
+	camera_controller = ExpeditionCamera3D.new()
 	add_child(camera_controller)
-	
-	# Configure camera settings
-	camera_controller.move_speed = 400.0
-	camera_controller.zoom_speed = 0.1
-	camera_controller.min_zoom = 0.3
-	camera_controller.max_zoom = 3.0
-	camera_controller.enable_mouse_drag = true
-	camera_controller.smooth_movement = true
-	camera_controller.movement_smoothing = 8.0
-	
-	# Set camera bounds to match map size
-	var map_manager = manager_registry.get_map_manager()
-	if map_manager:
-		var map_bounds = map_manager.get_world_bounds()
-		camera_controller.set_bounds(map_bounds)
-		print("Camera bounds set to: ", map_bounds)
-	
-	# Start at center of map instead of origin
-	if map_manager:
-		var center = Vector2(map_manager.map_width * map_manager.tile_size / 2, 
-							map_manager.map_height * map_manager.tile_size / 2)
-		camera_controller.set_camera_position(center)
-	else:
-		camera_controller.set_camera_position(Vector2.ZERO)
+	#camera_controller = ExpeditionCamera.new()
+	#add_child(camera_controller)
+	#
+	## Set camera bounds to match map size
+	#var map_manager = manager_registry.get_map_manager()
+	#if map_manager:
+		#var map_bounds = map_manager.get_world_bounds()
+		#camera_controller.set_bounds(map_bounds)
+		#print("Camera bounds set to: ", map_bounds)
+	#
+	## Start at center of map instead of origin
+	#if map_manager:
+		#var center = Vector2(map_manager.map_width * map_manager.tile_size / 2, 
+							#map_manager.map_height * map_manager.tile_size / 2)
+		#camera_controller.set_camera_position(center)
+	#else:
+		#camera_controller.set_camera_position(Vector2.ZERO)
 
 func _initialize_action_controller():
 	"""Initialize the action mode controller"""

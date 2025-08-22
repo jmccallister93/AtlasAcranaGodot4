@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://3pqn5lc4qr5w"]
+[gd_scene load_steps=2 format=3 uid="uid://cxn8w03y4h2k8"]
 
 [ext_resource type="Script" uid="uid://dq05lxfca57qx" path="res://scripts/game_manger/camera/ExpeditionCamera.gd" id="1_j03yi"]
 
 [node name="CameraController" type="Camera2D"]
+visible = false
 script = ExtResource("1_j03yi")

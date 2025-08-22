@@ -179,18 +179,32 @@ func create_sprite():
 	#
 	#add_child(color_rect)
 	
-	var sprite = Sprite2D.new()
-	sprite.name="CharacterSprite"
-	sprite.texture = preload("res://assets/character/character_sprite2.png")
-	#sprite.size = Vector2i(32, 32)
-	sprite.position = Vector2(-16, -16)  # Center the sprite
-	sprite.z_index = 10
-	add_child(sprite)
-	var collision_box = CollisionShape2D.new()
-	sprite.position = Vector2(-16, -16)  # Center the sprite
-	sprite.z_index = 10
+	#var sprite = Sprite2D.new()
+	#sprite.name="CharacterSprite"
+	#sprite.texture = preload("res://assets/character/character_sprite2.png")
+	##sprite.size = Vector2i(32, 32)
+	#sprite.position = Vector2(-16, -16)  # Center the sprite
+	#sprite.z_index = 10
+	#add_child(sprite)
+	#var collision_box = CollisionShape2D.new()
+	#sprite.position = Vector2(-16, -16)  # Center the sprite
+	#sprite.z_index = 10
+	#add_child(collision_box)
+	
+	var model_scene = preload("res://assets/character/swordcharacter.glb")
+	var character_model = model_scene.instantiate()
+	character_model.name = "CharacterModel"
+	character_model.position = Vector3(-16, 0, -16)  # Adjust position as needed
+	add_child(character_model)
+	
+	# Create 3D collision shape
+	var collision_box = CollisionShape3D.new()
+	var box_shape = BoxShape3D.new()
+	box_shape.size = Vector3(32, 32, 32)  # Adjust size as needed
+	collision_box.shape = box_shape
+	collision_box.position = Vector3(-16, 0, -16)  # Match model position
 	add_child(collision_box)
-
+	
 
 # Signal handlers
 func _on_stats_recalculated():

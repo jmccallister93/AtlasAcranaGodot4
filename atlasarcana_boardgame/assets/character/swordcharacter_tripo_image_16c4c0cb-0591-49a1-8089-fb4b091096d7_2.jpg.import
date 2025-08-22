@@ -1,0 +1,38 @@
+[remap]
+
+importer="texture"
+type="CompressedTexture2D"
+uid="uid://dy2osfoi83ujo"
+path.s3tc="res://.godot/imported/swordcharacter_tripo_image_16c4c0cb-0591-49a1-8089-fb4b091096d7_2.jpg-917549e80483b41a179a5af3962a055a.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
+generator_parameters={
+"md5": "cfb7cfdd8a3eda0da8cdc62bc7c3050a"
+}
+
+[deps]
+
+source_file="res://assets/character/swordcharacter_tripo_image_16c4c0cb-0591-49a1-8089-fb4b091096d7_2.jpg"
+dest_files=["res://.godot/imported/swordcharacter_tripo_image_16c4c0cb-0591-49a1-8089-fb4b091096d7_2.jpg-917549e80483b41a179a5af3962a055a.s3tc.ctex"]
+
+[params]
+
+compress/mode=2
+compress/high_quality=false
+compress/lossy_quality=0.7
+compress/hdr_compression=1
+compress/normal_map=1
+compress/channel_pack=0
+mipmaps/generate=true
+mipmaps/limit=-1
+roughness/mode=1
+roughness/src_normal="res://assets/character/swordcharacter_tripo_image_16c4c0cb-0591-49a1-8089-fb4b091096d7_2.jpg"
+process/fix_alpha_border=true
+process/premult_alpha=false
+process/normal_map_invert_y=false
+process/hdr_as_srgb=false
+process/hdr_clamp_exposure=false
+process/size_limit=0
+detect_3d/compress_to=0
