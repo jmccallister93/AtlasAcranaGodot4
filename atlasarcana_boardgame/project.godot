@@ -18,6 +18,10 @@ config/features=PackedStringArray("4.4", "GL Compatibility")
 
 GameManager="*res://scenes/managers/GameManager.tscn"
 
+[display]
+
+window/size/mode=2
+
 [input]
 
 ui_left={

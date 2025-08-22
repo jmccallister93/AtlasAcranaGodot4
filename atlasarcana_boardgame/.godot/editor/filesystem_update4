@@ -6,3 +6,15 @@ res://scripts/game_manger/camera/ExpeditionCamera3d.gd
 res://scenes/CameraController.tscn
 res://scripts/game_manger/camera/ExpeditionCamera3D.gd
 res://scripts/game_manger/core/ManageRegistry.gd
+res://scripts/ui/gameui/TopBar/TopLeft.gd
+res://scripts/ui/gameui/TopBar/TopLeftUI.gd
+res://scripts/ui/gameui/TopBar/TopCenterUI.gd
+res://scripts/ui/gameui/TopBar/TopRightUI.gd
+res://scripts/ui/gameui/TopBar/TopBarUI.gd
+res://scripts/ui/gameui/BottomBarUI/BottomRightUI.gd
+res://scripts/ui/gameui/BottomBarUI/BottomLeftUI.gd
+res://scripts/ui/gameui/BottomBarUI/BottomCenterUI.gd
+res://scripts/ui/gameui/BottomBarUI/BottomBarUI.gd
+res://scripts/ui/gameui/TopBarUI/TopLeftUI.gd
+res://scripts/ui/gameui/TopBarUI/TopCenterUI.gd
+res://scripts/ui/gameui/TopBarUI/TopRightUI.gd
