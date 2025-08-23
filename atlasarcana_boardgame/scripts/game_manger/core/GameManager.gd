@@ -208,14 +208,14 @@ func get_current_turn() -> int:
 func add_resource(resource_name: String, amount: int):
 	"""Add resources"""
 	if manager_registry:
-		manager_registry.add_resource(resource_name, amount)
+		manager_registry.resource_manager.add_resource(resource_name, amount)
 		if game_state:
 			game_state.add_resource(resource_name, amount)
 
 func spend_resource(resource_name: String, amount: int) -> bool:
 	"""Spend a single resource"""
 	if manager_registry:
-		var success = manager_registry.spend_resource(resource_name, amount)
+		var success = manager_registry.resource_manager.spend_resource(resource_name, amount)
 		if success and game_state:
 			game_state.spend_resource(resource_name, amount)
 		return success
@@ -224,7 +224,7 @@ func spend_resource(resource_name: String, amount: int) -> bool:
 func spend_resources(cost: Dictionary) -> bool:
 	"""Spend multiple resources"""
 	if manager_registry:
-		var success = manager_registry.spend_resources(cost)
+		var success = manager_registry.resource_manager.spend_resources(cost)
 		if success and game_state:
 			for resource_name in cost:
 				game_state.spend_resource(resource_name, cost[resource_name])
@@ -234,31 +234,31 @@ func spend_resources(cost: Dictionary) -> bool:
 func has_resource(resource_name: String, amount: int) -> bool:
 	"""Check if player has enough of a resource"""
 	if manager_registry:
-		return manager_registry.has_resource(resource_name, amount)
+		return manager_registry.resource_manager.has_resource(resource_name, amount)
 	return false
 
 func can_afford(cost: Dictionary) -> bool:
 	"""Check if player can afford a cost"""
 	if manager_registry:
-		return manager_registry.can_afford(cost)
+		return manager_registry.resource_manager.can_afford(cost)
 	return false
 
 func get_resource(resource_name: String) -> int:
 	"""Get current amount of a resource"""
 	if manager_registry:
-		return manager_registry.get_resource(resource_name)
+		return manager_registry.resource_manager.get_resource(resource_name)
 	return 0
 
 func get_all_resources() -> Dictionary:
 	"""Get all current resources"""
 	if manager_registry:
-		return manager_registry.get_all_resources()
+		return manager_registry.resource_manager.get_all_resources()
 	return {}
 
 func set_resource(resource_name: String, amount: int):
 	"""Set a resource to a specific amount"""
 	if manager_registry:
-		manager_registry.set_resource(resource_name, amount)
+		manager_registry.resource_manager.set_resource(resource_name, amount)
 		if game_state:
 			game_state.set_resource(resource_name, amount)
 
@@ -288,19 +288,19 @@ func get_current_action_points() -> int:
 func add_item_to_inventory(item: BaseItem, amount: int = 1) -> bool:
 	"""Add items to inventory"""
 	if manager_registry:
-		return manager_registry.add_item_to_inventory(item, amount)
+		return manager_registry.inventory_manager.add_item_to_inventory(item, amount)
 	return false
 
 func remove_item_from_inventory(item_id: String, amount: int = 1) -> int:
 	"""Remove items from inventory"""
 	if manager_registry:
-		return manager_registry.remove_item_from_inventory(item_id, amount)
+		return manager_registry.inventory_manager.remove_item_from_inventory(item_id, amount)
 	return 0
 
 func has_item_in_inventory(item_id: String, amount: int = 1) -> bool:
 	"""Check if player has an item in inventory"""
 	if manager_registry:
-		return manager_registry.has_item_in_inventory(item_id, amount)
+		return manager_registry.inventory_manager.has_item_in_inventory(item_id, amount)
 	return false
 
 # ═══════════════════════════════════════════════════════════
@@ -324,7 +324,7 @@ func show_building_type_detail(building_type_name: String):
 func get_warband_manager() -> WarbandManager:
 	"""Get the warband manager"""
 	if manager_registry:
-		return manager_registry.get_warband_manager()
+		return manager_registry.warband_manager.get_warband_manager()
 	return null
 
 # ═══════════════════════════════════════════════════════════

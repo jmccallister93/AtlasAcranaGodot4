@@ -6,11 +6,11 @@ signal scene_transition_started(from_scene: String, to_scene: String)
 signal scene_transition_completed(scene_name: String)
 
 # Scene paths
-const OVERWORLD_SCENE = "res://scenes/OverworldScene.tscn"
+const EXPEDITION_SCENE = "res://scenes/ExpeditionScene.tscn"
 const COMBAT_SCENE = "res://scenes/CombatScene.tscn"
 
 # Current scene tracking
-var current_scene_name: String = "overworld"
+var current_scene_name: String = "expedition"
 var previous_scene_name: String = ""
 var is_transitioning: bool = false
 
@@ -37,7 +37,7 @@ func start_combat_scene(combat_data: Dictionary = {}):
 	previous_scene_name = current_scene_name
 	
 	# Save current game state before transition
-	_save_overworld_state()
+	_save_expedition_state()
 	
 	# Emit signal for any listeners
 	scene_transition_started.emit(current_scene_name, "combat")
@@ -45,23 +45,23 @@ func start_combat_scene(combat_data: Dictionary = {}):
 	# Load combat scene
 	_load_combat_scene(combat_data)
 
-func return_to_overworld(combat_results: Dictionary = {}):
-	"""Return to overworld scene after combat"""
+func return_to_expedition(combat_results: Dictionary = {}):
+	"""Return to expedition scene after combat"""
 	if is_transitioning:
 		print("SceneManager: Already transitioning, ignoring request")
 		return
 	
-	print("SceneManager: Returning to overworld...")
+	print("SceneManager: Returning to expedition...")
 	is_transitioning = true
 	
 	# Process combat results
 	_process_combat_results(combat_results)
 	
 	# Emit signal
-	scene_transition_started.emit("combat", "overworld")
+	scene_transition_started.emit("combat", "expedition")
 	
-	# Load overworld scene
-	_load_overworld_scene()
+	# Load expedition scene
+	_load_expedition_scene()
 
 # ═══════════════════════════════════════════════════════════
 # PRIVATE SCENE LOADING
@@ -89,24 +89,24 @@ func _load_combat_scene(combat_data: Dictionary):
 		print("SceneManager: Failed to load combat scene")
 		is_transitioning = false
 
-func _load_overworld_scene():
-	"""Load the overworld scene"""
+func _load_expedition_scene():
+	"""Load the expedition scene"""
 	_show_transition_effect()
 	
-	var scene_load_result = get_tree().change_scene_to_file(OVERWORLD_SCENE)
+	var scene_load_result = get_tree().change_scene_to_file(EXPEDITION_SCENE)
 	
 	if scene_load_result == OK:
-		current_scene_name = "overworld"
+		current_scene_name = "expedition"
 		
 		# Wait a frame for scene to load, then restore state
 		await get_tree().process_frame
-		_restore_overworld_state()
+		_restore_expedition_state()
 		
-		scene_transition_completed.emit("overworld")
+		scene_transition_completed.emit("expedition")
 		is_transitioning = false
-		print("SceneManager: Overworld scene loaded successfully")
+	
 	else:
-		print("SceneManager: Failed to load overworld scene")
+	
 		is_transitioning = false
 
 # ═══════════════════════════════════════════════════════════
@@ -114,7 +114,7 @@ func _load_overworld_scene():
 # ═══════════════════════════════════════════════════════════
 
 func _setup_combat_scene(combat_data: Dictionary):
-	"""Setup the combat scene with data from overworld"""
+	"""Setup the combat scene with data from expedition"""
 	var combat_manager = get_tree().current_scene.get_node_or_null("CombatManager")
 	if combat_manager and combat_manager.has_method("initialize_combat"):
 		# Pass relevant data to combat scene
@@ -135,38 +135,38 @@ func _setup_combat_scene(combat_data: Dictionary):
 	else:
 		print("SceneManager: Warning - Combat scene doesn't have proper CombatManager")
 
-func _save_overworld_state():
-	"""Save overworld state before combat"""
+func _save_expedition_state():
+	"""Save expedition state before combat"""
 	# The game manager already handles most state, but we might want to save
-	# specific overworld data like player position, current action mode, etc.
-	var overworld_data = {
-		"player_position": _get_player_overworld_position(),
+	# specific expedition data like player position, current action mode, etc.
+	var expedition_data = {
+		"player_position": _get_player_expedition_position(),
 		"current_turn": game_manager.get_current_turn(),
 		"action_mode": game_manager.get_current_action_mode(),
 		"ui_state": _get_ui_state()
 	}
 	
-	# Store in game state or a separate overworld state manager
-	game_manager.game_state.set_data("overworld_state", overworld_data)
-	print("SceneManager: Overworld state saved")
+	# Store in game state or a separate expedition state manager
+	game_manager.game_state.set_data("expedition_state", expedition_data)
 
-func _restore_overworld_state():
-	"""Restore overworld state after combat"""
-	var overworld_data = game_manager.game_state.get_data("overworld_state", {})
+
+func _restore_expedition_state():
+	"""Restore expedition state after combat"""
+	var expedition_data = game_manager.game_state.get_data("expedition_state", {})
 	
-	if overworld_data.has("player_position"):
-		_restore_player_overworld_position(overworld_data.player_position)
+	if expedition_data.has("player_position"):
+		_restore_player_expedition_position(expedition_data.player_position)
 	
-	if overworld_data.has("action_mode"):
+	if expedition_data.has("action_mode"):
 		# Restore previous action mode if it wasn't NONE
-		var action_mode = overworld_data.action_mode
+		var action_mode = expedition_data.action_mode
 		if action_mode != game_manager.action_controller.ActionMode.NONE:
 			_restore_action_mode(action_mode)
 	
-	if overworld_data.has("ui_state"):
-		_restore_ui_state(overworld_data.ui_state)
+	if expedition_data.has("ui_state"):
+		_restore_ui_state(expedition_data.ui_state)
 	
-	print("SceneManager: Overworld state restored")
+
 
 func _process_combat_results(results: Dictionary):
 	"""Process results from combat and update game state"""
@@ -197,8 +197,8 @@ func _process_combat_results(results: Dictionary):
 
 func _on_combat_finished(combat_results: Dictionary):
 	"""Handle combat finished signal from combat scene"""
-	print("SceneManager: Combat finished, returning to overworld")
-	return_to_overworld(combat_results)
+	print("SceneManager: Combat finished, returning to expedition")
+	return_to_expedition(combat_results)
 
 # ═══════════════════════════════════════════════════════════
 # UTILITY FUNCTIONS
@@ -210,15 +210,15 @@ func _show_transition_effect():
 	# For now, just a simple print
 	print("SceneManager: Transitioning...")
 
-func _get_player_overworld_position() -> Vector2:
-	"""Get player position in overworld"""
+func _get_player_expedition_position() -> Vector2:
+	"""Get player position in expedition"""
 	var player = get_tree().current_scene.get_node_or_null("Player")
 	if player:
 		return player.global_position
 	return Vector2.ZERO
 
-func _restore_player_overworld_position(position: Vector2):
-	"""Restore player position in overworld"""
+func _restore_player_expedition_position(position: Vector2):
+	"""Restore player position in expedition"""
 	var player = get_tree().current_scene.get_node_or_null("Player")
 	if player:
 		player.global_position = position
@@ -274,6 +274,6 @@ func is_in_combat() -> bool:
 	"""Check if currently in combat scene"""
 	return current_scene_name == "combat"
 
-func is_in_overworld() -> bool:
-	"""Check if currently in overworld scene"""
-	return current_scene_name == "overworld"
+func is_in_expedition() -> bool:
+	"""Check if currently in expedition scene"""
+	return current_scene_name == "expedition"

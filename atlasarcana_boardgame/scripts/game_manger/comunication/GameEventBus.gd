@@ -61,12 +61,12 @@ func initialize(manager_registry: ManagerRegistry, action_mode_controller: Actio
 	managers = manager_registry
 	action_controller = action_mode_controller
 	ui_bridge = ui_bridge_ref
-	
-	# Wait for managers to be initialized before connecting signals
-	if managers.are_all_managers_initialized():
-		_connect_all_signals()
-	else:
-		managers.managers_initialized.connect(_connect_all_signals)
+	_connect_all_signals()
+	## Wait for managers to be initialized before connecting signals
+	#if managers.are_all_managers_initialized():
+		#_connect_all_signals()
+	#else:
+		#managers.managers_initialized.connect(_connect_all_signals)
 
 # ═══════════════════════════════════════════════════════════
 # SIGNAL CONNECTION MANAGEMENT

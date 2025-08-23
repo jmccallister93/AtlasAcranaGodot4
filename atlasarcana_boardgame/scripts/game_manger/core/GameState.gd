@@ -166,7 +166,7 @@ func refresh_action_points():
 	set_action_points(max_action_points)
 
 # ═══════════════════════════════════════════════════════════
-# WORLD STATE MANAGEMENT
+# EXPEDITION STATE MANAGEMENT
 # ═══════════════════════════════════════════════════════════
 
 func add_explored_tile(tile_position: Vector2i):
@@ -370,40 +370,3 @@ func _dict_array_to_vector2i_array(dict_array: Array) -> Array[Vector2i]:
 	for dict_item in dict_array:
 		vec_array.append(Vector2i(dict_item.x, dict_item.y))
 	return vec_array
-
-# ═══════════════════════════════════════════════════════════
-# VALIDATION & DEBUG
-# ═══════════════════════════════════════════════════════════
-
-func validate_state() -> bool:
-	"""Validate that the game state is consistent"""
-	# Check basic constraints
-	if current_action_points < 0 or current_action_points > max_action_points:
-		print("GameState: Invalid action points: ", current_action_points, "/", max_action_points)
-		return false
-	
-	if current_turn < 1:
-		print("GameState: Invalid turn number: ", current_turn)
-		return false
-	
-	# Check resource constraints
-	for resource_name in resources:
-		if resources[resource_name] < 0:
-			print("GameState: Negative resource amount: ", resource_name, "=", resources[resource_name])
-			return false
-	
-	return true
-
-func debug_print_state():
-	"""Debug print current game state"""
-	print("=== GameState Debug ===")
-	print("Turn: ", current_turn)
-	print("Phase: ", game_phase)
-	print("Character Position: ", character_position)
-	print("Action Points: ", current_action_points, "/", max_action_points)
-	print("Resources: ", resources)
-	print("Buildings: ", buildings.size())
-	print("Explored Tiles: ", explored_tiles.size())
-	print("Active Quests: ", active_quests.size())
-	print("Completed Quests: ", completed_quests.size())
-	print("======================")

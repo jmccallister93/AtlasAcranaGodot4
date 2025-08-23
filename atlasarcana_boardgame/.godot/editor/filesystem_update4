@@ -19,3 +19,6 @@ res://scripts/ui/gameui/TopBarUI/TopLeftUI.gd
 res://scripts/ui/gameui/TopBarUI/TopCenterUI.gd
 res://scripts/ui/gameui/TopBarUI/TopRightUI.gd
 res://scripts/ui/gameui/TopBarUI/TopBarUI.gd
+res://scripts/game_manger/managers/SceneManager.gd
+res://scripts/game_manger/core/GameState.gd
+res://scripts/game_manger/comunication/GameEventBus.gd
