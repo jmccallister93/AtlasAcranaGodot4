@@ -85,24 +85,14 @@ func _on_advance_turn_requested():
 
 func setup_layout(viewport_size: Vector2):
 	"""Setup the layout of the bottom bar and its sections"""
-	print("BottomBarUI setup_layout called with size: ", viewport_size)
-	
 	# Position and size the main control
 	position = Vector2(0, viewport_size.y - bar_height)
 	size = Vector2(viewport_size.x, bar_height)
 	mouse_filter = Control.MOUSE_FILTER_PASS
 	visible = true
 	
-	print("BottomBarUI positioned at: ", position, " with size: ", size)
-	
-	# Create background and sections
-	create_background()
 	create_sections()
-	
-	# Setup background
-	background_panel.position = Vector2.ZERO
-	background_panel.size = size
-	
+
 	# Layout sections
 	layout_sections(viewport_size)
 
@@ -111,7 +101,7 @@ func layout_sections(viewport_size: Vector2):
 	var section_height = bar_height
 	
 	# Menu section (left) - auto-sized to content
-	var menu_width = 450  # Width for 5 menu buttons
+	var menu_width = 550  # Width for 5 menu buttons
 	menu_section.position = Vector2(section_spacing, 0)
 	menu_section.setup_layout(Vector2(menu_width, section_height), section_margin)
 	
@@ -121,13 +111,14 @@ func layout_sections(viewport_size: Vector2):
 	turn_section.setup_layout(Vector2(turn_width, section_height), section_margin)
 	
 	# Action section (center) - takes remaining space
-	var action_start_x = menu_width + (section_spacing * 2)
-	var action_end_x = viewport_size.x - turn_width - (section_spacing * 2)
+	var action_start_x = menu_width + (section_spacing * 8)
+	var action_end_x = viewport_size.x - turn_width - (section_spacing * 8)
 	var action_width = action_end_x - action_start_x
-	action_section.position = Vector2(action_start_x, 0)
+	action_width = 450
+	#action_section.position = Vector2(action_start_x, 0)
+	action_section.position = Vector2((viewport_size.x/2.2), 0)
 	action_section.setup_layout(Vector2(action_width, section_height), section_margin)
 	
-	print("✅ BottomBarUI layout complete")
 
 # Public interface methods - delegate to appropriate sections
 
@@ -192,15 +183,15 @@ func update_button_states(active_mode):
 		
 		# Highlight the appropriate action button based on mode
 		# Note: You may need to adjust these enum references based on your GameManager structure
-		match active_mode:
-			GameManager.ActionMode.MOVEMENT:
-				action_section.highlight_action_button("move", "Move (Active)")
-			GameManager.ActionMode.BUILD:
-				action_section.highlight_action_button("build", "Build (Active)")
-			GameManager.ActionMode.ATTACK:
-				action_section.highlight_action_button("attack", "Attack (Active)")
-			GameManager.ActionMode.INTERACT:
-				action_section.highlight_action_button("interact", "Interact (Active)")
+	match active_mode:
+		GameManager.action_controller.ActionMode.MOVEMENT:
+			action_section.highlight_action_button("move", "Move (Active)")
+		GameManager.action_controller.ActionMode.BUILD:
+			action_section.highlight_action_button("build", "Build (Active)")
+		GameManager.action_controller.ActionMode.ATTACK:
+			action_section.highlight_action_button("attack", "Attack (Active)")
+		GameManager.action_controller.ActionMode.INTERACT:
+			action_section.highlight_action_button("interact", "Interact (Active)")
 
 # Component access methods
 func get_menu_section() -> BottomLeftUI:

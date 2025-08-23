@@ -78,7 +78,7 @@ func layout_sections(viewport_size: Vector2):
 	# Meters section (left) - auto-sized to content
 	var meters_width = 180  # Reduced to fit content better
 	meters_section.position = Vector2(section_spacing, 0)
-	meters_section.setup_layout(Vector2(meters_width, section_height), section_margin)
+	meters_section.setup_layout(Vector2(meters_width, (section_height+50)), section_margin)
 	
 	# Character section (right) - auto-sized to content
 	var character_width = 200  # Reduced to fit content better
@@ -89,7 +89,9 @@ func layout_sections(viewport_size: Vector2):
 	var resources_start_x = meters_width + (section_spacing * 2)
 	var resources_end_x = viewport_size.x - character_width - (section_spacing * 2)
 	var resources_width = resources_end_x - resources_start_x
-	resources_section.position = Vector2(resources_start_x, 0)
+	resources_width = 650
+	#resources_section.position = Vector2(resources_start_x, 0)
+	resources_section.position = Vector2((viewport_size.x/2.4), 0)
 	resources_section.setup_layout(Vector2(resources_width, section_height), section_margin)
 
 # Public interface methods - delegate to appropriate sections

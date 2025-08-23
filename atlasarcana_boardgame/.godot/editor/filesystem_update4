@@ -18,3 +18,4 @@ res://scripts/ui/gameui/BottomBarUI/BottomBarUI.gd
 res://scripts/ui/gameui/TopBarUI/TopLeftUI.gd
 res://scripts/ui/gameui/TopBarUI/TopCenterUI.gd
 res://scripts/ui/gameui/TopBarUI/TopRightUI.gd
+res://scripts/ui/gameui/TopBarUI/TopBarUI.gd
