@@ -22,3 +22,6 @@ res://scripts/ui/gameui/TopBarUI/TopBarUI.gd
 res://scripts/game_manger/managers/SceneManager.gd
 res://scripts/game_manger/core/GameState.gd
 res://scripts/game_manger/comunication/GameEventBus.gd
+res://scripts/combat/SimpleCombatScene3D.gd
+res://scripts/combat/Simple3DCombatManager.gd
+res://scripts/ui/gameui/GameUI.gd

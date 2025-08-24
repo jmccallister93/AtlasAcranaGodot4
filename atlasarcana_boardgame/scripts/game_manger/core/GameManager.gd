@@ -15,34 +15,18 @@ var camera_controller: ExpeditionCamera
 var character: Character
 var turn_manager: TurnManager
 
+var simple_3d_combat_manager: Simple3DCombatManager
+
 func _ready():
 	"""Initialize the game"""
 	
 	start_new_game()
-	debug_cameras()
+
 
 # ═══════════════════════════════════════════════════════════
 # GAME LIFECYCLE
 # ═══════════════════════════════════════════════════════════
 
-func debug_cameras():
-	"""Debug camera setup"""
-	var cameras_2d = get_tree().get_nodes_in_group("Camera2D")
-	var cameras_3d = get_tree().get_nodes_in_group("Camera3D")
-	
-	print("=== Camera Debug ===")
-	print("Camera2D nodes found: ", cameras_2d.size())
-	for cam in cameras_2d:
-		if cam.is_current():
-			print("  ACTIVE Camera2D: ", cam.name)
-	
-	print("Camera3D nodes found: ", cameras_3d.size())
-	for cam in cameras_3d:
-		if cam.is_current():
-			print("  ACTIVE Camera3D: ", cam.name)
-	
-	print("Current viewport camera: ", get_viewport().get_camera_3d())
-	print("===================")
 
 func start_new_game():
 	"""Initialize a new game with all components"""
@@ -56,11 +40,65 @@ func start_new_game():
 	_initialize_ui_bridge()
 	_initialize_event_bus()
 	
+	#Added
+	_initialize_simple_3d_combat_manager()
+	_setup_3d_combat_input()
+	
 	# Set up quick access references
 	character = manager_registry.get_character()
 	turn_manager = manager_registry.get_turn_manager()
 	
 
+# Added this new initialization function
+func _initialize_simple_3d_combat_manager():
+	"""Initialize the simple 3D combat manager"""
+	simple_3d_combat_manager = Simple3DCombatManager.new()
+	add_child(simple_3d_combat_manager)
+	simple_3d_combat_manager.initialize(self)
+	
+	# Connect combat finished signal
+	simple_3d_combat_manager.combat_scene_finished.connect(_on_combat_scene_finished)
+	
+	print("GameManager: Simple 3D Combat Manager initialized")
+#Added
+func _on_combat_scene_finished():
+	"""Handle combat scene finishing"""
+	print("GameManager: Combat scene finished, returning to expedition")
+#Added
+func trigger_simple_3d_combat():
+	"""Trigger simple 3D combat for testing"""
+	if not simple_3d_combat_manager:
+		print("GameManager: Simple 3D Combat Manager not available")
+		return false
+	
+	if simple_3d_combat_manager.is_combat_active():
+		print("GameManager: Combat already active")
+		return false
+	
+	print("GameManager: Triggering simple 3D combat")
+	return simple_3d_combat_manager.start_simple_combat()
+#Added
+func is_3d_combat_available() -> bool:
+	"""Check if 3D combat can be started"""
+	return simple_3d_combat_manager != null and not simple_3d_combat_manager.is_combat_active()
+
+# Added this getter method
+func get_simple_3d_combat_manager() -> Simple3DCombatManager:
+	"""Get the simple 3D combat manager"""
+	return simple_3d_combat_manager
+
+#Added
+func _setup_3d_combat_input():
+	"""Setup input actions for 3D combat - add this to GameManager"""
+	# Camera rotate action
+	if not InputMap.has_action("camera_rotate"):
+		InputMap.add_action("camera_rotate")
+		
+		var rmb_event = InputEventMouseButton.new()
+		rmb_event.button_index = MOUSE_BUTTON_RIGHT
+		InputMap.action_add_event("camera_rotate", rmb_event)
+		
+		print("GameManager: Added camera_rotate input action")
 
 func _initialize_manager_registry():
 	"""Initialize the manager registry and all game managers"""
@@ -326,104 +364,3 @@ func get_warband_manager() -> WarbandManager:
 	if manager_registry:
 		return manager_registry.warband_manager.get_warband_manager()
 	return null
-
-# ═══════════════════════════════════════════════════════════
-# SAVE/LOAD SYSTEM
-# ═══════════════════════════════════════════════════════════
-
-func save_game(file_path: String) -> bool:
-	"""Save the current game state"""
-	if game_state:
-		return game_state.save_to_file(file_path)
-	return false
-
-func load_game(file_path: String) -> bool:
-	"""Load a game state from file"""
-	if game_state:
-		var success = game_state.load_from_file(file_path)
-		if success:
-			_sync_managers_with_game_state()
-		return success
-	return false
-
-func _sync_managers_with_game_state():
-	"""Synchronize manager states with loaded game state"""
-	# This would involve updating managers with loaded state data
-	# Implementation depends on how managers handle state restoration
-	pass
-
-# ═══════════════════════════════════════════════════════════
-# COMPONENT ACCESS (For debugging/advanced usage)
-# ═══════════════════════════════════════════════════════════
-
-func get_manager_registry() -> ManagerRegistry:
-	"""Get the manager registry"""
-	return manager_registry
-
-func get_action_controller() -> ActionModeController:
-	"""Get the action controller"""
-	return action_controller
-
-func get_ui_bridge() -> UIBridge:
-	"""Get the UI bridge"""
-	return ui_bridge
-
-func get_event_bus() -> GameEventBus:
-	"""Get the event bus"""
-	return event_bus
-
-func get_game_state() -> GameState:
-	"""Get the game state"""
-	return game_state
-
-# ═══════════════════════════════════════════════════════════
-# DEBUG & VALIDATION
-# ═══════════════════════════════════════════════════════════
-
-func debug_game_status():
-	"""Print debug information about game state"""
-	print("=== GameManager Debug ===")
-	print("Components initialized:")
-	print("  ManagerRegistry: ", manager_registry != null)
-	print("  ActionController: ", action_controller != null)
-	print("  UIBridge: ", ui_bridge != null)
-	print("  EventBus: ", event_bus != null)
-	print("  GameState: ", game_state != null)
-	print()
-	
-	if game_state:
-		game_state.debug_print_state()
-	
-	if action_controller:
-		print("Current Action Mode: ", action_controller.get_current_action_mode())
-	
-	if ui_bridge:
-		ui_bridge.debug_ui_state()
-	
-	print("========================")
-
-func validate_game_state() -> bool:
-	"""Validate that the game is in a consistent state"""
-	if not game_state:
-		print("GameManager: No game state available")
-		return false
-	
-	if not manager_registry or not manager_registry.are_all_managers_initialized():
-		print("GameManager: Managers not properly initialized")
-		return false
-	
-	return game_state.validate_state()
-
-# ═══════════════════════════════════════════════════════════
-# CLEANUP
-# ═══════════════════════════════════════════════════════════
-
-func cleanup_game():
-	"""Clean up all game components"""
-	print("GameManager: Cleaning up game...")
-	
-	if manager_registry:
-		manager_registry.cleanup_managers()
-	
-	# Components will be automatically freed when this node is freed
-	print("GameManager: Cleanup complete")

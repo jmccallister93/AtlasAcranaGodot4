@@ -37,6 +37,8 @@ func _ready():
 	create_ui_components()
 	setup_layout()
 	connect_signals()
+	
+	add_to_group("game_ui")
 
 func _exit_tree():
 	if GameManager:
@@ -287,7 +289,6 @@ func debug_bottom_bar_state():
 
 func connect_signals():
 	"""Connect signals between components and GameManager"""
-	print("Connecting signals...")
 	
 	# Connect GameManager signals to top bar
 	GameManager.event_bus.initial_turn.connect(top_bar._on_turn_changed)
@@ -296,7 +297,9 @@ func connect_signals():
 	
 	# Connect bottom bar signals
 	bottom_bar.menu_button_pressed.connect(_on_menu_button_pressed)
-	bottom_bar.action_button_pressed.connect(action_mode_manager._on_action_button_pressed)
+	
+	#bottom_bar.action_button_pressed.connect(action_mode_manager._on_action_button_pressed)
+	bottom_bar.action_button_pressed.connect(_on_action_button_pressed) 
 	
 	# Connect GameManager signals to ActionModeManager
 	GameManager.event_bus.action_points_spent.connect(action_mode_manager._on_action_points_changed)
@@ -306,6 +309,51 @@ func connect_signals():
 	confirmation_dialog_manager.cancelled.connect(_on_confirmation_dialog_cancelled)
 
 	call_deferred("connect_build_manager_signals_deferred")
+
+# Added this new method to handle action button presses
+func _on_action_button_pressed(action_type: String):
+	"""Handle action button presses with combat integration"""
+	match action_type:
+		"attack":
+			# Check if 3D combat is available, if so trigger it instead of normal attack mode
+			if GameManager.is_3d_combat_available():
+				print("GameUI: Triggering 3D combat instead of attack mode")
+				var success = GameManager.trigger_simple_3d_combat()
+				if success:
+					show_info("Entering 3D Combat...")
+				else:
+					show_error("Failed to start 3D combat")
+					# Fall back to normal attack mode
+					action_mode_manager._on_action_button_pressed(action_type)
+			else:
+				# Fall back to normal attack mode if 3D combat not available
+				action_mode_manager._on_action_button_pressed(action_type)
+		_:
+			# For all other actions, use the normal flow
+			action_mode_manager._on_action_button_pressed(action_type)
+
+# Add a debug method to test 3D combat directly
+func _input(event):
+	"""Handle debug input for testing"""
+	# Debug: Press F5 to trigger 3D combat
+	if event.is_action_pressed("ui_accept") and Input.is_key_pressed(KEY_F5):
+		print("GameUI: Debug - Triggering 3D combat")
+		if GameManager.is_3d_combat_available():
+			GameManager.trigger_simple_3d_combat()
+		else:
+			print("GameUI: 3D combat not available")
+
+# Add convenience method for testing
+func debug_trigger_3d_combat():
+	"""Debug method to trigger 3D combat"""
+	if GameManager.is_3d_combat_available():
+		var success = GameManager.trigger_simple_3d_combat()
+		if success:
+			show_success("3D Combat started!")
+		else:
+			show_error("Failed to start 3D combat")
+	else:
+		show_warning("3D Combat not available")
 
 # ═══════════════════════════════════════════════════════════
 # MENU SYSTEM
