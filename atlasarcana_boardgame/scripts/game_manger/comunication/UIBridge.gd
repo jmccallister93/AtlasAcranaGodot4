@@ -39,55 +39,55 @@ func update_action_button_states(current_action_mode):
 # CONFIRMATION DIALOGS
 # ═══════════════════════════════════════════════════════════
 
-func show_movement_confirmation(target_tile: BiomeTile):
-	"""Show movement confirmation dialog"""
-	if game_ui:
-		game_ui.show_movement_confirmation(target_tile)
-		confirmation_controller.register_pending_confirmation("movement", {
-			"tile": target_tile,
-			"position": target_tile.grid_position
-		})
-	else:
-		print("UIBridge: No GameUI - auto-confirming movement")
-		_auto_confirm_movement()
-
-func show_build_confirmation(target_tile: BiomeTile, building_type: String):
-	"""Show build confirmation dialog"""
-	if game_ui:
-		game_ui.show_build_confirmation(target_tile, building_type)
-		confirmation_controller.register_pending_confirmation("build", {
-			"tile": target_tile,
-			"position": target_tile.grid_position,
-			"building_type": building_type
-		})
-	else:
-		print("UIBridge: No GameUI - auto-confirming building")
-		_auto_confirm_building()
-
-func show_attack_confirmation(target_tile: BiomeTile):
-	"""Show attack confirmation dialog"""
-	if game_ui:
-		game_ui.show_attack_confirmation(target_tile)
-		confirmation_controller.register_pending_confirmation("attack", {
-			"tile": target_tile,
-			"position": target_tile.grid_position
-		})
-	else:
-		print("UIBridge: No GameUI - auto-confirming attack")
-		_auto_confirm_attack()
-
-func show_interact_confirmation(target_tile: BiomeTile, interaction_name: String):
-	"""Show interact confirmation dialog"""
-	if game_ui:
-		game_ui.show_interact_confirmation(target_tile, interaction_name)
-		confirmation_controller.register_pending_confirmation("interact", {
-			"tile": target_tile,
-			"position": target_tile.grid_position,
-			"interaction_name": interaction_name
-		})
-	else:
-		print("UIBridge: No GameUI - auto-confirming interaction")
-		_auto_confirm_interaction()
+#func show_movement_confirmation(target_tile: BiomeTile):
+	#"""Show movement confirmation dialog"""
+	#if game_ui:
+		#game_ui.show_movement_confirmation(target_tile)
+		#confirmation_controller.register_pending_confirmation("movement", {
+			#"tile": target_tile,
+			#"position": target_tile.grid_position
+		#})
+	#else:
+		#print("UIBridge: No GameUI - auto-confirming movement")
+		#_auto_confirm_movement()
+#
+#func show_build_confirmation(target_tile: BiomeTile, building_type: String):
+	#"""Show build confirmation dialog"""
+	#if game_ui:
+		#game_ui.show_build_confirmation(target_tile, building_type)
+		#confirmation_controller.register_pending_confirmation("build", {
+			#"tile": target_tile,
+			#"position": target_tile.grid_position,
+			#"building_type": building_type
+		#})
+	#else:
+		#print("UIBridge: No GameUI - auto-confirming building")
+		#_auto_confirm_building()
+#
+#func show_attack_confirmation(target_tile: BiomeTile):
+	#"""Show attack confirmation dialog"""
+	#if game_ui:
+		#game_ui.show_attack_confirmation(target_tile)
+		#confirmation_controller.register_pending_confirmation("attack", {
+			#"tile": target_tile,
+			#"position": target_tile.grid_position
+		#})
+	#else:
+		#print("UIBridge: No GameUI - auto-confirming attack")
+		#_auto_confirm_attack()
+#
+#func show_interact_confirmation(target_tile: BiomeTile, interaction_name: String):
+	#"""Show interact confirmation dialog"""
+	#if game_ui:
+		#game_ui.show_interact_confirmation(target_tile, interaction_name)
+		#confirmation_controller.register_pending_confirmation("interact", {
+			#"tile": target_tile,
+			#"position": target_tile.grid_position,
+			#"interaction_name": interaction_name
+		#})
+	#else:
+		#print("UIBridge: No GameUI - auto-confirming interaction")
+		#_auto_confirm_interaction()
 
 # ═══════════════════════════════════════════════════════════
 # CONFIRMATION HANDLING - Called by GameUI
@@ -183,12 +183,12 @@ func update_resource(resource_name: String, new_amount: int):
 # BUILDING SYSTEM UI UPDATES
 # ═══════════════════════════════════════════════════════════
 
-func show_building_detail(building: Building):
-	"""Show building detail view for a specific building"""
-	if game_ui:
-		game_ui.show_building_detail(building)
-	else:
-		print("UIBridge: GameUI not available for building detail")
+#func show_building_detail(building: Building):
+	#"""Show building detail view for a specific building"""
+	#if game_ui:
+		#game_ui.show_building_detail(building)
+	#else:
+		#print("UIBridge: GameUI not available for building detail")
 
 func show_building_type_detail(building_type_name: String):
 	"""Show building detail view for a building type"""

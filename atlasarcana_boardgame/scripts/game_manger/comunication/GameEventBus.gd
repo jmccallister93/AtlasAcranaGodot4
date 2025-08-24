@@ -22,7 +22,7 @@ signal insufficient_resources(required: Dictionary, available: Dictionary)
 # Action completion events
 signal movement_completed(new_pos: Vector2i)
 signal movement_failed(reason: String)
-signal building_completed(new_building: Building, tile: BiomeTile)
+#signal building_completed(new_building: Building, tile: BiomeTile)
 signal building_failed(reason: String)
 signal interaction_completed(character: Character, entity: InteractableEntity, result: Dictionary)
 signal interaction_failed(reason: String)
@@ -31,10 +31,10 @@ signal attack_failed(reason: String)
 signal enemy_died(enemy: Enemy)
 
 # Confirmation request events
-signal movement_confirmation_requested(target_tile: BiomeTile)
-signal build_confirmation_requested(target_tile: BiomeTile, building_type: String)
-signal interact_confirmation_requested(target_tile: BiomeTile, entity: InteractableEntity)
-signal attack_confirmation_requested(target_tile: BiomeTile, enemy: Enemy)
+#signal movement_confirmation_requested(target_tile: BiomeTile)
+#signal build_confirmation_requested(target_tile: BiomeTile, building_type: String)
+#signal interact_confirmation_requested(target_tile: BiomeTile, entity: InteractableEntity)
+#signal attack_confirmation_requested(target_tile: BiomeTile, enemy: Enemy)
 
 # Map events
 signal movement_requested(target_grid_pos: Vector2i)
@@ -80,9 +80,9 @@ func _connect_all_signals():
 	_connect_character_signals()
 	_connect_map_signals()
 	_connect_movement_signals()
-	_connect_build_signals()
-	_connect_interact_signals()
-	_connect_attack_signals()
+	#_connect_build_signals()
+	#_connect_interact_signals()
+	#_connect_attack_signals()
 	_connect_resource_signals()
 	_connect_warband_signals()
 	_connect_action_controller_signals()
@@ -111,30 +111,30 @@ func _connect_movement_signals():
 	if managers.movement_manager:
 		managers.movement_manager.movement_completed.connect(_on_movement_completed)
 		managers.movement_manager.movement_failed.connect(_on_movement_failed)
-		managers.movement_manager.movement_confirmation_requested.connect(_on_movement_confirmation_requested)
+		#managers.movement_manager.movement_confirmation_requested.connect(_on_movement_confirmation_requested)
 
-func _connect_build_signals():
-	"""Connect build manager signals"""
-	if managers.build_manager:
-		managers.build_manager.building_completed.connect(_on_building_completed)
-		managers.build_manager.building_failed.connect(_on_building_failed)
-		managers.build_manager.build_confirmation_requested.connect(_on_build_confirmation_requested)
-		managers.build_manager.building_data_changed.connect(_on_building_data_changed)
+#func _connect_build_signals():
+	#"""Connect build manager signals"""
+	#if managers.build_manager:
+		#managers.build_manager.building_completed.connect(_on_building_completed)
+		#managers.build_manager.building_failed.connect(_on_building_failed)
+		#managers.build_manager.build_confirmation_requested.connect(_on_build_confirmation_requested)
+		#managers.build_manager.building_data_changed.connect(_on_building_data_changed)
+#
+#func _connect_interact_signals():
+	#"""Connect interact manager signals"""
+	#if managers.interact_manager:
+		#managers.interact_manager.interaction_completed.connect(_on_interaction_completed)
+		#managers.interact_manager.interaction_failed.connect(_on_interaction_failed)
+		#managers.interact_manager.interact_confirmation_requested.connect(_on_interact_confirmation_requested)
 
-func _connect_interact_signals():
-	"""Connect interact manager signals"""
-	if managers.interact_manager:
-		managers.interact_manager.interaction_completed.connect(_on_interaction_completed)
-		managers.interact_manager.interaction_failed.connect(_on_interaction_failed)
-		managers.interact_manager.interact_confirmation_requested.connect(_on_interact_confirmation_requested)
-
-func _connect_attack_signals():
-	"""Connect attack manager signals"""
-	if managers.attack_manager:
-		managers.attack_manager.attack_completed.connect(_on_attack_completed)
-		managers.attack_manager.attack_failed.connect(_on_attack_failed)
-		managers.attack_manager.attack_confirmation_requested.connect(_on_attack_confirmation_requested)
-		managers.attack_manager.enemy_died.connect(_on_enemy_died)
+#func _connect_attack_signals():
+	#"""Connect attack manager signals"""
+	#if managers.attack_manager:
+		#managers.attack_manager.attack_completed.connect(_on_attack_completed)
+		#managers.attack_manager.attack_failed.connect(_on_attack_failed)
+		#managers.attack_manager.attack_confirmation_requested.connect(_on_attack_confirmation_requested)
+		#managers.attack_manager.enemy_died.connect(_on_enemy_died)
 
 func _connect_resource_signals():
 	"""Connect resource manager signals"""
@@ -206,21 +206,21 @@ func _on_movement_failed(reason: String):
 	if ui_bridge:
 		ui_bridge.show_error("Movement failed: " + reason)
 
-func _on_movement_confirmation_requested(target_tile: BiomeTile):
-	"""Handle movement confirmation request"""
-	movement_confirmation_requested.emit(target_tile)
-	if ui_bridge:
-		ui_bridge.show_movement_confirmation(target_tile)
+#func _on_movement_confirmation_requested(target_tile: BiomeTile):
+	#"""Handle movement confirmation request"""
+	#movement_confirmation_requested.emit(target_tile)
+	#if ui_bridge:
+		#ui_bridge.show_movement_confirmation(target_tile)
 
 # ═══════════════════════════════════════════════════════════
 # EVENT HANDLERS - BUILDING
 # ═══════════════════════════════════════════════════════════
 
-func _on_building_completed(new_building: Building, tile: BiomeTile):
-	"""Handle building completion"""
-	building_completed.emit(new_building, tile)
-	if action_controller:
-		action_controller.on_action_completed(ActionModeController.ActionMode.BUILD)
+#func _on_building_completed(new_building: Building, tile: BiomeTile):
+	#"""Handle building completion"""
+	#building_completed.emit(new_building, tile)
+	#if action_controller:
+		#action_controller.on_action_completed(ActionModeController.ActionMode.BUILD)
 
 func _on_building_failed(reason: String):
 	"""Handle building failure"""
@@ -228,11 +228,11 @@ func _on_building_failed(reason: String):
 	if ui_bridge:
 		ui_bridge.show_error("Building failed: " + reason)
 
-func _on_build_confirmation_requested(target_tile: BiomeTile, building_type: String):
-	"""Handle build confirmation request"""
-	build_confirmation_requested.emit(target_tile, building_type)
-	if ui_bridge:
-		ui_bridge.show_build_confirmation(target_tile, building_type)
+#func _on_build_confirmation_requested(target_tile: BiomeTile, building_type: String):
+	#"""Handle build confirmation request"""
+	#build_confirmation_requested.emit(target_tile, building_type)
+	#if ui_bridge:
+		#ui_bridge.show_build_confirmation(target_tile, building_type)
 
 func _on_building_data_changed():
 	"""Handle building data changes"""
@@ -261,11 +261,11 @@ func _on_interaction_failed(reason: String):
 	if ui_bridge:
 		ui_bridge.show_error("Interaction failed: " + reason)
 
-func _on_interact_confirmation_requested(target_tile: BiomeTile, entity: InteractableEntity):
-	"""Handle interact confirmation request"""
-	interact_confirmation_requested.emit(target_tile, entity)
-	if ui_bridge:
-		ui_bridge.show_interact_confirmation(target_tile, entity.interaction_name)
+#func _on_interact_confirmation_requested(target_tile: BiomeTile, entity: InteractableEntity):
+	#"""Handle interact confirmation request"""
+	#interact_confirmation_requested.emit(target_tile, entity)
+	#if ui_bridge:
+		#ui_bridge.show_interact_confirmation(target_tile, entity.interaction_name)
 
 # ═══════════════════════════════════════════════════════════
 # EVENT HANDLERS - COMBAT
@@ -295,11 +295,11 @@ func _on_attack_failed(reason: String):
 	if ui_bridge:
 		ui_bridge.show_error("Attack failed: " + reason)
 
-func _on_attack_confirmation_requested(target_tile: BiomeTile, enemy: Enemy):
-	"""Handle attack confirmation request"""
-	attack_confirmation_requested.emit(target_tile, enemy)
-	if ui_bridge:
-		ui_bridge.show_attack_confirmation(target_tile)
+#func _on_attack_confirmation_requested(target_tile: BiomeTile, enemy: Enemy):
+	#"""Handle attack confirmation request"""
+	#attack_confirmation_requested.emit(target_tile, enemy)
+	#if ui_bridge:
+		#ui_bridge.show_attack_confirmation(target_tile)
 
 func _on_enemy_died(enemy: Enemy):
 	"""Handle enemy death"""

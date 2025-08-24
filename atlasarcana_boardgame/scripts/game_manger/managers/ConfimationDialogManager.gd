@@ -218,55 +218,55 @@ func _on_cancel_pressed():
 	animate_dialog_out()
 
 # Convenience methods for common dialog types
-func show_movement_confirmation(target_tile: BiomeTile):
-	"""Show movement confirmation dialog"""
-	var biome_name = target_tile.get_biome_data(target_tile.biome_type).name
-	var title = "Confirm Movement"
-	var message = "Move to %s at (%d, %d)?" % [biome_name, target_tile.grid_position.x, target_tile.grid_position.y]
-	var action_data = {
-		"action_type": "movement",
-		"target_position": target_tile.grid_position,
-		"target_tile": target_tile
-	}
-	show_dialog(title, message, action_data)
-
-func show_build_confirmation(target_tile: BiomeTile, building_type: String):
-	"""Show building confirmation dialog"""
-	var biome_name = target_tile.get_biome_data(target_tile.biome_type).name
-	var title = "Confirm Building"
-	var message = "Build %s on %s at (%d, %d)?" % [building_type.capitalize().replace("_", " "), biome_name, target_tile.grid_position.x, target_tile.grid_position.y]
-	var action_data = {
-		"action_type": "building",
-		"target_position": target_tile.grid_position,
-		"target_tile": target_tile,
-		"building_type": building_type
-	}
-	show_dialog(title, message, action_data)
-
-func show_attack_confirmation(target_tile: BiomeTile):
-	"""Show attack confirmation dialog"""
-	var biome_name = target_tile.get_biome_data(target_tile.biome_type).name
-	var title = "Confirm Attack"
-	var message = "Attack target at %s (%d, %d)?" % [biome_name, target_tile.grid_position.x, target_tile.grid_position.y]
-	var action_data = {
-		"action_type": "attack",
-		"target_position": target_tile.grid_position,
-		"target_tile": target_tile
-	}
-	show_dialog(title, message, action_data)
-
-func show_interact_confirmation(target_tile: BiomeTile, interaction_name: String):
-	"""Show interaction confirmation dialog"""
-	var biome_name = target_tile.get_biome_data(target_tile.biome_type).name
-	var title = "Confirm Interaction"
-	var message = "%s on %s at (%d, %d)?" % [interaction_name, biome_name, target_tile.grid_position.x, target_tile.grid_position.y]
-	var action_data = {
-		"action_type": "interaction",
-		"target_position": target_tile.grid_position,
-		"target_tile": target_tile,
-		"interaction_type": interaction_name
-	}
-	show_dialog(title, message, action_data)
+#func show_movement_confirmation(target_tile: BiomeTile):
+	#"""Show movement confirmation dialog"""
+	#var biome_name = target_tile.get_biome_data(target_tile.biome_type).name
+	#var title = "Confirm Movement"
+	#var message = "Move to %s at (%d, %d)?" % [biome_name, target_tile.grid_position.x, target_tile.grid_position.y]
+	#var action_data = {
+		#"action_type": "movement",
+		#"target_position": target_tile.grid_position,
+		#"target_tile": target_tile
+	#}
+	#show_dialog(title, message, action_data)
+#
+#func show_build_confirmation(target_tile: BiomeTile, building_type: String):
+	#"""Show building confirmation dialog"""
+	#var biome_name = target_tile.get_biome_data(target_tile.biome_type).name
+	#var title = "Confirm Building"
+	#var message = "Build %s on %s at (%d, %d)?" % [building_type.capitalize().replace("_", " "), biome_name, target_tile.grid_position.x, target_tile.grid_position.y]
+	#var action_data = {
+		#"action_type": "building",
+		#"target_position": target_tile.grid_position,
+		#"target_tile": target_tile,
+		#"building_type": building_type
+	#}
+	#show_dialog(title, message, action_data)
+#
+#func show_attack_confirmation(target_tile: BiomeTile):
+	#"""Show attack confirmation dialog"""
+	#var biome_name = target_tile.get_biome_data(target_tile.biome_type).name
+	#var title = "Confirm Attack"
+	#var message = "Attack target at %s (%d, %d)?" % [biome_name, target_tile.grid_position.x, target_tile.grid_position.y]
+	#var action_data = {
+		#"action_type": "attack",
+		#"target_position": target_tile.grid_position,
+		#"target_tile": target_tile
+	#}
+	#show_dialog(title, message, action_data)
+#
+#func show_interact_confirmation(target_tile: BiomeTile, interaction_name: String):
+	#"""Show interaction confirmation dialog"""
+	#var biome_name = target_tile.get_biome_data(target_tile.biome_type).name
+	#var title = "Confirm Interaction"
+	#var message = "%s on %s at (%d, %d)?" % [interaction_name, biome_name, target_tile.grid_position.x, target_tile.grid_position.y]
+	#var action_data = {
+		#"action_type": "interaction",
+		#"target_position": target_tile.grid_position,
+		#"target_tile": target_tile,
+		#"interaction_type": interaction_name
+	#}
+	#show_dialog(title, message, action_data)
 
 func show_custom_confirmation(title: String, message: String, confirm_text: String = "Confirm", cancel_text: String = "Cancel", custom_data: Dictionary = {}):
 	"""Show a custom confirmation dialog"""

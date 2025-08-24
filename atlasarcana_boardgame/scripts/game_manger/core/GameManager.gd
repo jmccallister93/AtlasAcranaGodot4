@@ -1,4 +1,4 @@
-# GameManager.gd - Simplified and Modular
+# GameManager.gd 
 extends Node
 
 # Core game components
@@ -8,14 +8,14 @@ var action_controller: ActionModeController
 var ui_bridge: UIBridge
 var event_bus: GameEventBus
 
-var camera_controller: ExpeditionCamera
-
+var camera_controller: ExpeditionCamera3D
+var mouse_raycaster: MouseRaycaster3D
 
 # Quick access to common components
 var character: Character
 var turn_manager: TurnManager
 
-var simple_3d_combat_manager: Simple3DCombatManager
+var combat_manager: CombatManager
 
 func _ready():
 	"""Initialize the game"""
@@ -33,6 +33,9 @@ func start_new_game():
 	# Create core game state
 	game_state = GameState.new()
 	
+	# Setup 3D input actions first
+	_setup_3d_input_system()
+	
 	# Initialize component systems
 	_initialize_manager_registry()
 	_initialize_camera_controller() 
@@ -41,64 +44,92 @@ func start_new_game():
 	_initialize_event_bus()
 	
 	#Added
-	_initialize_simple_3d_combat_manager()
-	_setup_3d_combat_input()
+	_initialize_combat_manager()
 	
 	# Set up quick access references
 	character = manager_registry.get_character()
 	turn_manager = manager_registry.get_turn_manager()
 	
+	# Final 3D system validation
+	_validate_3d_systems()
+	
 
 # Added this new initialization function
-func _initialize_simple_3d_combat_manager():
+func _initialize_combat_manager():
 	"""Initialize the simple 3D combat manager"""
-	simple_3d_combat_manager = Simple3DCombatManager.new()
-	add_child(simple_3d_combat_manager)
-	simple_3d_combat_manager.initialize(self)
+	combat_manager = CombatManager.new()
+	add_child(combat_manager)
+	combat_manager.initialize(self)
 	
 	# Connect combat finished signal
-	simple_3d_combat_manager.combat_scene_finished.connect(_on_combat_scene_finished)
+	combat_manager.combat_scene_finished.connect(_on_combat_scene_finished)
 	
-	print("GameManager: Simple 3D Combat Manager initialized")
 #Added
 func _on_combat_scene_finished():
 	"""Handle combat scene finishing"""
-	print("GameManager: Combat scene finished, returning to expedition")
+
 #Added
-func trigger_simple_3d_combat():
+func trigger_combat():
 	"""Trigger simple 3D combat for testing"""
-	if not simple_3d_combat_manager:
-		print("GameManager: Simple 3D Combat Manager not available")
+	if not combat_manager:
 		return false
 	
-	if simple_3d_combat_manager.is_combat_active():
-		print("GameManager: Combat already active")
+	if combat_manager.is_combat_active():
 		return false
 	
-	print("GameManager: Triggering simple 3D combat")
-	return simple_3d_combat_manager.start_simple_combat()
+	return combat_manager.start_simple_combat()
 #Added
 func is_3d_combat_available() -> bool:
 	"""Check if 3D combat can be started"""
-	return simple_3d_combat_manager != null and not simple_3d_combat_manager.is_combat_active()
+	return combat_manager != null and not combat_manager.is_combat_active()
 
 # Added this getter method
-func get_simple_3d_combat_manager() -> Simple3DCombatManager:
+func get_combat_manager() -> CombatManager:
 	"""Get the simple 3D combat manager"""
-	return simple_3d_combat_manager
+	return combat_manager
 
-#Added
-func _setup_3d_combat_input():
-	"""Setup input actions for 3D combat - add this to GameManager"""
-	# Camera rotate action
-	if not InputMap.has_action("camera_rotate"):
-		InputMap.add_action("camera_rotate")
-		
-		var rmb_event = InputEventMouseButton.new()
-		rmb_event.button_index = MOUSE_BUTTON_RIGHT
-		InputMap.action_add_event("camera_rotate", rmb_event)
-		
-		print("GameManager: Added camera_rotate input action")
+# Additional 3D combat integration methods
+func can_start_3d_combat_at_tile(tile: BiomeTile3D) -> bool:
+	"""Check if 3D combat can be started at a specific tile"""
+	if not is_3d_combat_available():
+		return false
+	
+	# Add your combat conditions here
+	# For example: check if there are enemies on the tile
+	return tile != null and tile.is_occupied
+
+func start_3d_combat_at_position(grid_position: Vector3i) -> bool:
+	"""Start 3D combat at a specific grid position"""
+	var tile = get_tile_at_3d_position(grid_position)
+	if tile and can_start_3d_combat_at_tile(tile):
+		# Focus camera on combat location before starting
+		focus_camera_on_tile(tile, true)
+		return trigger_combat()
+	return false
+
+func _setup_3d_input_system():
+	"""Setup all 3D input actions"""
+	Input3DSetup.setup_3d_input_actions()
+	
+	# Setup debug actions in debug builds
+	if OS.is_debug_build():
+		Input3DSetup.setup_debug_input_actions()
+	
+	print("GameManager: 3D input system setup complete")
+
+func _validate_3d_systems():
+	"""Validate that all 3D systems are properly initialized"""
+	var status = get_3d_system_status()
+	
+	print("=== 3D System Status ===")
+	for key in status:
+		print(key, ": ", status[key])
+	print("========================")
+	
+	if not status.overall_ready:
+		print("WARNING: 3D systems not fully ready!")
+	else:
+		print("SUCCESS: All 3D systems ready!")
 
 func _initialize_manager_registry():
 	"""Initialize the manager registry and all game managers"""
@@ -107,24 +138,33 @@ func _initialize_manager_registry():
 	manager_registry.initialize_all_managers()
 
 func _initialize_camera_controller():
-	"""Initialize the camera controller programmatically"""
-	camera_controller = ExpeditionCamera.new()
+	"""Initialize the 3D camera controller programmatically"""
+	camera_controller = ExpeditionCamera3D.new()
 	add_child(camera_controller)
 	
-	# Set camera bounds to match map size
+	# Set camera bounds to match 3D map size
 	var map_manager = manager_registry.get_map_manager()
 	if map_manager:
-		var map_bounds = map_manager.get_world_bounds()
-		camera_controller.set_bounds(map_bounds)
-		print("Camera bounds set to: ", map_bounds)
-	
-	# Start at center of map instead of origin
-	if map_manager:
-		var center = Vector2(map_manager.map_width * map_manager.tile_size / 2, 
-							map_manager.map_height * map_manager.tile_size / 2)
-		camera_controller.set_camera_position(center)
+		# Convert 2D bounds to 3D bounds
+		var bounds_2d = map_manager.get_world_bounds()
+		var bounds_3d = Vector3(bounds_2d.size.x, 20, bounds_2d.size.y)  # Add Y height
+		camera_controller.set_bounds(bounds_3d)
+		print("3D Camera bounds set to: ", bounds_3d)
+		
+		# Start at center of map in 3D space
+		var center_3d = Vector3(
+			map_manager.map_width * map_manager.tile_size / 2, 
+			0,  # Ground level
+			map_manager.map_height * map_manager.tile_size / 2
+		)
+		camera_controller.set_target_position(center_3d)
+		camera_controller.set_distance(15.0)  # Good overview distance
+		camera_controller.set_angles(0, -45)  # Nice viewing angle
+		print("3D Camera focused on: ", center_3d)
 	else:
-		camera_controller.set_camera_position(Vector2.ZERO)
+		camera_controller.set_target_position(Vector3.ZERO)
+	
+	print("ExpeditionCamera3D initialized and configured")
 
 func _initialize_action_controller():
 	"""Initialize the action mode controller"""
@@ -204,25 +244,42 @@ func get_current_action_mode():
 # CONFIRMATION HANDLING (Called by GameUI)
 # ═══════════════════════════════════════════════════════════
 
-func confirm_movement(target_position: Vector2i):
-	"""Confirm movement action"""
+func confirm_movement(target_position):
+	"""Confirm movement action - handles both Vector2i and Vector3i"""
 	if ui_bridge:
-		ui_bridge.confirm_movement(target_position)
+		# Convert Vector2i to Vector3i if needed for 3D compatibility
+		var pos_3d = convert_to_3d_position(target_position)
+		ui_bridge.confirm_movement(pos_3d)
 
-func confirm_building(target_position: Vector2i, building_type: String):
-	"""Confirm building placement"""
+func confirm_building(target_position, building_type: String):
+	"""Confirm building placement - handles both Vector2i and Vector3i"""
 	if ui_bridge:
-		ui_bridge.confirm_building(target_position, building_type)
+		var pos_3d = convert_to_3d_position(target_position)
+		ui_bridge.confirm_building(pos_3d, building_type)
 
-func confirm_attack(target_position: Vector2i):
-	"""Confirm attack action"""
+func confirm_attack(target_position):
+	"""Confirm attack action - handles both Vector2i and Vector3i"""
 	if ui_bridge:
-		ui_bridge.confirm_attack(target_position)
+		var pos_3d = convert_to_3d_position(target_position)
+		ui_bridge.confirm_attack(pos_3d)
 
-func confirm_interaction(target_position: Vector2i, interaction_type: String):
-	"""Confirm interaction action"""
+func confirm_interaction(target_position, interaction_type: String):
+	"""Confirm interaction action - handles both Vector2i and Vector3i"""
 	if ui_bridge:
-		ui_bridge.confirm_interaction(target_position, interaction_type)
+		var pos_3d = convert_to_3d_position(target_position)
+		ui_bridge.confirm_interaction(pos_3d, interaction_type)
+
+# Helper method for coordinate conversion
+func convert_to_3d_position(position) -> Vector3i:
+	"""Convert position to Vector3i for 3D compatibility"""
+	if position is Vector2i:
+		var pos_2d = position as Vector2i
+		return Vector3i(pos_2d.x, 0, pos_2d.y)  # Y=0 for ground level
+	elif position is Vector3i:
+		return position as Vector3i
+	else:
+		print("Warning: Unknown position type in convert_to_3d_position: ", typeof(position))
+		return Vector3i.ZERO
 
 # ═══════════════════════════════════════════════════════════
 # TURN MANAGEMENT
@@ -345,15 +402,15 @@ func has_item_in_inventory(item_id: String, amount: int = 1) -> bool:
 # BUILDING SYSTEM (Public API)
 # ═══════════════════════════════════════════════════════════
 
-func show_building_detail(building: Building):
-	"""Show building detail view"""
-	if ui_bridge:
-		ui_bridge.show_building_detail(building)
-
-func show_building_type_detail(building_type_name: String):
-	"""Show building type detail view"""
-	if ui_bridge:
-		ui_bridge.show_building_type_detail(building_type_name)
+#func show_building_detail(building: Building):
+	#"""Show building detail view"""
+	#if ui_bridge:
+		#ui_bridge.show_building_detail(building)
+#
+#func show_building_type_detail(building_type_name: String):
+	#"""Show building type detail view"""
+	#if ui_bridge:
+		#ui_bridge.show_building_type_detail(building_type_name)
 
 # ═══════════════════════════════════════════════════════════
 # WARBAND MANAGEMENT (Public API)
@@ -364,3 +421,184 @@ func get_warband_manager() -> WarbandManager:
 	if manager_registry:
 		return manager_registry.warband_manager.get_warband_manager()
 	return null
+
+# ═══════════════════════════════════════════════════════════
+# BUILDING SYSTEM (Public API)
+# ═══════════════════════════════════════════════════════════
+
+#func get_build_manager() -> BuildManager:
+	#"""Get the build manager"""
+	#if manager_registry:
+		#return manager_registry.get_build_manager()
+	#return null
+#
+#func start_building_mode(building_type: String = ""):
+	#"""Start building placement mode"""
+	#var build_manager = get_build_manager()
+	#if build_manager:
+		#build_manager.start_build_mode(building_type)
+#
+#func end_building_mode():
+	#"""End building placement mode"""
+	#var build_manager = get_build_manager()
+	#if build_manager:
+		#build_manager.end_build_mode()
+#
+#func can_place_building_at(position, building_type: String) -> bool:
+	#"""Check if a building can be placed at position"""
+	#var build_manager = get_build_manager()
+	#if build_manager:
+		## Convert position if needed
+		#var pos_3d = convert_to_3d_position(position)
+		#var tile = get_tile_at_3d_position(pos_3d)
+		#if tile and build_manager.pending_building_type == building_type:
+			#var building_data = build_manager.available_buildings.get(building_type, {})
+			#return build_manager.can_place_building_at_tile(tile, building_data)
+	#return false
+#
+#func place_building(position, building_type: String) -> bool:
+	#"""Attempt to place a building at position"""
+	#var build_manager = get_build_manager()
+	#if build_manager:
+		#build_manager.attempt_build_at(position, building_type)
+		#return true
+	#return false
+#
+#func get_building_at_position(position) -> Dictionary:
+	#"""Get building at specified position"""
+	#var build_manager = get_build_manager()
+	#if build_manager:
+		#return build_manager.get_building_at(position)
+	#return {}
+#
+#func get_available_buildings() -> Dictionary:
+	#"""Get all available building types"""
+	#var build_manager = get_build_manager()
+	#if build_manager:
+		#return build_manager.get_available_buildings()
+	#return {}
+#
+#func get_building_cost(building_type: String) -> Dictionary:
+	#"""Get the resource cost of a building type"""
+	#var build_manager = get_build_manager()
+	#if build_manager:
+		#return build_manager.get_building_cost(building_type)
+	#return {}
+
+# ═══════════════════════════════════════════════════════════
+# 3D SYSTEM ACCESS METHODS 
+# ═══════════════════════════════════════════════════════════
+
+func get_3d_camera() -> ExpeditionCamera3D:
+	"""Get the 3D camera controller"""
+	return camera_controller
+
+func get_3d_map_manager() -> MapManager3D:
+	"""Get the 3D map manager"""
+	if manager_registry:
+		return manager_registry.get_map_manager() as MapManager3D
+	return null
+
+func focus_camera_on_tile(tile: BiomeTile3D, instant: bool = false):
+	"""Focus the 3D camera on a specific tile"""
+	if camera_controller and tile:
+		camera_controller.focus_on_tile(tile, instant)
+
+func focus_camera_on_position(world_position: Vector3, instant: bool = false):
+	"""Focus the 3D camera on a world position"""
+	if camera_controller:
+		camera_controller.focus_on_position(world_position, instant)
+
+func set_camera_view(preset_name: String):
+	"""Set the 3D camera to a preset view"""
+	if camera_controller:
+		camera_controller.set_preset_view(preset_name)
+
+func get_tile_at_3d_position(grid_position: Vector3i) -> BiomeTile3D:
+	"""Get tile at 3D grid position"""
+	var map_manager = get_3d_map_manager()
+	if map_manager:
+		return map_manager.get_tile_at_position(grid_position)
+	return null
+
+func get_tile_at_world_position(world_position: Vector3) -> BiomeTile3D:
+	"""Get tile at world position"""
+	var map_manager = get_3d_map_manager()
+	if map_manager:
+		return map_manager.get_tile_at_world(world_position)
+	return null
+
+# Legacy compatibility methods for gradual migration
+func get_tile_at_position(position) -> BiomeTile3D:
+	"""Get tile at position - handles both 2D and 3D coordinates"""
+	var pos_3d = convert_to_3d_position(position)
+	return get_tile_at_3d_position(pos_3d)
+
+func convert_2d_to_3d_grid_position(pos_2d: Vector2i) -> Vector3i:
+	"""Convert 2D grid position to 3D grid position"""
+	return Vector3i(pos_2d.x, 0, pos_2d.y)
+
+func convert_3d_to_2d_grid_position(pos_3d: Vector3i) -> Vector2i:
+	"""Convert 3D grid position to 2D grid position (for legacy systems)"""
+	return Vector2i(pos_3d.x, pos_3d.z)
+
+# Debug methods for 3D systems
+func debug_3d_camera_info():
+	"""Print debug information about the 3D camera"""
+	if camera_controller:
+		camera_controller.debug_print_camera_info()
+
+func debug_3d_map_info():
+	"""Print debug information about the 3D map"""
+	var map_manager = get_3d_map_manager()
+	if map_manager:
+		map_manager.debug_print_3d_info()
+
+func is_3d_system_ready() -> bool:
+	"""Check if all 3D systems are properly initialized"""
+	return camera_controller != null and get_3d_map_manager() != null
+
+func get_3d_system_status() -> Dictionary:
+	"""Get status of all 3D systems"""
+	return {
+		"camera_ready": camera_controller != null,
+		"map_manager_ready": get_3d_map_manager() != null,
+		"combat_manager_ready": combat_manager != null,
+		"mouse_raycaster_ready": get_3d_map_manager() != null and get_3d_map_manager().mouse_raycaster != null,
+		"terrain_materials_ready": get_3d_map_manager() != null and get_3d_map_manager().terrain_material_library != null,
+		"overall_ready": is_3d_system_ready()
+	}
+
+# Input handling for 3D camera presets
+func _input(event):
+	"""Handle global 3D input events"""
+	if event.is_action_pressed("camera_overview"):
+		set_camera_view("overview")
+	elif event.is_action_pressed("camera_close"):
+		set_camera_view("close")
+	elif event.is_action_pressed("camera_side"):
+		set_camera_view("side")
+	elif event.is_action_pressed("camera_top_down"):
+		set_camera_view("top_down")
+	elif event.is_action_pressed("reset_camera"):
+		reset_camera_to_default()
+	elif event.is_action_pressed("debug_3d_camera"):
+		debug_3d_camera_info()
+	elif event.is_action_pressed("debug_3d_map"):
+		debug_3d_map_info()
+
+func reset_camera_to_default():
+	"""Reset camera to default position and view"""
+	if camera_controller:
+		# Reset to map center
+		var map_manager = get_3d_map_manager()
+		if map_manager:
+			var center_3d = Vector3(
+				map_manager.map_width * map_manager.tile_size / 2,
+				0,
+				map_manager.map_height * map_manager.tile_size / 2
+			)
+			camera_controller.set_target_position(center_3d)
+			camera_controller.set_distance(15.0)
+			camera_controller.set_angles(0, -45)
+			print("Camera reset to default position")

@@ -1,42 +1,42 @@
-extends Area2D
-class_name BiomeTile
+# BiomeTile3D.gd - 3D Conversion of your BiomeTile
+extends Area3D  # Changed from Area2D
+class_name BiomeTile3D
 
 # Tile properties
-@export var grid_position: Vector2i  # Position in the grid
+@export var grid_position: Vector3i  # Changed from Vector2i
 @export var biome_type: BiomeType = BiomeType.GRASSLAND
-var tile_size: int = 64  # Set by MapManager - no longer exported
+var tile_size: float = 2.0  # Changed to float for 3D scaling
+var elevation: float = 0.0  # New: tile elevation
 
 # Reference to map manager for accessing map-wide functionality
-var map_manager: MapManager
+var map_manager: MapManager3D  # Updated type
 
-# Game logic data
-#var buildings: Array[Building] = []  # Buildings on this tile
-#var characters: Array[Character] = []  # Characters on this tile
-var resources: Dictionary = {}  # Resource amounts on this tile
+# Game logic data (unchanged)
+var resources: Dictionary = {}
 var is_occupied: bool = false
 var movement_cost: float = 1.0
 
-# Visual components - created in code
-var sprite: Sprite2D
-var collision_shape: CollisionShape2D
-var hover_label: Label
-#Highlights for movement
+# 3D Visual components - created in code
+var mesh_instance: MeshInstance3D  # Replaced Sprite2D
+var collision_shape: CollisionShape3D  # Changed from CollisionShape2D
+var material: StandardMaterial3D
+var hover_indicator: MeshInstance3D  # Replaced Label with 3D indicator
+
+# 3D Highlight overlays (replace 2D ColorRect overlays)
+var movement_highlight: MeshInstance3D
+var build_highlight: MeshInstance3D
+var interact_highlight: MeshInstance3D
+var attack_highlight: MeshInstance3D
+
+# Highlight states (unchanged)
 var is_movement_highlighted: bool = false
-var movement_highlight_overlay: ColorRect
-#Highlights for building
 var is_build_highlighted: bool = false
-var build_highlight_overlay: ColorRect
-#Interact highlights
 var is_interact_highlighted: bool = false
-var interact_highlight_overlay: ColorRect
-#Attack highlights
 var is_attack_highlighted: bool = false
-var attack_highlight_overlay: ColorRect
 
-
-# Signals for game events
-signal tile_clicked(tile: BiomeTile)
-signal tile_hovered(tile: BiomeTile)
+# Signals for game events (unchanged)
+signal tile_clicked(tile: BiomeTile3D)
+signal tile_hovered(tile: BiomeTile3D)
 
 enum BiomeType {
 	GRASSLAND,
@@ -48,188 +48,270 @@ enum BiomeType {
 }
 
 func _ready():
-	# Create all components first
-	create_sprite()
-	create_collision_shape()
-	create_hover_label()
+	"""Initialize the 3D tile"""
+	create_3d_mesh()
+	create_3d_collision_shape()
+	create_3d_hover_indicator()
 	
 	# Initialize tile
-	setup_tile()
-	setup_hover_label()
-	setup_movement_highlight_overlay()
-	setup_build_highlight_overlay()
-	setup_interact_highlight_overlay()
-	setup_attack_highlight_overlay()
+	setup_tile_3d()
+	setup_3d_highlight_overlays()
+	connect_3d_signals()
 
-func create_sprite():
-	"""Create and setup the sprite component"""
-	sprite = Sprite2D.new()
-	sprite.name = "Sprite2D"
-	add_child(sprite)
-
-func create_collision_shape():
-	"""Create and setup the collision shape"""
-	collision_shape = CollisionShape2D.new()
-	collision_shape.name = "CollisionShape2D"
+func create_3d_mesh():
+	"""Create and setup the 3D mesh component with no gaps"""
+	mesh_instance = MeshInstance3D.new()
+	mesh_instance.name = "TileMesh"
 	
-	# Create rectangle shape for the tile
-	var shape = RectangleShape2D.new()
-	shape.size = Vector2(tile_size, tile_size)
+	# Create a plane mesh that exactly fills tile_size with no gaps
+	#var plane_mesh = PlaneMesh.new()
+	#plane_mesh.size = Vector2(tile_size, tile_size)
+	#plane_mesh.subdivide_width = 1  # Reduce subdivisions for performance
+	#plane_mesh.subdivide_depth = 1
+	#mesh_instance.mesh = plane_mesh
+	var box_mesh = BoxMesh.new()
+	box_mesh.size = Vector3(tile_size, 0.2, tile_size) # give a bit of thickness
+	mesh_instance.mesh = box_mesh
+	
+	add_child(mesh_instance)
+
+func create_3d_collision_shape():
+	"""Create and setup the 3D collision shape"""
+	collision_shape = CollisionShape3D.new()
+	collision_shape.name = "CollisionShape3D"
+	
+	# Create box shape for the tile (thin for flat tiles)
+	var shape = BoxShape3D.new()
+	shape.size = Vector3(tile_size, 0.1, tile_size)  # Thin box for flat tile
 	collision_shape.shape = shape
-
-
 	
 	add_child(collision_shape)
 
-func create_hover_label():
-	"""Create and setup the hover label"""
-	hover_label = Label.new()
-	hover_label.name = "HoverLabel"
+func create_3d_hover_indicator():
+	"""Create 3D hover indicator (replaces 2D label)"""
+	hover_indicator = MeshInstance3D.new()
+	hover_indicator.name = "HoverIndicator"
 	
-	# Basic label setup
-	hover_label.visible = false
-	hover_label.z_index = 10  # Ensure it appears above other elements
+	# Create a small sphere or cylinder for hover indication
+	var indicator_mesh = CylinderMesh.new()
+	indicator_mesh.top_radius = 0.1
+	indicator_mesh.bottom_radius = 0.1
+	indicator_mesh.height = 0.2
+	hover_indicator.mesh = indicator_mesh
 	
-	# Set size flags for auto-sizing
-	hover_label.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	hover_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	# Create glowing material for hover indicator
+	var indicator_material = StandardMaterial3D.new()
+	indicator_material.albedo_color = Color.YELLOW
+	indicator_material.emission_enabled = true
+	indicator_material.emission = Color.YELLOW
+	indicator_material.emission_energy = 0.5
+	hover_indicator.material_override = indicator_material
 	
-	add_child(hover_label)
+	# Position above tile surface
+	hover_indicator.position = Vector3(0, 0.2, 0)
+	hover_indicator.visible = false
+	add_child(hover_indicator)
 
-func setup_tile():
-	"""Initialize the tile based on its biome type"""
+func setup_tile_3d():
+	"""Initialize the 3D tile based on its biome type"""
 	var biome_data = get_biome_data(biome_type)
 	
-	# Set sprite texture based on biome
-	sprite.texture = biome_data.texture
+	# Create and apply material based on biome
+	create_biome_material(biome_data)
 	
 	# Set tile properties from biome
 	movement_cost = biome_data.movement_cost
 	resources = biome_data.base_resources.duplicate()
 	
-	# Position the tile in world space
-	global_position = Vector2(
-		grid_position.x * tile_size  + tile_size/2, 
-		grid_position.y * tile_size + tile_size/2
-		)
+	# CRITICAL: Position tiles so they connect seamlessly
+	global_position = Vector3(
+		grid_position.x * tile_size,  # Don't add offset - tiles should touch exactly
+		elevation,
+		grid_position.z * tile_size
+	)
 
-func setup_hover_label():
-	"""Setup the hover label properties"""
-	if hover_label:
-		# Position label at top-left corner of tile with small offset
-		hover_label.position = Vector2(2, 2)
-		
-		# Style the label
-		hover_label.add_theme_color_override("font_color", Color.WHITE)
-		hover_label.add_theme_color_override("font_shadow_color", Color.BLACK)
-		hover_label.add_theme_constant_override("shadow_offset_x", 1)
-		hover_label.add_theme_constant_override("shadow_offset_y", 1)
-		hover_label.add_theme_font_size_override("font_size", 10)
-		
-		# Create a background for better readability
-		var style_box = StyleBoxFlat.new()
-		style_box.bg_color = Color(0, 0, 0, 0.8)  # Semi-transparent black
-		style_box.corner_radius_top_left = 4
-		style_box.corner_radius_top_right = 4
-		style_box.corner_radius_bottom_left = 4
-		style_box.corner_radius_bottom_right = 4
-		style_box.content_margin_top = 4
-		style_box.content_margin_bottom = 4
-		style_box.content_margin_left = 8
-		style_box.content_margin_right = 8
-		hover_label.add_theme_stylebox_override("normal", style_box)
-
-func setup_movement_highlight_overlay():
-	"""Setup the highlight overlay for movement indication"""
-	movement_highlight_overlay = ColorRect.new()
-	movement_highlight_overlay.color = Color(0, 0, 1, 0.3)  # Semi-transparent green
-	movement_highlight_overlay.size = Vector2(tile_size/2, tile_size/2)  # Use dynamic tile_size instead of hardcoded 64
-	movement_highlight_overlay.position = Vector2(-tile_size/2, -tile_size/2) 
-	movement_highlight_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE  # Don't block mouse events
-	movement_highlight_overlay.visible = false
-
-	add_child(movement_highlight_overlay)
+func create_biome_material(biome_data: Dictionary):
+	"""Create 3D material based on biome type with edge considerations"""
+	material = StandardMaterial3D.new()
 	
-func setup_build_highlight_overlay():
-	"""Setup the build highlight overlay"""
-	build_highlight_overlay = ColorRect.new()
-	build_highlight_overlay.color = Color(0.8, 0.4, 0.8, 0.3)  # Semi-transparent purple
-	build_highlight_overlay.size = Vector2(tile_size/2, tile_size/2)
-	build_highlight_overlay.position = Vector2(-tile_size/2, -tile_size/2)
-	build_highlight_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	build_highlight_overlay.visible = false
-	add_child(build_highlight_overlay)
+	# Set base color
+	material.albedo_color = biome_data.color
+	
+	# Disable backface culling to prevent holes
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	
+	# Ensure no gaps by disabling depth testing issues
+	material.no_depth_test = false
+	material.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_OPAQUE_ONLY
+	
+	# Load texture if available
+	if biome_data.has("texture_path"):
+		var texture = load(biome_data.texture_path) as Texture2D
+		if texture:
+			material.albedo_texture = texture
+			# Ensure texture wrapping doesn't create gaps
+			material.uv1_scale = Vector3(1, 1, 1)
+	
+	# Set material properties based on biome
+	match biome_type:
+		BiomeType.WATER:
+			material.metallic = 0.0
+			material.roughness = 0.0
+		BiomeType.MOUNTAIN:
+			material.metallic = 0.2
+			material.roughness = 0.8
+		BiomeType.FOREST:
+			material.roughness = 0.9
+		_:
+			material.metallic = 0.0
+			material.roughness = 0.7
+	
+	mesh_instance.material_override = material
+func setup_3d_highlight_overlays():
+	"""Setup 3D highlight overlays (replace 2D ColorRect overlays)"""
+	# Movement highlight
+	movement_highlight = create_highlight_overlay(Color(0, 0, 1, 0.3))  # Blue
+	movement_highlight.name = "MovementHighlight"
+	
+	# Build highlight  
+	build_highlight = create_highlight_overlay(Color(0.8, 0.4, 0.8, 0.3))  # Purple
+	build_highlight.name = "BuildHighlight"
+	
+	# Interact highlight
+	interact_highlight = create_highlight_overlay(Color(1.0, 1.0, 0.0, 0.4))  # Yellow
+	interact_highlight.name = "InteractHighlight"
+	
+	# Attack highlight
+	attack_highlight = create_highlight_overlay(Color(1.0, 0.0, 0.0, 0.4))  # Red
+	attack_highlight.name = "AttackHighlight"
 
-func setup_interact_highlight_overlay():
-	"""Setup the interact highlight overlay"""
-	interact_highlight_overlay = ColorRect.new()
-	interact_highlight_overlay.color = Color(1.0, 1.0, 0.0, 0.4)  # Semi-transparent yellow
-	interact_highlight_overlay.size = Vector2(tile_size, tile_size)
-	interact_highlight_overlay.position = Vector2(-tile_size/2, -tile_size/2)
-	interact_highlight_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	interact_highlight_overlay.visible = false
-	add_child(interact_highlight_overlay)
+func create_highlight_overlay(color: Color) -> MeshInstance3D:
+	"""Create a 3D highlight overlay mesh"""
+	var highlight = MeshInstance3D.new()
+	
+	# Create a slightly larger plane above the tile
+	var highlight_mesh = PlaneMesh.new()
+	highlight_mesh.size = Vector2(tile_size * 1.1, tile_size * 1.1)
+	highlight.mesh = highlight_mesh
+	
+	# Create transparent material with the specified color
+	var highlight_material = StandardMaterial3D.new()
+	highlight_material.albedo_color = color
+	highlight_material.flags_transparent = true
+	highlight_material.no_depth_test = true
+	highlight_material.flags_unshaded = true
+	highlight.material_override = highlight_material
+	
+	# Position slightly above tile surface
+	highlight.position = Vector3(0, 0.01, 0)
+	highlight.visible = false
+	
+	add_child(highlight)
+	return highlight
 
-func setup_attack_highlight_overlay():
-	"""Setup the attack highlight overlay"""
-	attack_highlight_overlay = ColorRect.new()
-	attack_highlight_overlay.color = Color(1.0, 0.0, 0.0, 0.4)  # Semi-transparent red
-	attack_highlight_overlay.size = Vector2(tile_size, tile_size)
-	attack_highlight_overlay.position = Vector2(-tile_size/2, -tile_size/2)
-	attack_highlight_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	attack_highlight_overlay.visible = false
-	add_child(attack_highlight_overlay)
+func connect_3d_signals():
+	"""Connect 3D-specific signals"""
+	# 3D input events work differently - handled by mouse raycasting in MapManager
+	input_event.connect(_on_input_event_3d)
+	mouse_entered.connect(_on_mouse_entered_3d)
+	mouse_exited.connect(_on_mouse_exited_3d)
 
+func _on_input_event_3d(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int):
+	"""Handle 3D input events"""
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			tile_clicked.emit(self)
+			show_tile_details_3d()
+
+func _on_mouse_entered_3d():
+	"""Handle 3D mouse hover"""
+	tile_hovered.emit(self)
+	# Show hover indicator
+	if hover_indicator:
+		hover_indicator.visible = true
+	
+	# Add subtle glow effect
+	if material:
+		create_tween().tween_property(material, "emission_energy", 0.2, 0.1)
+
+func _on_mouse_exited_3d():
+	"""Handle 3D mouse exit"""
+	# Hide hover indicator
+	if hover_indicator:
+		hover_indicator.visible = false
+	
+	# Remove glow effect
+	if material:
+		create_tween().tween_property(material, "emission_energy", 0.0, 0.1)
+
+# 3D Highlight methods (updated for 3D)
 func set_movement_highlighted(highlighted: bool):
-	"""Set the highlight state of this tile"""
+	"""Set the movement highlight state"""
 	is_movement_highlighted = highlighted
-	if movement_highlight_overlay:
-		movement_highlight_overlay.visible = highlighted
+	if movement_highlight:
+		movement_highlight.visible = highlighted
 
 func set_build_highlighted(highlighted: bool):
-	"""Set the build highlight state of this tile"""
+	"""Set the build highlight state"""
 	is_build_highlighted = highlighted
-	if build_highlight_overlay:
-		build_highlight_overlay.visible = highlighted
+	if build_highlight:
+		build_highlight.visible = highlighted
 
 func set_interact_highlighted(highlighted: bool):
-	"""Set the interact highlight state of this tile"""
+	"""Set the interact highlight state"""
 	is_interact_highlighted = highlighted
-	if interact_highlight_overlay:
-		interact_highlight_overlay.visible = highlighted
+	if interact_highlight:
+		interact_highlight.visible = highlighted
 	
-	# Optional: Different visual effect for interact mode
-	if highlighted:
-		create_tween().tween_property(self, "scale", Vector2(1.02, 1.02), 0.1)
-	else:
-		create_tween().tween_property(self, "scale", Vector2(1.0, 1.0), 0.1)
-
-func set_attack_highlighted(highlighted: bool):
-	"""Set the attack highlight state of this tile"""
-	is_attack_highlighted = highlighted
-	if attack_highlight_overlay:
-		attack_highlight_overlay.visible = highlighted
-	
-	# Optional: Different visual effect for attack mode (pulsing red)
+	# Add pulsing animation for interact mode
 	if highlighted:
 		var tween = create_tween()
 		tween.set_loops()
-		tween.tween_property(attack_highlight_overlay, "modulate:a", 0.6, 0.5)
-		tween.tween_property(attack_highlight_overlay, "modulate:a", 0.3, 0.5)
+		tween.tween_property(self, "scale", Vector3(1.05, 1.0, 1.05), 0.5)
+		tween.tween_property(self, "scale", Vector3.ONE, 0.5)
 	else:
 		var tweens = get_tree().get_processed_tweens()
 		for tween in tweens:
 			if tween.is_valid():
 				tween.kill()
-		if attack_highlight_overlay:
-			attack_highlight_overlay.modulate.a = 0.4
+		scale = Vector3.ONE
+
+func set_attack_highlighted(highlighted: bool):
+	"""Set the attack highlight state"""
+	is_attack_highlighted = highlighted
+	if attack_highlight:
+		attack_highlight.visible = highlighted
+	
+	# Add pulsing red glow for attack mode
+	if highlighted and attack_highlight:
+		var highlight_material = attack_highlight.material_override as StandardMaterial3D
+		if highlight_material:
+			var tween = create_tween()
+			tween.set_loops()
+			tween.tween_property(highlight_material, "albedo_color:a", 0.6, 0.5)
+			tween.tween_property(highlight_material, "albedo_color:a", 0.3, 0.5)
+	else:
+		var tweens = get_tree().get_processed_tweens()
+		for tween in tweens:
+			if tween.is_valid():
+				tween.kill()
+
+func set_elevation(new_elevation: float):
+	"""Set tile elevation (new 3D feature)"""
+	elevation = new_elevation
+	global_position.y = elevation
+	
+	# Update collision shape position if needed
+	if collision_shape:
+		collision_shape.position.y = 0
 
 func get_biome_data(biome: BiomeType) -> Dictionary:
-	"""Return biome-specific data"""
+	"""Return 3D biome-specific data"""
 	match biome:
 		BiomeType.GRASSLAND:
 			return {
-				"texture": preload("res://assets/tiles/grassland.png"),
+				"color": Color(0.4, 0.8, 0.2),  # Green
+				"texture_path": "res://assets/tiles/3d/grassland_texture.png",
 				"movement_cost": 1.0,
 				"base_resources": {"food": 2, "wood": 0},
 				"building_bonus": {"farm": 1.5},
@@ -237,7 +319,8 @@ func get_biome_data(biome: BiomeType) -> Dictionary:
 			}
 		BiomeType.FOREST:
 			return {
-				"texture": preload("res://assets/tiles/forest.png"),
+				"color": Color(0.2, 0.6, 0.2),  # Dark Green
+				"texture_path": "res://assets/tiles/3d/forest_texture.png",
 				"movement_cost": 1.5,
 				"base_resources": {"food": 1, "wood": 3},
 				"building_bonus": {"lumber_mill": 2.0},
@@ -245,7 +328,8 @@ func get_biome_data(biome: BiomeType) -> Dictionary:
 			}
 		BiomeType.MOUNTAIN:
 			return {
-				"texture": preload("res://assets/tiles/mountain.png"),
+				"color": Color(0.6, 0.5, 0.4),  # Brown/Gray
+				"texture_path": "res://assets/tiles/3d/mountain_texture.png",
 				"movement_cost": 2.0,
 				"base_resources": {"stone": 2, "metal": 1},
 				"building_bonus": {"mine": 2.0},
@@ -253,7 +337,8 @@ func get_biome_data(biome: BiomeType) -> Dictionary:
 			}
 		BiomeType.WATER:
 			return {
-				"texture": preload("res://assets/tiles/water.png"),
+				"color": Color(0.2, 0.4, 0.8),  # Blue
+				"texture_path": "res://assets/tiles/3d/water_texture.png",
 				"movement_cost": 999.0,  # Impassable
 				"base_resources": {"fish": 2},
 				"building_bonus": {"dock": 1.5},
@@ -261,7 +346,8 @@ func get_biome_data(biome: BiomeType) -> Dictionary:
 			}
 		BiomeType.DESERT:
 			return {
-				"texture": preload("res://assets/tiles/default.png"),
+				"color": Color(0.8, 0.7, 0.4),  # Sand color
+				"texture_path": "res://assets/tiles/3d/desert_texture.png",
 				"movement_cost": 1.3,
 				"base_resources": {"stone": 1},
 				"building_bonus": {"mine": 1.2},
@@ -269,7 +355,8 @@ func get_biome_data(biome: BiomeType) -> Dictionary:
 			}
 		BiomeType.SWAMP:
 			return {
-				"texture": preload("res://assets/tiles/default.png"),
+				"color": Color(0.4, 0.5, 0.3),  # Muddy green
+				"texture_path": "res://assets/tiles/3d/swamp_texture.png",
 				"movement_cost": 2.5,
 				"base_resources": {"wood": 1, "herbs": 2},
 				"building_bonus": {"farm": 0.8},
@@ -277,202 +364,52 @@ func get_biome_data(biome: BiomeType) -> Dictionary:
 			}
 		_:
 			return {
-				"texture": preload("res://assets/tiles/default.png"),
+				"color": Color.GRAY,
+				"texture_path": "res://assets/tiles/3d/default_texture.png",
 				"movement_cost": 1.0,
 				"base_resources": {},
 				"building_bonus": {},
 				"name": "Unknown"
 			}
 
-func _on_input_event(viewport: Node, event: InputEvent, shape_idx: int):
-	"""Handle tile clicking"""
-	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			tile_clicked.emit(self)
-			show_tile_details()
-		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
-			show_context_menu()
-
-func _on_mouse_entered():
-	"""Handle mouse hover"""
-	tile_hovered.emit(self)
-	# Add hover visual effect
-	modulate = Color(1.2, 1.2, 1.2, 1.0)
-	# Show hover label with tile info
-	show_hover_info()
-
-func _on_mouse_exited():
-	"""Handle mouse exit"""
-	# Remove hover visual effect
-	modulate = Color.WHITE
-	
-	# Hide hover label
-	if hover_label:
-		hover_label.visible = false
-	
-func show_hover_info():
-	"""Display hover information in the label"""
-	if not hover_label:
-		return
-	
+func show_tile_details_3d():
+	"""Show 3D tile details (you might want a 3D floating UI)"""
 	var biome_data = get_biome_data(biome_type)
-	var info_text = ""
-	
-	# Build the info text
-	info_text += biome_data.name + "\n"
-	info_text += "Pos: (%d, %d)\n" % [grid_position.x, grid_position.y]
-	
-	# Show resources if any
-	if not resources.is_empty():
-		info_text += "Resources: "
-		var resource_strings = []
-		for resource in resources:
-			if resources[resource] > 0:
-				resource_strings.append("%s: %d" % [resource.capitalize(), resources[resource]])
-		info_text += ", ".join(resource_strings) + "\n"
-	
-	# Show movement cost
-	if movement_cost < 999:
-		info_text += "Movement: %.1f" % movement_cost
-	else:
-		info_text += "Impassable"
-	
-	# Set the text and show the label
-	hover_label.text = info_text
-	hover_label.visible = true
+	print("=== 3D TILE DETAILS ===")
+	print("Biome: ", biome_data.name)
+	print("3D Position: ", grid_position)
+	print("World Position: ", global_position)
+	print("Elevation: ", elevation)
+	print("Resources: ", resources)
+	print("Movement Cost: ", movement_cost)
+	print("=====================")
 
-func show_tile_details():
-	"""Show detailed information about the tile"""
-	var biome_data = get_biome_data(biome_type)
-	
-	# Update details panel (you'll need to create UI elements)
-	# This is a simplified version - you'd want a proper UI
-	#print("=== TILE DETAILS ===")
-	#print("Biome: ", biome_data.name)
-	#print("Position: ", grid_position)
-	#print("Resources: ", resources)
-	##print("Buildings: ", buildings.size())
-	##print("Characters: ", characters.size())
-	#print("Movement Cost: ", movement_cost)
+# Utility methods for 3D operations
+func get_world_center() -> Vector3:
+	"""Get the world center position of this tile"""
+	return global_position
 
-func show_context_menu():
-	"""Show context menu for tile actions"""
-	#print("=== TILE ACTIONS ===")
-	#print("1. Build Structure")
-	#print("2. Harvest Resources")
-	#print("3. Move Character Here")
-	pass
+func get_distance_to_3d(other_tile: BiomeTile3D) -> float:
+	"""Get 3D distance to another tile"""
+	return global_position.distance_to(other_tile.global_position)
 
-# Utility functions for changing tile properties
-func change_biome_type(new_biome: BiomeType):
-	"""Change the biome type and update visual/properties"""
-	biome_type = new_biome
-	setup_tile()
+func get_grid_distance_to(other_tile: BiomeTile3D) -> int:
+	"""Get grid-based distance (Manhattan distance in 3D)"""
+	var diff = grid_position - other_tile.grid_position
+	return abs(diff.x) + abs(diff.y) + abs(diff.z)
 
-func set_custom_texture(texture: Texture2D):
-	"""Set a custom texture for this tile"""
-	if sprite:
-		sprite.texture = texture
-
-func update_tile_size(new_size: int):
-	"""Update the tile size and collision shape"""
-	tile_size = new_size
-	
-	# Update collision shape
-	if collision_shape and collision_shape.shape:
-		var rect_shape = collision_shape.shape as RectangleShape2D
-		if rect_shape:
-			rect_shape.size = Vector2(tile_size, tile_size)
-			
-	# Update movement highlight overlay size
-	if movement_highlight_overlay:
-		movement_highlight_overlay.size = Vector2(tile_size, tile_size)
-	
-		# Update build highlight overlay
-	if build_highlight_overlay:
-		build_highlight_overlay.size = Vector2(tile_size, tile_size)
-		build_highlight_overlay.position = Vector2(-tile_size/2, -tile_size/2)
-		
-	# Update interact highlight overlay
-	if interact_highlight_overlay:
-		interact_highlight_overlay.size = Vector2(tile_size, tile_size)
-		interact_highlight_overlay.position = Vector2(-tile_size/2, -tile_size/2)
-	#Update attack highlight overlay
-	if attack_highlight_overlay:
-		attack_highlight_overlay.size = Vector2(tile_size, tile_size)
-		attack_highlight_overlay.position = Vector2(-tile_size/2, -tile_size/2)
-# Building management
-func can_place_building(building_type: String) -> bool:
-	"""Check if a building can be placed on this tile"""
-	if is_occupied:
-		return false
-	
-	var biome_data = get_biome_data(biome_type)
-	# Add specific building placement rules here
-	match building_type:
-		"dock":
-			return biome_type == BiomeType.WATER
-		"mine":
-			return biome_type == BiomeType.MOUNTAIN
-		_:
-			return biome_type != BiomeType.WATER
-
-#func place_building(building: Building) -> bool:
-	#"""Place a building on this tile"""
-	#if can_place_building(building.type):
-		#buildings.append(building)
-		#is_occupied = true
-		#building_placed.emit(self, building)
-		#return true
-	#return false
-
-#func remove_building(building: Building):
-	#"""Remove a building from this tile"""
-	#buildings.erase(building)
-	#if buildings.is_empty():
-		#is_occupied = false
-
-# Character management
-#func add_character(character: Character):
-	#"""Add a character to this tile"""
-	#if not characters.has(character):
-		#characters.append(character)
-		#character_entered.emit(self, character)
-#
-#func remove_character(character: Character):
-	#"""Remove a character from this tile"""
-	#characters.erase(character)
-
-# Resource management
-func get_resource_production() -> Dictionary:
-	"""Calculate total resource production including bonuses"""
-	var total_production = resources.duplicate()
-	
-	# Apply building bonuses
-	var biome_data = get_biome_data(biome_type)
-	#for building in buildings:
-		#if building.type in biome_data.building_bonus:
-			#var bonus = biome_data.building_bonus[building.type]
-			#for resource in building.production:
-				#if resource in total_production:
-					#total_production[resource] *= bonus
-	
-	return total_production
-
-func harvest_resources() -> Dictionary:
-	"""Harvest resources from this tile"""
-	var harvested = get_resource_production()
-	# Could implement resource depletion here
-	return harvested
-
-# Utility functions
-func get_distance_to(other_tile: BiomeTile) -> float:
-	"""Get distance to another tile"""
-	return abs(grid_position.x - other_tile.grid_position.x) + abs(grid_position.y - other_tile.grid_position.y)
-
-func get_neighbors() -> Array[BiomeTile]:
-	"""Get neighboring tiles using the map manager"""
+func get_neighbors_3d() -> Array[BiomeTile3D]:
+	"""Get neighboring tiles using the 3D map manager"""
 	if not map_manager:
-		push_warning("BiomeTile has no map_manager reference")
+		push_warning("BiomeTile3D has no map_manager reference")
 		return []
-	return map_manager.get_neighbors(self)
+	return map_manager.get_neighbors_3d(self)
+
+# Legacy compatibility methods
+func get_neighbors() -> Array[BiomeTile3D]:
+	"""Legacy method - forwards to 3D version"""
+	return get_neighbors_3d()
+
+func get_distance_to(other_tile: BiomeTile3D) -> float:
+	"""Legacy method - forwards to 3D version"""
+	return get_distance_to_3d(other_tile)

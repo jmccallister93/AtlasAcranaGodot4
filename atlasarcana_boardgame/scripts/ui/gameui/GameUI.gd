@@ -9,14 +9,14 @@ var action_mode_manager: ActionModeManager
 var notification_manager: NotificationManager
 var menu_manager: MenuManager
 var confirmation_dialog_manager: ConfirmationDialogManager
-var building_detail_view: BuildingDetailView
+#var building_detail_view: BuildingDetailView
 var item_detail_view: ItemDetailView
 var equipment_detail_view: EquipmentDetailView
 
 # Menu references (for compatibility)
 var inventory_menu: InventoryMenu
 var character_menu: CharacterMenu
-var building_menu: BuildingMenu
+#var building_menu: BuildingMenu
 var equipment_menu: EquipmentMenu
 var warband_menu: WarbandMenu 
 
@@ -85,10 +85,10 @@ func create_menus():
 	character_menu = CharacterMenu.new()
 	menu_manager.add_child(character_menu)
 	character_menu.hide()
-	
-	building_menu = BuildingMenu.new()
-	menu_manager.add_child(building_menu)
-	building_menu.hide()
+	#
+	#building_menu = BuildingMenu.new()
+	#menu_manager.add_child(building_menu)
+	#building_menu.hide()
 	
 	# Create NEW equipment menu
 	equipment_menu = EquipmentMenu.new()
@@ -137,8 +137,8 @@ func _on_skill_unlearned(skill: SkillNode):
 func create_detail_views():
 	"""Create detail views as part of the UI system"""
 	# Building detail view
-	building_detail_view = BuildingDetailView.new()
-	building_detail_view.name = "BuildingDetailView"
+	#building_detail_view = BuildingDetailView.new()
+	#building_detail_view.name = "BuildingDetailView"
 	
 	# Item detail view (for non-equipment items)
 	item_detail_view = ItemDetailView.new()
@@ -149,19 +149,19 @@ func create_detail_views():
 	equipment_detail_view.name = "EquipmentDetailView"
 	
 	# Add to the menu manager so they're positioned with other menus
-	menu_manager.add_child(building_detail_view)
+	#menu_manager.add_child(building_detail_view)
 	menu_manager.add_child(item_detail_view)
 	menu_manager.add_child(equipment_detail_view)
 	
 	# Connect their signals
-	building_detail_view.detail_view_closed.connect(_on_building_detail_closed)
+	#building_detail_view.detail_view_closed.connect(_on_building_detail_closed)
 	item_detail_view.detail_view_closed.connect(_on_item_detail_closed)
 	item_detail_view.item_action_completed.connect(_on_item_action_completed)
 	equipment_detail_view.detail_view_closed.connect(_on_equipment_detail_closed)
 	equipment_detail_view.equipment_action_completed.connect(_on_equipment_action_completed)
 	
 	# Add to groups for other components to find them
-	building_detail_view.add_to_group("building_detail_views")
+	#building_detail_view.add_to_group("building_detail_views")
 	item_detail_view.add_to_group("item_detail_views")
 	equipment_detail_view.add_to_group("equipment_detail_views")
 
@@ -235,21 +235,21 @@ func refresh_equipment_menu_deferred():
 	if equipment_menu and equipment_menu.has_method("refresh_all_displays"):
 		equipment_menu.refresh_all_displays()
 
-func show_building_detail(building: Building):
-	"""Show building detail view for a specific building"""
-	if building_detail_view:
-		close_all_menus()
-		building_detail_view.show_for_building(building)
-	else:
-		print("BuildingDetailView not available")
+#func show_building_detail(building: Building):
+	#"""Show building detail view for a specific building"""
+	#if building_detail_view:
+		#close_all_menus()
+		#building_detail_view.show_for_building(building)
+	#else:
+		#print("BuildingDetailView not available")
 
-func show_building_type_detail(building_type_name: String):
-	"""Show building detail view for a building type"""
-	if building_detail_view:
-		close_all_menus()
-		building_detail_view.show_for_building_type(building_type_name)
-	else:
-		print("BuildingDetailView not available")
+#func show_building_type_detail(building_type_name: String):
+	#"""Show building detail view for a building type"""
+	#if building_detail_view:
+		#close_all_menus()
+		#building_detail_view.show_for_building_type(building_type_name)
+	#else:
+		#print("BuildingDetailView not available")
 
 func _on_building_detail_closed():
 	"""Handle building detail view being closed"""
@@ -318,7 +318,7 @@ func _on_action_button_pressed(action_type: String):
 			# Check if 3D combat is available, if so trigger it instead of normal attack mode
 			if GameManager.is_3d_combat_available():
 				print("GameUI: Triggering 3D combat instead of attack mode")
-				var success = GameManager.trigger_simple_3d_combat()
+				var success = GameManager.trigger_combat()
 				if success:
 					show_info("Entering 3D Combat...")
 				else:
@@ -339,7 +339,7 @@ func _input(event):
 	if event.is_action_pressed("ui_accept") and Input.is_key_pressed(KEY_F5):
 		print("GameUI: Debug - Triggering 3D combat")
 		if GameManager.is_3d_combat_available():
-			GameManager.trigger_simple_3d_combat()
+			GameManager.trigger_combat()
 		else:
 			print("GameUI: 3D combat not available")
 
@@ -347,7 +347,7 @@ func _input(event):
 func debug_trigger_3d_combat():
 	"""Debug method to trigger 3D combat"""
 	if GameManager.is_3d_combat_available():
-		var success = GameManager.trigger_simple_3d_combat()
+		var success = GameManager.trigger_combat()
 		if success:
 			show_success("3D Combat started!")
 		else:
@@ -366,8 +366,8 @@ func _on_menu_button_pressed(menu_type: String):
 			_on_inventory_button_pressed()
 		"character":
 			_on_character_button_pressed()
-		"buildings":
-			_on_buildings_button_pressed()
+		#"buildings":
+			#_on_buildings_button_pressed()
 		"equipment":  # NEW MENU
 			_on_equipment_button_pressed()
 		"warband":
@@ -403,20 +403,20 @@ func _on_character_button_pressed():
 			character_menu.show_menu()
 			character_opened.emit()
 
-func _on_buildings_button_pressed():
-	"""Handle buildings menu button press"""
-	if building_menu:
-		if building_menu.visible:
-			building_menu.hide_menu()
-			building_closed.emit()
-		else:
-			close_all_menus()
-			
-			# Refresh building data before showing
-			building_menu.refresh_display()
-			
-			building_menu.show_menu()
-			building_opened.emit()
+#func _on_buildings_button_pressed():
+	#"""Handle buildings menu button press"""
+	#if building_menu:
+		#if building_menu.visible:
+			#building_menu.hide_menu()
+			#building_closed.emit()
+		#else:
+			#close_all_menus()
+			#
+			## Refresh building data before showing
+			#building_menu.refresh_display()
+			#
+			#building_menu.show_menu()
+			#building_opened.emit()
 
 func _on_equipment_button_pressed():
 	"""Handle equipment menu button press"""
@@ -466,9 +466,9 @@ func close_all_menus():
 		character_menu.hide_menu()
 		character_closed.emit()
 	
-	if building_menu and building_menu.visible:
-		building_menu.hide_menu()
-		building_closed.emit()
+	#if building_menu and building_menu.visible:
+		#building_menu.hide_menu()
+		#building_closed.emit()
 	
 	if equipment_menu and equipment_menu.visible:
 		equipment_menu.hide_menu()
@@ -478,8 +478,8 @@ func close_all_menus():
 		warband_menu.hide_menu()
 		warband_closed.emit()
 		
-	if building_detail_view and building_detail_view.is_showing():
-		building_detail_view.hide_with_animation()
+	#if building_detail_view and building_detail_view.is_showing():
+		#building_detail_view.hide_with_animation()
 		
 	if item_detail_view and item_detail_view.is_showing():
 		item_detail_view.hide_menu()
@@ -521,30 +521,30 @@ func _on_confirmation_dialog_cancelled():
 # PUBLIC INTERFACE METHODS
 # ═══════════════════════════════════════════════════════════
 
-func connect_build_manager_signals():
-	"""Connect BuildManager signals after it's initialized"""
-	GameManager.manager_registry.build_manager.building_completed.connect(_on_building_placed)
-	GameManager.manager_registry.build_manager.building_data_changed.connect(_on_building_data_changed)
-		
-func connect_build_manager_signals_deferred():
-	await get_tree().process_frame
-	connect_build_manager_signals()
+#func connect_build_manager_signals():
+	#"""Connect BuildManager signals after it's initialized"""
+	#GameManager.manager_registry.build_manager.building_completed.connect(_on_building_placed)
+	#GameManager.manager_registry.build_manager.building_data_changed.connect(_on_building_data_changed)
+		#
+#func connect_build_manager_signals_deferred():
+	#await get_tree().process_frame
+	#connect_build_manager_signals()
 	
-func show_movement_confirmation(target_tile: BiomeTile):
-	"""Show movement confirmation dialog"""
-	confirmation_dialog_manager.show_movement_confirmation(target_tile)
-
-func show_build_confirmation(target_tile: BiomeTile, building_type: String):
-	"""Show building confirmation dialog"""
-	confirmation_dialog_manager.show_build_confirmation(target_tile, building_type)
-
-func show_attack_confirmation(target_tile: BiomeTile):
-	"""Show attack confirmation dialog"""
-	confirmation_dialog_manager.show_attack_confirmation(target_tile)
-
-func show_interact_confirmation(target_tile: BiomeTile, interaction_type: String):
-	"""Show interaction confirmation dialog"""
-	confirmation_dialog_manager.show_interact_confirmation(target_tile, interaction_type)
+#func show_movement_confirmation(target_tile: BiomeTile):
+	#"""Show movement confirmation dialog"""
+	#confirmation_dialog_manager.show_movement_confirmation(target_tile)
+#
+#func show_build_confirmation(target_tile: BiomeTile, building_type: String):
+	#"""Show building confirmation dialog"""
+	#confirmation_dialog_manager.show_build_confirmation(target_tile, building_type)
+#
+#func show_attack_confirmation(target_tile: BiomeTile):
+	#"""Show attack confirmation dialog"""
+	#confirmation_dialog_manager.show_attack_confirmation(target_tile)
+#
+#func show_interact_confirmation(target_tile: BiomeTile, interaction_type: String):
+	#"""Show interaction confirmation dialog"""
+	#confirmation_dialog_manager.show_interact_confirmation(target_tile, interaction_type)
 
 func show_notification(message: String, duration: float = 3.0, color: Color = Color.RED):
 	"""Show a notification to the player"""
@@ -602,17 +602,17 @@ func update_character_info(name: String = "", level: int = -1, current_hp: int =
 		top_bar.update_character_hp(current_hp, max_hp)
 
 # Add these new signal handlers
-func _on_building_placed(new_building: Building, tile: BiomeTile):
-	"""Handle new building placement - update BuildingMenu"""
-	print("GameUI: Building placed, updating building menu")
-	if building_menu:
-		building_menu.refresh_display()
+#func _on_building_placed(new_building: Building, tile: BiomeTile):
+	#"""Handle new building placement - update BuildingMenu"""
+	#print("GameUI: Building placed, updating building menu")
+	#if building_menu:
+		#building_menu.refresh_display()
 
 func _on_building_data_changed():
 	"""Handle building data changes - refresh BuildingMenu"""
 	print("GameUI: Building data changed, refreshing building menu")
-	if building_menu:
-		building_menu.refresh_display()
+	#if building_menu:
+		#building_menu.refresh_display()
 		
 func show_warband_member_detail(member_index: int):
 	"""Show warband member detail view for a specific member"""
@@ -657,7 +657,7 @@ func debug_show_component_info():
 	print("MenuManager: ", menu_manager != null)
 	print("InventoryMenu: ", inventory_menu != null)
 	print("CharacterMenu: ", character_menu != null)
-	print("BuildingMenu: ", building_menu != null)
+	#print("BuildingMenu: ", building_menu != null)
 	print("EquipmentMenu: ", equipment_menu != null)
 	print("===========================")
 
@@ -680,8 +680,8 @@ func get_component(component_name: String):
 			return inventory_menu
 		"charactermenu":
 			return character_menu
-		"buildingmenu":
-			return building_menu
+		#"buildingmenu":
+			#return building_menu
 		"equipmentmenu":
 			return equipment_menu
 		"warbandmenu":

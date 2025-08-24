@@ -111,9 +111,9 @@ func calculate_total_income() -> Dictionary:
 	
 	# Get income from buildings
 
-	var building_income = GameManager.manager_registry.build_manager.get_total_production_per_turn()
-	for resource in building_income:
-		total_income[resource] = total_income.get(resource, 0) + building_income[resource]
+	#var building_income = GameManager.manager_registry.build_manager.get_total_production_per_turn()
+	#for resource in building_income:
+		#total_income[resource] = total_income.get(resource, 0) + building_income[resource]
 	
 	#Base income
 	total_income["essence"] = total_income.get("essence", 0) + 10
