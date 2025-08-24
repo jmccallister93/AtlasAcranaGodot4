@@ -41,3 +41,4 @@ res://scripts/buildings/BuildingMenu.gd
 res://scripts/combat/CombatManager.gd
 res://scripts/game_manger/managers/ResourceManager.gd
 res://scripts/map/HeightmapMesh.gd
+res://scripts/map/ExpeditionMapGenerator.gd

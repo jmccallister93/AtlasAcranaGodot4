@@ -17,6 +17,9 @@ var turn_manager: TurnManager
 
 var combat_manager: CombatManager
 
+var map_generator: ExpeditionMapGenerator
+
+
 func _ready():
 	"""Initialize the game"""
 	
@@ -42,6 +45,7 @@ func start_new_game():
 	_initialize_action_controller()
 	_initialize_ui_bridge()
 	_initialize_event_bus()
+	_initialize_map_generator()
 	
 	#Added
 	_initialize_combat_manager()
@@ -53,6 +57,19 @@ func start_new_game():
 	# Final 3D system validation
 	_validate_3d_systems()
 	
+
+func _initialize_map_generator():
+	"""Initialize the procedural 3D map generator"""
+	map_generator = ExpeditionMapGenerator.new()
+	add_child(map_generator)
+	
+	# Optional: Configure map parameters
+	map_generator.map_size = 50  # Adjust as needed
+	map_generator.tile_size = 2.0
+	map_generator.height_scale = 8.0
+	map_generator.noise_frequency = 0.08
+	
+	print("ExpeditionMapGenerator initialized and added to scene")
 
 # Added this new initialization function
 func _initialize_combat_manager():

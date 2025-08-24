@@ -404,12 +404,3 @@ func get_neighbors_3d() -> Array[BiomeTile3D]:
 		push_warning("BiomeTile3D has no map_manager reference")
 		return []
 	return map_manager.get_neighbors_3d(self)
-
-# Legacy compatibility methods
-func get_neighbors() -> Array[BiomeTile3D]:
-	"""Legacy method - forwards to 3D version"""
-	return get_neighbors_3d()
-
-func get_distance_to(other_tile: BiomeTile3D) -> float:
-	"""Legacy method - forwards to 3D version"""
-	return get_distance_to_3d(other_tile)
