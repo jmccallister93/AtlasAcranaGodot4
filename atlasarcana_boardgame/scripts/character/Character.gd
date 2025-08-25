@@ -170,19 +170,12 @@ func get_action_points() -> int:
 
 func create_sprite():
 	"""Create character sprite"""
-	#var color_rect = ColorRect.new()
-	#color_rect.name = "CharacterSprite"
-	#color_rect.color = Color.RED
-	#color_rect.size = Vector2(32, 32)
-	#color_rect.position = Vector2(-16, -16)  # Center the sprite
-	#color_rect.z_index = 10
-	#
-	#add_child(color_rect)
-	
 	var sprite = Sprite2D.new()
 	sprite.name="CharacterSprite"
-	sprite.texture = preload("res://assets/character/character_sprite2.png")
-	#sprite.size = Vector2i(32, 32)
+	sprite.texture = preload("res://assets/character/token_sword.png")
+	var target_size = Vector2(96, 96)
+	var tex_size = sprite.texture.get_size()
+	sprite.scale = target_size / tex_size  # rescale proportionally
 	sprite.position = Vector2(-16, -16)  # Center the sprite
 	sprite.z_index = 10
 	add_child(sprite)
@@ -190,6 +183,7 @@ func create_sprite():
 	sprite.position = Vector2(-16, -16)  # Center the sprite
 	sprite.z_index = 10
 	add_child(collision_box)
+	
 	
 	
 

@@ -17,32 +17,11 @@ var turn_manager: TurnManager
 
 func _ready():
 	"""Initialize the game"""
-	
 	start_new_game()
-	debug_cameras()
 
 # ═══════════════════════════════════════════════════════════
 # GAME LIFECYCLE
 # ═══════════════════════════════════════════════════════════
-
-func debug_cameras():
-	"""Debug camera setup"""
-	var cameras_2d = get_tree().get_nodes_in_group("Camera2D")
-	var cameras_3d = get_tree().get_nodes_in_group("Camera3D")
-	
-	print("=== Camera Debug ===")
-	print("Camera2D nodes found: ", cameras_2d.size())
-	for cam in cameras_2d:
-		if cam.is_current():
-			print("  ACTIVE Camera2D: ", cam.name)
-	
-	print("Camera3D nodes found: ", cameras_3d.size())
-	for cam in cameras_3d:
-		if cam.is_current():
-			print("  ACTIVE Camera3D: ", cam.name)
-	
-	print("Current viewport camera: ", get_viewport().get_camera_3d())
-	print("===================")
 
 func start_new_game():
 	"""Initialize a new game with all components"""
@@ -60,8 +39,6 @@ func start_new_game():
 	character = manager_registry.get_character()
 	turn_manager = manager_registry.get_turn_manager()
 	
-
-
 func _initialize_manager_registry():
 	"""Initialize the manager registry and all game managers"""
 	manager_registry = ManagerRegistry.new()
@@ -92,7 +69,7 @@ func _initialize_action_controller():
 	"""Initialize the action mode controller"""
 	action_controller = ActionModeController.new()
 	add_child(action_controller)
-	# UI bridge must be created first before initializing action controller
+	
 
 func _initialize_ui_bridge():
 	"""Initialize the UI bridge"""
@@ -351,79 +328,3 @@ func _sync_managers_with_game_state():
 	# This would involve updating managers with loaded state data
 	# Implementation depends on how managers handle state restoration
 	pass
-
-# ═══════════════════════════════════════════════════════════
-# COMPONENT ACCESS (For debugging/advanced usage)
-# ═══════════════════════════════════════════════════════════
-
-func get_manager_registry() -> ManagerRegistry:
-	"""Get the manager registry"""
-	return manager_registry
-
-func get_action_controller() -> ActionModeController:
-	"""Get the action controller"""
-	return action_controller
-
-func get_ui_bridge() -> UIBridge:
-	"""Get the UI bridge"""
-	return ui_bridge
-
-func get_event_bus() -> GameEventBus:
-	"""Get the event bus"""
-	return event_bus
-
-func get_game_state() -> GameState:
-	"""Get the game state"""
-	return game_state
-
-# ═══════════════════════════════════════════════════════════
-# DEBUG & VALIDATION
-# ═══════════════════════════════════════════════════════════
-
-func debug_game_status():
-	"""Print debug information about game state"""
-	print("=== GameManager Debug ===")
-	print("Components initialized:")
-	print("  ManagerRegistry: ", manager_registry != null)
-	print("  ActionController: ", action_controller != null)
-	print("  UIBridge: ", ui_bridge != null)
-	print("  EventBus: ", event_bus != null)
-	print("  GameState: ", game_state != null)
-	print()
-	
-	if game_state:
-		game_state.debug_print_state()
-	
-	if action_controller:
-		print("Current Action Mode: ", action_controller.get_current_action_mode())
-	
-	if ui_bridge:
-		ui_bridge.debug_ui_state()
-	
-	print("========================")
-
-func validate_game_state() -> bool:
-	"""Validate that the game is in a consistent state"""
-	if not game_state:
-		print("GameManager: No game state available")
-		return false
-	
-	if not manager_registry or not manager_registry.are_all_managers_initialized():
-		print("GameManager: Managers not properly initialized")
-		return false
-	
-	return game_state.validate_state()
-
-# ═══════════════════════════════════════════════════════════
-# CLEANUP
-# ═══════════════════════════════════════════════════════════
-
-func cleanup_game():
-	"""Clean up all game components"""
-	print("GameManager: Cleaning up game...")
-	
-	if manager_registry:
-		manager_registry.cleanup_managers()
-	
-	# Components will be automatically freed when this node is freed
-	print("GameManager: Cleanup complete")

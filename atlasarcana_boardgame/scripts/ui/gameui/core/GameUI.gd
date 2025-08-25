@@ -44,8 +44,6 @@ func _exit_tree():
 
 func create_ui_components():
 	"""Create all UI components programmatically"""
-	print("Creating UI components...")
-	
 	# Create main components
 	top_bar = TopBarUI.new()
 	bottom_bar = BottomBarUI.new()
@@ -578,7 +576,6 @@ func _on_warband_member_detail_closed():
 
 func _on_warband_member_action_completed(action: String, member_index: int):
 	"""Handle warband member actions completed from detail view"""
-	print("Warband member action completed: ", action, " on member: ", member_index)
 	
 	# Refresh warband menu if it's open
 	if warband_menu and warband_menu.visible:
@@ -593,51 +590,3 @@ func _on_warband_member_action_completed(action: String, member_index: int):
 			show_success("Member promoted!")
 		"equip_item":
 			show_info("Item equipped to member")
-
-# ═══════════════════════════════════════════════════════════
-# DEBUG AND UTILITY METHODS
-# ═══════════════════════════════════════════════════════════
-
-func debug_show_component_info():
-	"""Debug method to show component information"""
-	print("=== GameUI Component Info ===")
-	print("TopBar: ", top_bar != null)
-	print("BottomBar: ", bottom_bar != null)
-	print("ActionModeManager: ", action_mode_manager != null)
-	print("NotificationManager: ", notification_manager != null)
-	print("ConfirmationDialogManager: ", confirmation_dialog_manager != null)
-	print("MenuManager: ", menu_manager != null)
-	print("InventoryMenu: ", inventory_menu != null)
-	print("CharacterMenu: ", character_menu != null)
-	print("BuildingMenu: ", building_menu != null)
-	print("EquipmentMenu: ", equipment_menu != null)
-	print("===========================")
-
-func get_component(component_name: String):
-	"""Get a specific component by name"""
-	match component_name.to_lower():
-		"topbar":
-			return top_bar
-		"bottombar":
-			return bottom_bar
-		"actionmodemanager":
-			return action_mode_manager
-		"notificationmanager":
-			return notification_manager
-		"confirmationdialogmanager":
-			return confirmation_dialog_manager
-		"menumanager":
-			return menu_manager
-		"inventorymenu":
-			return inventory_menu
-		"charactermenu":
-			return character_menu
-		"buildingmenu":
-			return building_menu
-		"equipmentmenu":
-			return equipment_menu
-		"warbandmenu":
-			return warband_menu
-		_:
-			print("Unknown component: ", component_name)
-			return null
